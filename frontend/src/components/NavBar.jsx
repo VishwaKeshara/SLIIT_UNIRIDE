@@ -27,7 +27,7 @@ function Navbar() {
   ];
 
   return (
-    <nav className="fixed left-0 right-0 top-0 z-50 bg-yellow-500 text-white shadow-lg">
+    <nav className="fixed left-0 right-0 top-0 z-50 bg-indigo-900 text-white shadow-lg">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 md:h-20 lg:px-8">
         <div className="flex items-center gap-2.5 text-xl font-bold md:text-2xl">
           <FaBus size={28} className="hidden sm:block" />

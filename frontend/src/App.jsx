@@ -13,6 +13,8 @@ import MyRides from "./pages/MyRides";
 import Drivers from "./pages/Drivers";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import RouteList from "./features/Shuttle & Route Management/RouteList";
+import RouteForm from "./features/Shuttle & Route Management/RouteForm";
 
 function App() {
   return (
@@ -34,6 +36,9 @@ function App() {
             <Route path="/about"     element={<About />} />
             <Route path="/contact"   element={<Contact />} />
             <Route path="/login"     element={<Login />} />
+            <Route path="/RouteList" element={<RouteList/>} />
+            <Route path="/RouteForm" element={<RouteForm/>} />
+            
 
             {/* Fallback route – better to show 404 page in future */}
             <Route path="*"          element={<Home />} />
