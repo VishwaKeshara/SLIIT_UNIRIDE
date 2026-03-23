@@ -14,33 +14,39 @@ import Drivers from "./pages/Drivers";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 
+import AdminLogin from "./admin/Adminlogin";
+import AdminDashboard from "./admin/AdminDashboard";
+import UserManagement from "./admin/UserManagement";
+import ComplaintManagement from "./admin/ComplaintManagement";
+
 function App() {
   return (
     <Router>
       <div className="flex min-h-screen flex-col bg-gray-50">
-
-        {/* Fixed/sticky Navbar */}
         <Navbar />
 
-        {/* Main content area – grows to fill space + padding below navbar */}
         <main className="flex-grow pt-16 md:pt-20">
           <Routes>
-            <Route path="/"          element={<Home />} />
-            <Route path="/home"      element={<Home />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/home" element={<Home />} />
             <Route path="/schedules" element={<Schedules />} />
-            <Route path="/book"      element={<BookRide />} />
-            <Route path="/myrides"   element={<MyRides />} />
-            <Route path="/drivers"   element={<Drivers />} />
-            <Route path="/about"     element={<About />} />
-            <Route path="/contact"   element={<Contact />} />
-            <Route path="/login"     element={<Login />} />
+            <Route path="/book" element={<BookRide />} />
+            <Route path="/myrides" element={<MyRides />} />
+            <Route path="/drivers" element={<Drivers />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/login" element={<Login />} />
 
-            {/* Fallback route – better to show 404 page in future */}
-            <Route path="*"          element={<Home />} />
+            {/* Admin Routes */}
+            <Route path="/adminlogin" element={<AdminLogin />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<UserManagement />} />
+            <Route path="/admin/complaints" element={<ComplaintManagement />} />
+
+            <Route path="*" element={<Home />} />
           </Routes>
         </main>
 
-        {/* Footer at the bottom */}
         <Footer />
       </div>
     </Router>
