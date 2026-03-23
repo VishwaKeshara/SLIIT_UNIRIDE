@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "../axiosinstance";
 
-export default function ComplaintManagement() {
+function ComplaintManagement() {
   const [complaints, setComplaints] = useState([]);
   const [replyData, setReplyData] = useState({});
 
@@ -19,13 +19,13 @@ export default function ComplaintManagement() {
   };
 
   const handleChange = (id, field, value) => {
-    setReplyData({
-      ...replyData,
+    setReplyData((prev) => ({
+      ...prev,
       [id]: {
-        ...replyData[id],
+        ...prev[id],
         [field]: value,
       },
-    });
+    }));
   };
 
   const handleUpdate = async (id) => {
@@ -41,64 +41,69 @@ export default function ComplaintManagement() {
   };
 
   return (
-    <div style={{ padding: "30px" }}>
-      <h2>Complaint Management</h2>
+    <div className="max-w-6xl mx-auto px-6 py-10">
+      <h1 className="text-3xl font-bold mb-8 text-center">Complaint Management</h1>
 
       {complaints.length === 0 ? (
-        <p>No complaints available.</p>
+        <div className="bg-white shadow-md rounded-lg p-6 border text-center">
+          <p>No complaints available.</p>
+        </div>
       ) : (
-        complaints.map((c) => (
-          <div
-            key={c._id}
-            style={{
-              border: "1px solid #ccc",
-              borderRadius: "10px",
-              padding: "15px",
-              marginBottom: "15px",
-            }}
-          >
-            <p><strong>User:</strong> {c.userId?.name || "Unknown"}</p>
-            <p><strong>Email:</strong> {c.userId?.email || "-"}</p>
-            <p><strong>Complaint Type:</strong> {c.complaintType}</p>
-            <p><strong>Message:</strong> {c.message}</p>
-            <p><strong>Current Status:</strong> {c.status}</p>
+        <div className="space-y-6">
+          {complaints.map((complaint) => (
+            <div key={complaint._id} className="bg-white shadow-md rounded-lg p-6 border">
+              <p className="mb-2">
+                <strong>User:</strong> {complaint.userId?.name || "Unknown"}
+              </p>
+              <p className="mb-2">
+                <strong>Email:</strong> {complaint.userId?.email || "-"}
+              </p>
+              <p className="mb-2">
+                <strong>Complaint Type:</strong> {complaint.complaintType}
+              </p>
+              <p className="mb-2">
+                <strong>Message:</strong> {complaint.message}
+              </p>
+              <p className="mb-4">
+                <strong>Current Status:</strong> {complaint.status}
+              </p>
 
-            <select
-              value={replyData[c._id]?.status || c.status}
-              onChange={(e) => handleChange(c._id, "status", e.target.value)}
-            >
-              <option value="Pending">Pending</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Resolved">Resolved</option>
-            </select>
+              <div className="mb-4">
+                <label className="block font-medium mb-1">Update Status</label>
+                <select
+                  value={replyData[complaint._id]?.status || complaint.status}
+                  onChange={(e) => handleChange(complaint._id, "status", e.target.value)}
+                  className="w-full md:w-64 border p-2 rounded"
+                >
+                  <option value="Pending">Pending</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Resolved">Resolved</option>
+                </select>
+              </div>
 
-            <br /><br />
+              <div className="mb-4">
+                <label className="block font-medium mb-1">Admin Reply</label>
+                <textarea
+                  rows="3"
+                  placeholder="Enter admin reply"
+                  value={replyData[complaint._id]?.adminReply || complaint.adminReply || ""}
+                  onChange={(e) => handleChange(complaint._id, "adminReply", e.target.value)}
+                  className="w-full border p-2 rounded"
+                />
+              </div>
 
-            <textarea
-              rows="3"
-              cols="50"
-              placeholder="Admin Reply"
-              value={replyData[c._id]?.adminReply || c.adminReply}
-              onChange={(e) => handleChange(c._id, "adminReply", e.target.value)}
-            />
-
-            <br /><br />
-
-            <button onClick={() => handleUpdate(c._id)} style={buttonStyle}>
-              Update Complaint
-            </button>
-          </div>
-        ))
+              <button
+                onClick={() => handleUpdate(complaint._id)}
+                className="bg-blue-700 text-white px-5 py-2 rounded hover:bg-blue-800"
+              >
+                Update Complaint
+              </button>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
 }
 
-const buttonStyle = {
-  padding: "10px 16px",
-  border: "none",
-  borderRadius: "6px",
-  backgroundColor: "#0b2c74",
-  color: "white",
-  cursor: "pointer",
-};
+export default ComplaintManagement;
