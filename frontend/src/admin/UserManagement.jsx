@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "../axiosinstance";
 
-export default function UserManagement() {
+function UserManagement() {
   const [users, setUsers] = useState([]);
-  const [form, setForm] = useState({
+  const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
@@ -23,33 +23,49 @@ export default function UserManagement() {
       const res = await axios.get("/users");
       setUsers(res.data);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to fetch users", err);
     }
   };
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
   const validateForm = () => {
-    if (!form.name || !form.email || !form.role) {
-      setError("Name, Email, and Role are required.");
+    if (!formData.name || !formData.email || !formData.role) {
+      setError("Full Name, Email Address, and Role are required.");
       return false;
     }
 
-    if (!editingId && !form.password) {
+    if (!editingId && !formData.password) {
       setError("Password is required for new users.");
       return false;
     }
 
     const emailPattern = /\S+@\S+\.\S+/;
-    if (!emailPattern.test(form.email)) {
+    if (!emailPattern.test(formData.email)) {
       setError("Enter a valid email address.");
       return false;
     }
 
     setError("");
     return true;
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      email: "",
+      password: "",
+      role: "",
+      phone: "",
+      status: "active",
+    });
+    setEditingId(null);
+    setError("");
   };
 
   const handleSubmit = async (e) => {
@@ -60,40 +76,32 @@ export default function UserManagement() {
     try {
       if (editingId) {
         await axios.put(`/users/${editingId}`, {
-          name: form.name,
-          email: form.email,
-          role: form.role,
-          phone: form.phone,
-          status: form.status,
+          name: formData.name,
+          email: formData.email,
+          role: formData.role,
+          phone: formData.phone,
+          status: formData.status,
         });
       } else {
-        await axios.post("/users", form);
+        await axios.post("/users", formData);
       }
 
-      setForm({
-        name: "",
-        email: "",
-        password: "",
-        role: "",
-        phone: "",
-        status: "active",
-      });
-      setEditingId(null);
+      resetForm();
       fetchUsers();
     } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || "Something went wrong.");
+      console.error("Failed to save user", err);
+      setError(err.response?.data?.message || "Failed to save user.");
     }
   };
 
   const handleEdit = (user) => {
-    setForm({
+    setFormData({
       name: user.name,
       email: user.email,
       password: "",
       role: user.role,
-      phone: user.phone,
-      status: user.status,
+      phone: user.phone || "",
+      status: user.status || "active",
     });
     setEditingId(user._id);
     setError("");
@@ -104,12 +112,12 @@ export default function UserManagement() {
       await axios.delete(`/users/${id}`);
       fetchUsers();
     } catch (err) {
-      console.error(err);
+      console.error("Failed to delete user", err);
     }
   };
 
   const fillDummyData = () => {
-    setForm({
+    setFormData({
       name: "Lecturer Demo",
       email: "lecturerdemo@gmail.com",
       password: "123456",
@@ -117,103 +125,173 @@ export default function UserManagement() {
       phone: "0770000000",
       status: "active",
     });
+    setError("");
   };
 
   return (
-    <div style={{ padding: "30px" }}>
-      <h2>User Management</h2>
+    <div className="max-w-6xl mx-auto px-6 py-10">
+      <h1 className="text-3xl font-bold mb-8 text-center">User Management</h1>
 
-      <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
-        <div style={rowStyle}>
-          <input type="text" name="name" placeholder="Full Name" value={form.name} onChange={handleChange} />
-          <input type="email" name="email" placeholder="Email Address" value={form.email} onChange={handleChange} />
-        </div>
-
-        <div style={rowStyle}>
-          {!editingId && (
+      <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6 mb-8 border">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block font-medium mb-1">Full Name</label>
             <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={form.password}
+              type="text"
+              name="name"
+              placeholder="Enter full name"
+              value={formData.name}
               onChange={handleChange}
+              className="w-full border p-2 rounded"
             />
+          </div>
+
+          <div>
+            <label className="block font-medium mb-1">Email Address</label>
+            <input
+              type="email"
+              name="email"
+              placeholder="Enter email address"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full border p-2 rounded"
+            />
+          </div>
+
+          {!editingId && (
+            <div>
+              <label className="block font-medium mb-1">Password</label>
+              <input
+                type="password"
+                name="password"
+                placeholder="Enter password"
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full border p-2 rounded"
+              />
+            </div>
           )}
 
-          <select name="role" value={form.role} onChange={handleChange}>
-            <option value="">Select Role</option>
-            <option value="student">Student</option>
-            <option value="lecturer">Lecturer</option>
-            <option value="driver">Driver</option>
-            <option value="admin">Admin</option>
-          </select>
+          <div>
+            <label className="block font-medium mb-1">Role</label>
+            <select
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="w-full border p-2 rounded"
+            >
+              <option value="">Select Role</option>
+              <option value="student">Student</option>
+              <option value="lecturer">Lecturer</option>
+              <option value="driver">Driver</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block font-medium mb-1">Phone Number</label>
+            <input
+              type="text"
+              name="phone"
+              placeholder="Enter phone number"
+              value={formData.phone}
+              onChange={handleChange}
+              className="w-full border p-2 rounded"
+            />
+          </div>
+
+          <div>
+            <label className="block font-medium mb-1">Status</label>
+            <select
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              className="w-full border p-2 rounded"
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
         </div>
 
-        <div style={rowStyle}>
-          <input type="text" name="phone" placeholder="Phone Number" value={form.phone} onChange={handleChange} />
+        {error && <p className="text-red-600 mt-3">{error}</p>}
 
-          <select name="status" value={form.status} onChange={handleChange}>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <button type="submit" className="bg-blue-700 text-white px-5 py-2 rounded hover:bg-blue-800">
+            {editingId ? "Update User" : "Add User"}
+          </button>
+
+          <button
+            type="button"
+            onClick={fillDummyData}
+            className="bg-gray-300 text-black px-5 py-2 rounded hover:bg-gray-400"
+          >
+            Fill Dummy Data
+          </button>
+
+          {editingId && (
+            <button
+              type="button"
+              onClick={resetForm}
+              className="bg-red-500 text-white px-5 py-2 rounded hover:bg-red-600"
+            >
+              Cancel Edit
+            </button>
+          )}
         </div>
-
-        {error && <p style={{ color: "red" }}>{error}</p>}
-
-        <button type="submit" style={buttonStyle}>
-          {editingId ? "Update User" : "Add User"}
-        </button>
-
-        <button type="button" onClick={fillDummyData} style={{ ...buttonStyle, marginLeft: "10px" }}>
-          Fill Dummy Data
-        </button>
       </form>
 
-      <table border="1" cellPadding="10" style={{ width: "100%", borderCollapse: "collapse" }}>
-        <thead>
-          <tr>
-            <th>Full Name</th>
-            <th>Email Address</th>
-            <th>Role</th>
-            <th>Phone Number</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {users.map((u) => (
-            <tr key={u._id}>
-              <td>{u.name}</td>
-              <td>{u.email}</td>
-              <td>{u.role}</td>
-              <td>{u.phone}</td>
-              <td>{u.status}</td>
-              <td>
-                <button onClick={() => handleEdit(u)}>Edit</button>
-                <button onClick={() => handleDelete(u._id)} style={{ marginLeft: "8px" }}>
-                  Delete
-                </button>
-              </td>
+      <div className="bg-white shadow-md rounded-lg p-6 border overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="border p-3">Full Name</th>
+              <th className="border p-3">Email Address</th>
+              <th className="border p-3">Role</th>
+              <th className="border p-3">Phone Number</th>
+              <th className="border p-3">Status</th>
+              <th className="border p-3">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            {users.map((user) => (
+              <tr key={user._id}>
+                <td className="border p-3">{user.name}</td>
+                <td className="border p-3">{user.email}</td>
+                <td className="border p-3">{user.role}</td>
+                <td className="border p-3">{user.phone}</td>
+                <td className="border p-3">{user.status}</td>
+                <td className="border p-3">
+                  <button
+                    onClick={() => handleEdit(user)}
+                    className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    onClick={() => handleDelete(user._id)}
+                    className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 ml-2"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+
+            {users.length === 0 && (
+              <tr>
+                <td colSpan="6" className="text-center p-4">
+                  No users found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
 
-const rowStyle = {
-  display: "flex",
-  gap: "10px",
-  marginBottom: "10px",
-};
-
-const buttonStyle = {
-  padding: "10px 16px",
-  border: "none",
-  borderRadius: "6px",
-  backgroundColor: "#0b2c74",
-  color: "white",
-  cursor: "pointer",
-};
+export default UserManagement;
