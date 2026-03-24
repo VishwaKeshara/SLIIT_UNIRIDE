@@ -18,6 +18,7 @@ function Adminlogin() {
       ...formData,
       [e.target.name]: e.target.value,
     });
+    setError("");
   };
 
   const validateForm = () => {
@@ -43,6 +44,7 @@ function Adminlogin() {
 
     try {
       setLoading(true);
+      setError("");
 
       const res = await axios.post("/admin/login", {
         email: formData.email,
@@ -52,7 +54,6 @@ function Adminlogin() {
       localStorage.setItem("adminToken", res.data.token);
       localStorage.setItem("adminData", JSON.stringify(res.data.admin));
 
-      alert("Admin login successful");
       navigate("/admin/dashboard");
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
@@ -61,19 +62,14 @@ function Adminlogin() {
     }
   };
 
-  const fillDummyData = () => {
-    setFormData({
-      email: "admin@gmail.com",
-      password: "123456",
-    });
-    setError("");
-  };
-
   return (
     <div className="max-w-md mx-auto py-8 px-4">
       <h1 className="text-3xl font-bold mb-6 text-center">Admin Login</h1>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 bg-white p-6 rounded-lg shadow-md">
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-4 bg-white p-6 rounded-lg shadow-md"
+      >
         <label className="font-medium">Email Address</label>
         <input
           type="email"
@@ -102,14 +98,6 @@ function Adminlogin() {
           disabled={loading}
         >
           {loading ? "Logging in..." : "Login"}
-        </button>
-
-        <button
-          type="button"
-          onClick={fillDummyData}
-          className="bg-gray-200 text-black py-2 rounded hover:bg-gray-300"
-        >
-          Fill Dummy Data
         </button>
       </form>
     </div>

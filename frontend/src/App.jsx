@@ -6,6 +6,7 @@ import Footer from "./components/Footer";
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Schedules from "./pages/Schedules";
 import BookRide from "./pages/BookRide";
 import MyRides from "./pages/MyRides";
@@ -17,6 +18,7 @@ import AdminLogin from "./admin/Adminlogin";
 import AdminDashboard from "./admin/AdminDashboard";
 import UserManagement from "./admin/UserManagement";
 import ComplaintManagement from "./admin/ComplaintManagement";
+import ProtectedAdminRoute from "./admin/ProtectedAdminRoute";
 
 function AppLayout() {
   const location = useLocation();
@@ -30,6 +32,7 @@ function AppLayout() {
 
       <main className={isAdminRoute ? "flex-grow" : "flex-grow pt-16 md:pt-20"}>
         <Routes>
+          {/* User side routes */}
           <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
           <Route path="/schedules" element={<Schedules />} />
@@ -39,12 +42,40 @@ function AppLayout() {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
+          {/* Admin login */}
           <Route path="/adminlogin" element={<AdminLogin />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/users" element={<UserManagement />} />
-          <Route path="/admin/complaints" element={<ComplaintManagement />} />
 
+          {/* Protected admin routes */}
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedAdminRoute>
+                <AdminDashboard />
+              </ProtectedAdminRoute>
+            }
+          />
+
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedAdminRoute>
+                <UserManagement />
+              </ProtectedAdminRoute>
+            }
+          />
+
+          <Route
+            path="/admin/complaints"
+            element={
+              <ProtectedAdminRoute>
+                <ComplaintManagement />
+              </ProtectedAdminRoute>
+            }
+          />
+
+          {/* Default route */}
           <Route path="*" element={<Home />} />
         </Routes>
       </main>

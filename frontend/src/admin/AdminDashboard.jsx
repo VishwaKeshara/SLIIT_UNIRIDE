@@ -33,7 +33,6 @@ function AdminDashboard() {
 
   return (
     <div className="min-h-screen flex bg-gray-100">
-      {/* Sidebar */}
       <aside className="w-64 bg-blue-900 text-white flex flex-col p-6">
         <h2 className="text-2xl font-bold mb-10">Admin Panel</h2>
 
@@ -70,9 +69,7 @@ function AdminDashboard() {
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 p-8">
-        {/* Top Header */}
         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
@@ -86,7 +83,6 @@ function AdminDashboard() {
           </div>
         </div>
 
-        {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
           <div className="bg-white p-6 rounded-xl shadow border-l-4 border-blue-600">
             <p className="text-gray-500 text-sm">Total Users</p>
@@ -109,9 +105,7 @@ function AdminDashboard() {
           </div>
         </div>
 
-        {/* Bottom Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Quick Actions */}
           <div className="bg-white p-6 rounded-xl shadow">
             <h3 className="text-xl font-semibold mb-4 text-gray-800">Quick Actions</h3>
 
@@ -130,7 +124,6 @@ function AdminDashboard() {
             </div>
           </div>
 
-          {/* Activity / Insights */}
           <div className="bg-white p-6 rounded-xl shadow">
             <h3 className="text-xl font-semibold mb-4 text-gray-800">System Insights</h3>
 

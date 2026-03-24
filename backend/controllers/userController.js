@@ -1,26 +1,30 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 
-const getAllUsers = async (req, res) => {
+const registerUser = async (req, res) => {
   try {
-    const users = await User.find().select("-password").sort({ createdAt: -1 });
-    res.status(200).json(users);
-  } catch (error) {
-    res.status(500).json({ message: "Failed to fetch users", error: error.message });
-  }
-};
-
-const createUser = async (req, res) => {
-  try {
-    const { name, email, password, role, phone, status } = req.body;
+    const { name, email, password, role } = req.body;
 
     if (!name || !email || !password || !role) {
-      return res.status(400).json({ message: "Name, email, password and role are required" });
+      return res.status(400).json({
+        message: "All fields are required.",
+      });
+    }
+
+    const allowedRoles = ["student", "instructor", "lecturer"];
+
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({
+        message: "Invalid role selected.",
+      });
     }
 
     const existingUser = await User.findOne({ email: email.toLowerCase() });
+
     if (existingUser) {
-      return res.status(400).json({ message: "User already exists" });
+      return res.status(400).json({
+        message: "Email is already registered.",
+      });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -30,74 +34,81 @@ const createUser = async (req, res) => {
       email: email.toLowerCase(),
       password: hashedPassword,
       role,
-      phone,
-      status
+      isActive: true,
     });
 
     await newUser.save();
 
-    res.status(201).json({
-      message: "User created successfully",
+    return res.status(201).json({
+      message: "User registered successfully.",
       user: {
         id: newUser._id,
         name: newUser.name,
         email: newUser.email,
         role: newUser.role,
-        phone: newUser.phone,
-        status: newUser.status
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Failed to create user", error: error.message });
-  }
-};
-
-const updateUser = async (req, res) => {
-  try {
-    const { name, email, role, phone, status } = req.body;
-
-    const updatedUser = await User.findByIdAndUpdate(
-      req.params.id,
-      {
-        name,
-        email: email ? email.toLowerCase() : undefined,
-        role,
-        phone,
-        status
+        isActive: newUser.isActive,
       },
-      { new: true, runValidators: true }
-    ).select("-password");
-
-    if (!updatedUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.status(200).json({
-      message: "User updated successfully",
-      user: updatedUser
     });
   } catch (error) {
-    res.status(500).json({ message: "Failed to update user", error: error.message });
+    return res.status(500).json({
+      message: "Server error during registration.",
+      error: error.message,
+    });
   }
 };
 
-const deleteUser = async (req, res) => {
+const loginUser = async (req, res) => {
   try {
-    const deletedUser = await User.findByIdAndDelete(req.params.id);
+    const { email, password } = req.body;
 
-    if (!deletedUser) {
-      return res.status(404).json({ message: "User not found" });
+    if (!email || !password) {
+      return res.status(400).json({
+        message: "Email and password are required.",
+      });
     }
 
-    res.status(200).json({ message: "User deleted successfully" });
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+      return res.status(400).json({
+        message: "User not found.",
+      });
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json({
+        message: "Your account has been deactivated. Please contact admin.",
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({
+        message: "Invalid credentials.",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Login successful",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phoneNumber: user.phoneNumber,
+        isActive: user.isActive,
+      },
+    });
   } catch (error) {
-    res.status(500).json({ message: "Failed to delete user", error: error.message });
+    return res.status(500).json({
+      message: "Server error during login.",
+      error: error.message,
+    });
   }
 };
 
 module.exports = {
-  getAllUsers,
-  createUser,
-  updateUser,
-  deleteUser
+  registerUser,
+  loginUser,
 };
