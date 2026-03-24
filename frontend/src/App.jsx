@@ -15,6 +15,7 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import RouteList from "./features/Shuttle & Route Management/RouteList";
 import RouteForm from "./features/Shuttle & Route Management/RouteForm";
+import StopManagerPage from "./features/Shuttle & Route Management/StopManagerPage";
 
 function App() {
   return (
@@ -38,6 +39,8 @@ function App() {
             <Route path="/login"     element={<Login />} />
             <Route path="/RouteList" element={<RouteList/>} />
             <Route path="/RouteForm" element={<RouteForm/>} />
+            <Route path="/stop"      element={<StopManagerPage/>}/>
+            <Route path="/stop/:routeId" element={<StopManagerPage/>}/>
             
 
             {/* Fallback route – better to show 404 page in future */}

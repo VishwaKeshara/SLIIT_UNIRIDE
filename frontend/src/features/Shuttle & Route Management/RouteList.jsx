@@ -9,9 +9,12 @@ function RouteList({
 }) {
   const location = useLocation();
   const [routes, setRoutes] = useState([]);
+  const [stopsByRoute, setStopsByRoute] = useState({});
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState(location.state?.successMessage || "");
   const [editingRouteId, setEditingRouteId] = useState("");
+  const [editingStopId, setEditingStopId] = useState("");
+  const [editingStopName, setEditingStopName] = useState("");
   const [editForm, setEditForm] = useState({
     routeName: "",
     startLocation: "",
@@ -61,8 +64,36 @@ function RouteList({
       setError("");
       const res = await axios.get("http://localhost:5000/api/routes");
       setRoutes(res.data);
+      await fetchStopsForRoutes(res.data);
     } catch (err) {
       setError(err.response?.data?.message || "Unable to load routes.");
+    }
+  };
+
+  const fetchStopsForRoutes = async (routeList) => {
+    try {
+      const stopEntries = await Promise.all(
+        routeList.map(async (route) => {
+          const res = await axios.get(`http://localhost:5000/api/stops/route/${route._id}`);
+          return [route._id, res.data];
+        })
+      );
+
+      setStopsByRoute(Object.fromEntries(stopEntries));
+    } catch (err) {
+      setError(err.response?.data?.message || "Unable to load stop locations.");
+    }
+  };
+
+  const refreshRouteStops = async (routeId) => {
+    try {
+      const res = await axios.get(`http://localhost:5000/api/stops/route/${routeId}`);
+      setStopsByRoute((current) => ({
+        ...current,
+        [routeId]: res.data
+      }));
+    } catch (err) {
+      setError(err.response?.data?.message || "Unable to load stop locations.");
     }
   };
 
@@ -88,6 +119,51 @@ function RouteList({
       fetchRoutes();
     } catch (err) {
       setError(err.response?.data?.message || "Unable to delete route.");
+    }
+  };
+
+  const startEditingStop = (stop) => {
+    setEditingStopId(stop._id);
+    setEditingStopName(stop.stopName);
+    setError("");
+    setSuccessMessage("");
+  };
+
+  const cancelEditingStop = () => {
+    setEditingStopId("");
+    setEditingStopName("");
+  };
+
+  const updateStop = async (routeId, stopId) => {
+    if (!editingStopName.trim()) {
+      setError("Stop location is required.");
+      return;
+    }
+
+    try {
+      setError("");
+      await axios.put(`http://localhost:5000/api/stops/${stopId}`, {
+        stopName: editingStopName.trim()
+      });
+      setSuccessMessage("Stop location updated successfully.");
+      cancelEditingStop();
+      await refreshRouteStops(routeId);
+    } catch (err) {
+      setError(err.response?.data?.message || "Unable to update stop location.");
+    }
+  };
+
+  const deleteStop = async (routeId, stopId) => {
+    try {
+      setError("");
+      await axios.delete(`http://localhost:5000/api/stops/${stopId}`);
+      setSuccessMessage("Stop location deleted successfully.");
+      if (editingStopId === stopId) {
+        cancelEditingStop();
+      }
+      await refreshRouteStops(routeId);
+    } catch (err) {
+      setError(err.response?.data?.message || "Unable to delete stop location.");
     }
   };
 
@@ -229,6 +305,71 @@ function RouteList({
                       ? ` (${route.days.join(", ")})`
                       : ""}
                   </p>
+                  <div className="pt-2">
+                    <p className="text-sm font-semibold text-slate-800">Stop Locations</p>
+                    <div className="mt-2 space-y-2">
+                      {(stopsByRoute[route._id] || []).length > 0 ? (
+                        (stopsByRoute[route._id] || []).map((stop, index) => (
+                          <div
+                            key={stop._id}
+                            className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
+                          >
+                            {editingStopId === stop._id && !readOnly ? (
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-slate-700">#{index + 1}</span>
+                                <input
+                                  type="text"
+                                  value={editingStopName}
+                                  onChange={(event) => setEditingStopName(event.target.value)}
+                                  className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => updateStop(route._id, stop._id)}
+                                  className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={cancelEditingStop}
+                                  className="rounded-lg bg-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-300"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-between gap-3">
+                                <p className="text-sm text-slate-700">
+                                  #{index + 1} {stop.stopName}
+                                </p>
+                                {!readOnly && (
+                                  <div className="flex gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => startEditingStop(stop)}
+                                      className="rounded-lg bg-amber-500 px-3 py-1 text-sm font-medium text-white hover:bg-amber-600"
+                                    >
+                                      Edit Stop
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => deleteStop(route._id, stop._id)}
+                                      className="rounded-lg bg-red-600 px-3 py-1 text-sm font-medium text-white hover:bg-red-700"
+                                    >
+                                      Delete Stop
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-slate-500">No stop locations added yet.</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {readOnly ? (
@@ -243,6 +384,13 @@ function RouteList({
                   </div>
                 ) : (
                   <div className="flex gap-2">
+                    <Link
+                      to={`/stop/${route._id}`}
+                      state={{ route }}
+                      className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                    >
+                      Manage Stops
+                    </Link>
                     <button
                       type="button"
                       onClick={() => startEditing(route)}
