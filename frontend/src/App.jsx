@@ -10,37 +10,59 @@ import Login from "./pages/Login";
 import Schedules from "./pages/Schedules";
 import BookRide from "./pages/BookRide";
 import MyRides from "./pages/MyRides";
-import Drivers from "./pages/Drivers";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+
+// Driver Management
+import Drivers from "./pages/Drivers";
+import AddDriver from "./pages/AddDriver";
+import EditDriver from "./pages/EditDriver";
+
+// Trip Management
+import Trips from "./pages/Trips";
+import AddTrip from "./pages/AddTrip";
+import EditTrip from "./pages/EditTrip";
+import TripDetails from "./pages/TripDetails";
+
+// Driver Portal
+import DriverDashboard from "./pages/DriverDashboard";
 
 function App() {
   return (
     <Router>
       <div className="flex min-h-screen flex-col bg-gray-50">
-
-        {/* Fixed/sticky Navbar */}
         <Navbar />
 
-        {/* Main content area – grows to fill space + padding below navbar */}
         <main className="flex-grow pt-16 md:pt-20">
           <Routes>
-            <Route path="/"          element={<Home />} />
-            <Route path="/home"      element={<Home />} />
-            <Route path="/schedules" element={<Schedules />} />
-            <Route path="/book"      element={<BookRide />} />
-            <Route path="/myrides"   element={<MyRides />} />
-            <Route path="/drivers"   element={<Drivers />} />
-            <Route path="/about"     element={<About />} />
-            <Route path="/contact"   element={<Contact />} />
-            <Route path="/login"     element={<Login />} />
+            {/* Public pages */}
+            <Route path="/"            element={<Home />} />
+            <Route path="/home"        element={<Home />} />
+            <Route path="/schedules"   element={<Schedules />} />
+            <Route path="/book"        element={<BookRide />} />
+            <Route path="/myrides"     element={<MyRides />} />
+            <Route path="/about"       element={<About />} />
+            <Route path="/contact"     element={<Contact />} />
+            <Route path="/login"       element={<Login />} />
 
-            {/* Fallback route – better to show 404 page in future */}
-            <Route path="*"          element={<Home />} />
+            {/* Driver Management */}
+            <Route path="/drivers"          element={<Drivers />} />
+            <Route path="/drivers/add"      element={<AddDriver />} />
+            <Route path="/drivers/edit/:id" element={<EditDriver />} />
+
+            {/* Trip Management */}
+            <Route path="/trips"            element={<Trips />} />
+            <Route path="/trips/add"        element={<AddTrip />} />
+            <Route path="/trips/edit/:id"   element={<EditTrip />} />
+            <Route path="/trips/:id"        element={<TripDetails />} />
+
+            {/* Driver Portal */}
+            <Route path="/driver-portal"    element={<DriverDashboard />} />
+
+            <Route path="*" element={<Home />} />
           </Routes>
         </main>
 
-        {/* Footer at the bottom */}
         <Footer />
       </div>
     </Router>

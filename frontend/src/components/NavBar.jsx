@@ -12,19 +12,22 @@ import {
   FaPhoneAlt,
   FaBars,
   FaTimes,
+  FaRoute,
+  FaTachometerAlt,
 } from "react-icons/fa";
 
 function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navLinks = [
-    { to: "/schedules", label: "Schedules", icon: <FaCalendarAlt /> },
-    { to: "/book", label: "Book Ride", icon: <FaTicketAlt /> },
-    { to: "/myrides", label: "My Rides", icon: <FaUser /> },
-    { to: "/drivers", label: "Drivers", icon: <FaUsers /> },
-    { to: "/about", label: "About Us", icon: <FaInfoCircle /> },
-    { to: "/contact", label: "Contact", icon: <FaPhoneAlt /> },
+    { to: "/schedules",    label: "Schedules",     icon: <FaCalendarAlt /> },
+    { to: "/book",         label: "Book Ride",      icon: <FaTicketAlt /> },
+    { to: "/myrides",      label: "My Rides",       icon: <FaUser /> },
+    { to: "/drivers",      label: "Drivers",        icon: <FaUsers /> },
+    { to: "/about",        label: "About Us",       icon: <FaInfoCircle /> },
+    { to: "/contact",      label: "Contact",        icon: <FaPhoneAlt /> },
   ];
+
 
   return (
     <nav className="fixed left-0 right-0 top-0 z-50 bg-yellow-500 text-white shadow-lg">
