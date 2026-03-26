@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   FaBus,
   FaCalendarAlt,
@@ -12,12 +12,39 @@ import {
   FaPhoneAlt,
   FaBars,
   FaTimes,
+  FaExclamationCircle,
+  FaSignOutAlt,
 } from "react-icons/fa";
 
 function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [loggedUser, setLoggedUser] = useState(null);
+  const navigate = useNavigate();
 
-  const navLinks = [
+  useEffect(() => {
+    const checkUser = () => {
+      const userData = localStorage.getItem("userData");
+      if (userData) {
+        try {
+          setLoggedUser(JSON.parse(userData));
+        } catch (error) {
+          console.error("Failed to parse userData", error);
+          setLoggedUser(null);
+        }
+      } else {
+        setLoggedUser(null);
+      }
+    };
+
+    checkUser();
+    window.addEventListener("storage", checkUser);
+
+    return () => {
+      window.removeEventListener("storage", checkUser);
+    };
+  }, []);
+
+  const commonLinks = [
     { to: "/schedules", label: "Schedules", icon: <FaCalendarAlt /> },
     { to: "/book", label: "Book Ride", icon: <FaTicketAlt /> },
     { to: "/myrides", label: "My Rides", icon: <FaUser /> },
@@ -25,6 +52,18 @@ function Navbar() {
     { to: "/about", label: "About Us", icon: <FaInfoCircle /> },
     { to: "/contact", label: "Contact", icon: <FaPhoneAlt /> },
   ];
+
+  const userOnlyLinks = [
+    { to: "/complaint", label: "Complaint", icon: <FaExclamationCircle /> },
+  ];
+
+  const handleLogout = () => {
+    localStorage.removeItem("userToken");
+    localStorage.removeItem("userData");
+    setLoggedUser(null);
+    setMobileOpen(false);
+    navigate("/login");
+  };
 
   return (
     <nav className="fixed left-0 right-0 top-0 z-50 bg-yellow-500 text-white shadow-lg">
@@ -37,7 +76,7 @@ function Navbar() {
         </div>
 
         <div className="hidden items-center gap-5 text-sm font-medium md:flex lg:gap-6 lg:text-base">
-          {navLinks.map((item) => (
+          {commonLinks.map((item) => (
             <Link
               key={item.to}
               to={item.to}
@@ -46,15 +85,48 @@ function Navbar() {
               {item.icon} {item.label}
             </Link>
           ))}
-          <Link to="/login" className="flex items-center gap-2 transition hover:text-yellow-100">
-            <FaSignInAlt /> Sign In
-          </Link>
-          <Link
-            to="/adminlogin"
-            className="flex items-center gap-2 rounded-lg bg-white/20 px-4 py-2 transition hover:bg-white/30"
-          >
-            <FaUserShield /> Admin
-          </Link>
+
+          {loggedUser &&
+            userOnlyLinks.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className="flex items-center gap-2 transition hover:text-yellow-100"
+              >
+                {item.icon} {item.label}
+              </Link>
+            ))}
+
+          {!loggedUser ? (
+            <>
+              <Link
+                to="/login"
+                className="flex items-center gap-2 transition hover:text-yellow-100"
+              >
+                <FaSignInAlt /> Sign In
+              </Link>
+
+              <Link
+                to="/adminlogin"
+                className="flex items-center gap-2 rounded-lg bg-white/20 px-4 py-2 transition hover:bg-white/30"
+              >
+                <FaUserShield /> Admin
+              </Link>
+            </>
+          ) : (
+            <>
+              <div className="rounded-lg bg-white/15 px-4 py-2 text-sm font-semibold">
+                Hi, {loggedUser.name?.split(" ")[0] || "User"}
+              </div>
+
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 rounded-lg bg-white/20 px-4 py-2 transition hover:bg-white/30"
+              >
+                <FaSignOutAlt /> Logout
+              </button>
+            </>
+          )}
         </div>
 
         <button
@@ -70,7 +142,7 @@ function Navbar() {
       {mobileOpen && (
         <div className="border-t border-yellow-400/40 bg-yellow-500 px-4 pb-4 pt-3 md:hidden">
           <div className="flex flex-col gap-2 text-sm font-medium">
-            {navLinks.map((item) => (
+            {commonLinks.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
@@ -80,20 +152,51 @@ function Navbar() {
                 {item.icon} {item.label}
               </Link>
             ))}
-            <Link
-              to="/login"
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-2 rounded-md px-2 py-2 transition hover:bg-yellow-600"
-            >
-              <FaSignInAlt /> Sign In
-            </Link>
-            <Link
-              to="/adminlogin"
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-2 rounded-md bg-white/20 px-2 py-2 transition hover:bg-white/30"
-            >
-              <FaUserShield /> Admin
-            </Link>
+
+            {loggedUser &&
+              userOnlyLinks.map((item) => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2 rounded-md px-2 py-2 transition hover:bg-yellow-600"
+                >
+                  {item.icon} {item.label}
+                </Link>
+              ))}
+
+            {!loggedUser ? (
+              <>
+                <Link
+                  to="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2 rounded-md px-2 py-2 transition hover:bg-yellow-600"
+                >
+                  <FaSignInAlt /> Sign In
+                </Link>
+
+                <Link
+                  to="/adminlogin"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2 rounded-md bg-white/20 px-2 py-2 transition hover:bg-white/30"
+                >
+                  <FaUserShield /> Admin
+                </Link>
+              </>
+            ) : (
+              <>
+                <div className="rounded-md bg-white/15 px-2 py-2 font-semibold">
+                  Hi, {loggedUser.name?.split(" ")[0] || "User"}
+                </div>
+
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 rounded-md bg-white/20 px-2 py-2 text-left transition hover:bg-white/30"
+                >
+                  <FaSignOutAlt /> Logout
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}

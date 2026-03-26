@@ -1,10 +1,13 @@
 const express = require("express");
 const router = express.Router();
+
 const {
+  createComplaint,
   getAllComplaints,
-  updateComplaint
+  updateComplaint,
 } = require("../controllers/complaintController");
 
+router.post("/", createComplaint);
 router.get("/", getAllComplaints);
 router.put("/:id", updateComplaint);
 

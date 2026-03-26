@@ -7,26 +7,23 @@ import {
   FaEyeSlash,
   FaEnvelope,
   FaLock,
-  FaUser,
-  FaBus,
+  FaKey,
   FaArrowLeft,
 } from "react-icons/fa";
 
-function Register() {
+function ForgotPassword() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    name: "",
     email: "",
-    role: "student",
-    password: "",
+    newPassword: "",
     confirmPassword: "",
   });
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleChange = (e) => {
@@ -40,41 +37,39 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
 
-    if (
-      !formData.name ||
-      !formData.email ||
-      !formData.role ||
-      !formData.password ||
-      !formData.confirmPassword
-    ) {
-      setError("Please fill in all fields.");
+    if (!formData.email || !formData.newPassword || !formData.confirmPassword) {
+      setError("All fields are required.");
       return;
     }
 
-    if (formData.password !== formData.confirmPassword) {
+    if (formData.newPassword.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+
+    if (formData.newPassword !== formData.confirmPassword) {
       setError("Passwords do not match.");
       return;
     }
 
     try {
       setLoading(true);
+      setError("");
+      setSuccess("");
 
-      await axios.post("/users/register", {
-        name: formData.name,
+      const res = await axios.put("/users/forgot-password", {
         email: formData.email,
-        role: formData.role,
-        password: formData.password,
+        newPassword: formData.newPassword,
       });
 
-      setSuccess("Account created successfully. Redirecting to login...");
+      setSuccess(res.data.message || "Password updated successfully.");
+
       setTimeout(() => {
         navigate("/login");
       }, 1500);
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed.");
+      setError(err.response?.data?.message || "Failed to reset password.");
     } finally {
       setLoading(false);
     }
@@ -95,10 +90,11 @@ function Register() {
       <div className="relative z-10 min-h-[calc(100vh-180px)] flex items-center justify-center px-4 py-5 md:py-6">
         <div className="w-full max-w-5xl grid lg:grid-cols-2 rounded-[22px] overflow-hidden border border-white/10 shadow-2xl backdrop-blur-xl bg-white/5">
           
+          {/* LEFT SIDE */}
           <div className="hidden lg:flex flex-col justify-between p-7 xl:p-8 bg-gradient-to-br from-slate-950/70 via-slate-900/50 to-blue-950/30 border-r border-white/10">
             <div>
               <span className="inline-flex items-center rounded-full border border-blue-400/30 bg-blue-400/10 px-4 py-1.5 text-sm font-medium text-blue-300">
-                Join UniRide Today
+                Recover Your Account
               </span>
             </div>
 
@@ -108,45 +104,44 @@ function Register() {
               </h2>
 
               <h1 className="text-4xl xl:text-[44px] font-extrabold leading-tight text-white mb-4">
-                Start your
+                Reset your
                 <br />
-                smarter travel
+                password with
                 <br />
-                <span className="text-blue-400">journey</span>
+                <span className="text-blue-400">UniRide</span>
               </h1>
 
               <p className="text-sm xl:text-base text-slate-300 leading-7 mb-5">
-                Create your account to book rides, manage your trips, access
-                schedules, and enjoy a safer and more convenient campus
-                transport experience.
+                Enter your email and choose a new password to securely recover
+                your account and continue using the UniRide system.
               </p>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5">
                   <h3 className="text-base font-bold text-white mb-1">Fast</h3>
                   <p className="text-xs text-slate-300">
-                    Simple and quick account setup
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5">
-                  <h3 className="text-base font-bold text-white mb-1">Easy</h3>
-                  <p className="text-xs text-slate-300">
-                    Book and manage rides with ease
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5">
-                  <h3 className="text-base font-bold text-white mb-1">Smart</h3>
-                  <p className="text-xs text-slate-300">
-                    Built for campus transport needs
+                    Reset your password quickly
                   </p>
                 </div>
 
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5">
                   <h3 className="text-base font-bold text-white mb-1">Secure</h3>
                   <p className="text-xs text-slate-300">
-                    Protected access for every user
+                    Safe account recovery process
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5">
+                  <h3 className="text-base font-bold text-white mb-1">Easy</h3>
+                  <p className="text-xs text-slate-300">
+                    Simple form with minimal steps
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5">
+                  <h3 className="text-base font-bold text-white mb-1">Access</h3>
+                  <p className="text-xs text-slate-300">
+                    Get back into your account smoothly
                   </p>
                 </div>
               </div>
@@ -165,24 +160,25 @@ function Register() {
                 to="/login"
                 className="rounded-xl bg-blue-500 px-4 py-2.5 font-semibold text-white hover:bg-blue-600 transition"
               >
-                Login Now
+                Back to Login
               </Link>
             </div>
           </div>
 
+          {/* RIGHT SIDE */}
           <div className="flex items-center justify-center bg-slate-950/40 px-5 py-6 sm:px-7 md:px-8">
             <div className="w-full max-w-md">
               <div className="rounded-[22px] border border-white/10 bg-white/10 backdrop-blur-2xl p-6 sm:p-7 shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
                 <div className="mb-5 text-center lg:text-left">
                   <div className="mx-auto lg:mx-0 mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/15 border border-blue-400/30">
-                    <FaBus className="text-lg text-blue-400" />
+                    <FaKey className="text-lg text-blue-400" />
                   </div>
 
                   <h1 className="text-3xl sm:text-[34px] font-bold text-white mb-1">
-                    Create account
+                    Forgot password
                   </h1>
                   <p className="text-slate-300 text-sm">
-                    Register to use your UniRide account
+                    Reset your account password
                   </p>
                 </div>
 
@@ -201,25 +197,6 @@ function Register() {
                 <form onSubmit={handleSubmit} className="space-y-3.5">
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-slate-200">
-                      Full Name
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                        <FaUser />
-                      </span>
-                      <input
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        placeholder="Enter your full name"
-                        className="w-full rounded-xl border border-white/10 bg-white/10 py-3 pl-12 pr-4 text-white placeholder:text-slate-400 outline-none transition focus:border-blue-400/60 focus:ring-2 focus:ring-blue-400/30"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-200">
                       Email Address
                     </label>
                     <div className="relative">
@@ -229,9 +206,9 @@ function Register() {
                       <input
                         type="email"
                         name="email"
+                        placeholder="Enter your email"
                         value={formData.email}
                         onChange={handleChange}
-                        placeholder="Enter your email"
                         className="w-full rounded-xl border border-white/10 bg-white/10 py-3 pl-12 pr-4 text-white placeholder:text-slate-400 outline-none transition focus:border-blue-400/60 focus:ring-2 focus:ring-blue-400/30"
                       />
                     </div>
@@ -239,48 +216,26 @@ function Register() {
 
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-slate-200">
-                      Role
-                    </label>
-                    <select
-                      name="role"
-                      value={formData.role}
-                      onChange={handleChange}
-                      className="w-full rounded-xl border border-white/10 bg-white/10 py-3 px-4 text-white outline-none transition focus:border-blue-400/60 focus:ring-2 focus:ring-blue-400/30"
-                    >
-                      <option className="text-black" value="student">
-                        Student
-                      </option>
-                      <option className="text-black" value="lecturer">
-                        Lecturer
-                      </option>
-                      <option className="text-black" value="driver">
-                        Driver
-                      </option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-200">
-                      Password
+                      New Password
                     </label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
                         <FaLock />
                       </span>
                       <input
-                        type={showPassword ? "text" : "password"}
-                        name="password"
-                        value={formData.password}
+                        type={showNewPassword ? "text" : "password"}
+                        name="newPassword"
+                        placeholder="Enter new password"
+                        value={formData.newPassword}
                         onChange={handleChange}
-                        placeholder="Enter password"
                         className="w-full rounded-xl border border-white/10 bg-white/10 py-3 pl-12 pr-12 text-white placeholder:text-slate-400 outline-none transition focus:border-blue-400/60 focus:ring-2 focus:ring-blue-400/30"
                       />
                       <button
                         type="button"
-                        onClick={() => setShowPassword(!showPassword)}
+                        onClick={() => setShowNewPassword(!showNewPassword)}
                         className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-white"
                       >
-                        {showPassword ? <FaEyeSlash /> : <FaEye />}
+                        {showNewPassword ? <FaEyeSlash /> : <FaEye />}
                       </button>
                     </div>
                   </div>
@@ -296,9 +251,9 @@ function Register() {
                       <input
                         type={showConfirmPassword ? "text" : "password"}
                         name="confirmPassword"
+                        placeholder="Confirm new password"
                         value={formData.confirmPassword}
                         onChange={handleChange}
-                        placeholder="Confirm password"
                         className="w-full rounded-xl border border-white/10 bg-white/10 py-3 pl-12 pr-12 text-white placeholder:text-slate-400 outline-none transition focus:border-blue-400/60 focus:ring-2 focus:ring-blue-400/30"
                       />
                       <button
@@ -318,13 +273,13 @@ function Register() {
                     disabled={loading}
                     className="w-full rounded-xl bg-blue-600 py-3 text-base font-bold text-white shadow-lg transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
                   >
-                    {loading ? "Creating Account..." : "Create Account"}
+                    {loading ? "Updating..." : "Reset Password"}
                   </button>
                 </form>
 
                 <div className="mt-4 text-center">
                   <p className="text-sm text-slate-300">
-                    Already have an account?{" "}
+                    Back to{" "}
                     <Link
                       to="/login"
                       className="font-semibold text-blue-400 hover:text-blue-300"
@@ -345,7 +300,7 @@ function Register() {
                     to="/login"
                     className="w-full rounded-xl bg-white/10 py-3 text-center text-white hover:bg-white/15 transition"
                   >
-                    Login Now
+                    Back to Login
                   </Link>
                 </div>
               </div>
@@ -357,4 +312,4 @@ function Register() {
   );
 }
 
-export default Register;
+export default ForgotPassword;

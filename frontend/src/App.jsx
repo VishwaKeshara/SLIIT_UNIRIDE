@@ -7,6 +7,8 @@ import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import Complaint from "./pages/Complaint";
 import Schedules from "./pages/Schedules";
 import BookRide from "./pages/BookRide";
 import MyRides from "./pages/MyRides";
@@ -23,8 +25,9 @@ import ProtectedAdminRoute from "./admin/ProtectedAdminRoute";
 function AppLayout() {
   const location = useLocation();
 
+  // Hide navbar/footer for admin login and admin dashboard pages
   const isAdminRoute =
-    location.pathname.startsWith("/admin/") || location.pathname === "/adminlogin";
+    location.pathname === "/adminlogin" || location.pathname.startsWith("/admin/");
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
@@ -43,8 +46,10 @@ function AppLayout() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/complaint" element={<Complaint />} />
 
-          {/* Admin login */}
+          {/* Admin login page */}
           <Route path="/adminlogin" element={<AdminLogin />} />
 
           {/* Protected admin routes */}
@@ -75,7 +80,7 @@ function AppLayout() {
             }
           />
 
-          {/* Default route */}
+          {/* Fallback */}
           <Route path="*" element={<Home />} />
         </Routes>
       </main>

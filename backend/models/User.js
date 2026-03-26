@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+
     email: {
       type: String,
       required: true,
@@ -14,20 +15,26 @@ const userSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
     },
+
     password: {
       type: String,
       required: true,
     },
+
     role: {
       type: String,
-      enum: ["student", "instructor", "lecturer", "admin"],
+      enum: ["student", "lecturer", "driver", "admin"],
       default: "student",
+      lowercase: true,
+      trim: true,
     },
+
     phoneNumber: {
       type: String,
       default: "",
       trim: true,
     },
+
     isActive: {
       type: Boolean,
       default: true,
