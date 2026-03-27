@@ -1,13 +1,14 @@
-// backend/routes/userRoutes.js
 const express = require("express");
-const router  = express.Router();
+const router = express.Router();
 
-const { getUserById, getUserBookings } = require("../controllers/userController");
+const {
+  registerUser,
+  loginUser,
+  forgotPassword,
+} = require("../controllers/userController");
 
-// GET USER PROFILE
-router.get("/:id", getUserById);
-
-// GET USER'S BOOKINGS
-router.get("/:id/bookings", getUserBookings);
+router.post("/register", registerUser);
+router.post("/login", loginUser);
+router.put("/forgot-password", forgotPassword);
 
 module.exports = router;
