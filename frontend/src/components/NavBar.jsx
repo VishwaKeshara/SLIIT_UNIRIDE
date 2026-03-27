@@ -7,13 +7,15 @@ import {
   FaUser,
   FaUsers,
   FaSignInAlt,
+  FaSignOutAlt,
   FaUserShield,
   FaInfoCircle,
   FaPhoneAlt,
   FaBars,
   FaTimes,
+  FaRoute,
+  FaTachometerAlt,
   FaExclamationCircle,
-  FaSignOutAlt,
 } from "react-icons/fa";
 
 function Navbar() {
@@ -21,6 +23,7 @@ function Navbar() {
   const [loggedUser, setLoggedUser] = useState(null);
   const navigate = useNavigate();
 
+  // Check user login status
   useEffect(() => {
     const checkUser = () => {
       const userData = localStorage.getItem("userData");
@@ -44,6 +47,15 @@ function Navbar() {
     };
   }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem("userToken");
+    localStorage.removeItem("userData");
+    setLoggedUser(null);
+    setMobileOpen(false);
+    navigate("/login");
+  };
+
+  // Links visible to all users
   const commonLinks = [
     { to: "/schedules", label: "Schedules", icon: <FaCalendarAlt /> },
     { to: "/book", label: "Book Ride", icon: <FaTicketAlt /> },
@@ -53,17 +65,11 @@ function Navbar() {
     { to: "/contact", label: "Contact", icon: <FaPhoneAlt /> },
   ];
 
+  // Links visible only to logged-in users
   const userOnlyLinks = [
     { to: "/complaint", label: "Complaint", icon: <FaExclamationCircle /> },
+    { to: "/driver-portal", label: "Driver Portal", icon: <FaTachometerAlt /> },
   ];
-
-  const handleLogout = () => {
-    localStorage.removeItem("userToken");
-    localStorage.removeItem("userData");
-    setLoggedUser(null);
-    setMobileOpen(false);
-    navigate("/login");
-  };
 
   return (
     <nav className="fixed left-0 right-0 top-0 z-50 border-b border-orange-500/20 bg-gradient-to-r from-[#0A2233] via-[#123B57] to-[#16476A] text-white shadow-lg">
@@ -79,6 +85,7 @@ function Navbar() {
           </Link>
         </div>
 
+        {/* Desktop menu */}
         <div className="hidden items-center gap-5 text-sm font-medium md:flex lg:gap-6 lg:text-base">
           {commonLinks.map((item) => (
             <Link
@@ -133,6 +140,7 @@ function Navbar() {
           )}
         </div>
 
+        {/* Mobile menu toggle */}
         <button
           type="button"
           className="text-2xl text-orange-300 md:hidden"
@@ -143,6 +151,7 @@ function Navbar() {
         </button>
       </div>
 
+      {/* Mobile menu */}
       {mobileOpen && (
         <div className="border-t border-orange-500/20 bg-gradient-to-b from-[#0A2233] to-[#16476A] px-4 pb-4 pt-3 md:hidden">
           <div className="flex flex-col gap-2 text-sm font-medium">
