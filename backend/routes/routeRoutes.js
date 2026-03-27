@@ -1,9 +1,21 @@
+// backend/routes/routeRoutes.js
 const express = require("express");
-const router = express.Router();
+const router  = express.Router();
 
-// GET all routes
-router.get("/", (req, res) => {
-  res.json({ message: "Routes endpoint working" });
-});
+const {
+  createRoute,
+  getRoutes,
+  getActiveRoutes,
+  getRouteById,
+  updateRoute,
+  deleteRoute
+} = require("../controllers/routeController");
+
+router.post("/",         createRoute);
+router.get("/",          getRoutes);
+router.get("/active",    getActiveRoutes);  // must be before /:id
+router.get("/:id",       getRouteById);
+router.put("/:id",       updateRoute);
+router.delete("/:id",    deleteRoute);
 
 module.exports = router;
