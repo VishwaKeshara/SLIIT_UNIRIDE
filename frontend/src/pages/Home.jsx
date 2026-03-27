@@ -1,22 +1,60 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaMapMarkedAlt, FaBus, FaBell, FaLock, FaArrowRight } from "react-icons/fa";
+import {
+  FaMapMarkedAlt,
+  FaBus,
+  FaBell,
+  FaLock,
+  FaArrowRight,
+  FaExclamationCircle,
+} from "react-icons/fa";
 
 function Home() {
   const navigate = useNavigate();
+  const [loggedUser, setLoggedUser] = useState(null);
+
+  useEffect(() => {
+    const userData = localStorage.getItem("userData");
+    if (userData) {
+      try {
+        setLoggedUser(JSON.parse(userData));
+      } catch (error) {
+        console.error("Failed to parse userData", error);
+        setLoggedUser(null);
+      }
+    } else {
+      setLoggedUser(null);
+    }
+  }, []);
 
   const stats = [
     { number: "2500+", label: "Active Students" },
-    { number: "50+",   label: "Daily Trips" },
-    { number: "99%",   label: "On-Time Rate" },
-    { number: "24/7",  label: "Support" },
+    { number: "50+", label: "Daily Trips" },
+    { number: "99%", label: "On-Time Rate" },
+    { number: "24/7", label: "Support" },
   ];
 
   const features = [
-    { icon: <FaMapMarkedAlt size={40} className="text-yellow-500" />, title: "Live Tracking",    description: "Track shuttles in real-time with GPS accuracy." },
-    { icon: <FaBus size={40} className="text-yellow-500"           />, title: "Easy Booking",     description: "Reserve your seat instantly in seconds." },
-    { icon: <FaBell size={40} className="text-yellow-500"          />, title: "Smart Alerts",     description: "Instant notifications for updates & delays." },
-    { icon: <FaLock size={40} className="text-yellow-500"          />, title: "Secure Payment",   description: "Multiple safe payment options available." },
+    {
+      icon: <FaMapMarkedAlt size={40} className="text-yellow-500" />,
+      title: "Live Tracking",
+      description: "Track shuttles in real-time with GPS accuracy.",
+    },
+    {
+      icon: <FaBus size={40} className="text-yellow-500" />,
+      title: "Easy Booking",
+      description: "Reserve your seat instantly in seconds.",
+    },
+    {
+      icon: <FaBell size={40} className="text-yellow-500" />,
+      title: "Smart Alerts",
+      description: "Instant notifications for updates & delays.",
+    },
+    {
+      icon: <FaLock size={40} className="text-yellow-500" />,
+      title: "Secure Payment",
+      description: "Multiple safe payment options available.",
+    },
   ];
 
   return (
@@ -26,6 +64,16 @@ function Home() {
         <div className="max-w-7xl mx-auto px-5 sm:px-8 py-24 lg:py-32">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div>
+              {loggedUser ? (
+                <p className="mb-4 inline-block rounded-full bg-white/10 px-5 py-2 text-sm sm:text-base font-medium text-blue-100">
+                  Welcome back, {loggedUser.name || "User"} 👋
+                </p>
+              ) : (
+                <p className="mb-4 inline-block rounded-full bg-white/10 px-5 py-2 text-sm sm:text-base font-medium text-blue-100">
+                  Welcome to UniRide
+                </p>
+              )}
+
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
                 Smart Shuttle
                 <br />
@@ -33,9 +81,12 @@ function Home() {
                   Booking System
                 </span>
               </h1>
+
               <p className="text-lg sm:text-xl text-blue-100 mb-8 max-w-xl">
-                Seamless campus transportation for SLIIT students. Book instantly, track live, and travel safely every day.
+                Seamless campus transportation for SLIIT students. Book instantly,
+                track live, and travel safely every day.
               </p>
+
               <div className="flex flex-wrap gap-4">
                 <button
                   onClick={() => navigate("/book")}
@@ -43,12 +94,23 @@ function Home() {
                 >
                   Book Now
                 </button>
+
                 <button
                   onClick={() => navigate("/about")}
                   className="px-8 py-3.5 border-2 border-white rounded-xl hover:bg-white/10 transition"
                 >
                   Learn More
                 </button>
+
+                {loggedUser && (
+                  <button
+                    onClick={() => navigate("/complaint")}
+                    className="px-8 py-3.5 bg-yellow-500 text-slate-900 font-semibold rounded-xl shadow-lg hover:bg-yellow-400 transition inline-flex items-center gap-2"
+                  >
+                    <FaExclamationCircle />
+                    Add Complaint
+                  </button>
+                )}
               </div>
             </div>
 
@@ -56,8 +118,12 @@ function Home() {
               <div className="grid grid-cols-2 gap-6 text-center">
                 {stats.map((stat, i) => (
                   <div key={i}>
-                    <div className="text-4xl sm:text-5xl font-bold text-yellow-400">{stat.number}</div>
-                    <div className="text-blue-100 mt-1">{stat.label}</div>
+                    <div className="text-4xl sm:text-5xl font-bold text-yellow-400">
+                      {stat.number}
+                    </div>
+                    <div className="text-blue-100 mt-1 text-base sm:text-lg">
+                      {stat.label}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -95,12 +161,24 @@ function Home() {
       <section className="py-16 lg:py-20 bg-gradient-to-r from-blue-900 to-indigo-900 text-white text-center">
         <div className="max-w-7xl mx-auto px-5 sm:px-8">
           <h2 className="text-3xl sm:text-4xl font-bold mb-6">Ready to Ride?</h2>
-          <button
-            onClick={() => navigate("/book")}
-            className="bg-yellow-500 hover:bg-yellow-600 px-10 py-4 rounded-xl font-bold text-lg inline-flex items-center gap-3 shadow-lg transition"
-          >
-            Book Your First Ride <FaArrowRight />
-          </button>
+
+          <div className="flex flex-wrap justify-center gap-4">
+            <button
+              onClick={() => navigate("/book")}
+              className="bg-yellow-500 hover:bg-yellow-600 px-10 py-4 rounded-xl font-bold text-lg inline-flex items-center gap-3 shadow-lg transition"
+            >
+              Book Your First Ride <FaArrowRight />
+            </button>
+
+            {loggedUser && (
+              <button
+                onClick={() => navigate("/complaint")}
+                className="bg-white text-blue-900 hover:bg-gray-100 px-10 py-4 rounded-xl font-bold text-lg inline-flex items-center gap-3 shadow-lg transition"
+              >
+                Submit Complaint <FaExclamationCircle />
+              </button>
+            )}
+          </div>
         </div>
       </section>
     </>
