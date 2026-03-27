@@ -20,7 +20,14 @@ import {
 
 function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [loggedUser, setLoggedUser] = useState(null);
+  const [loggedUser, setLoggedUser] = useState(() => {
+    try {
+      const data = localStorage.getItem("userData");
+      return data ? JSON.parse(data) : null;
+    } catch {
+      return null;
+    }
+  });
   const navigate = useNavigate();
 
   // Check user login status
@@ -41,17 +48,20 @@ function Navbar() {
 
     checkUser();
     window.addEventListener("storage", checkUser);
+    window.addEventListener("userChanged", checkUser);
 
     return () => {
       window.removeEventListener("storage", checkUser);
+      window.removeEventListener("userChanged", checkUser);
     };
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("userToken");
+    localStorage.removeItem("token");
     localStorage.removeItem("userData");
     setLoggedUser(null);
     setMobileOpen(false);
+    window.dispatchEvent(new Event("userChanged"));
     navigate("/login");
   };
 
@@ -63,7 +73,6 @@ function Navbar() {
     { to: "/drivers", label: "Drivers", icon: <FaUsers /> },
     { to: "/about", label: "About Us", icon: <FaInfoCircle /> },
     { to: "/contact", label: "Contact", icon: <FaPhoneAlt /> },
-    { to: "/profile", label: "Profile", icon: <FaUser /> },
   ];
 
   // Links visible only to logged-in users

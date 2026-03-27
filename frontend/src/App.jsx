@@ -1,5 +1,10 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
 
 import Navbar from "./components/NavBar";
 import Footer from "./components/Footer";
@@ -44,7 +49,8 @@ function AppLayout() {
   const location = useLocation();
 
   const isAdminRoute =
-    location.pathname === "/adminlogin" || location.pathname.startsWith("/admin/");
+    location.pathname === "/adminlogin" ||
+    location.pathname.startsWith("/admin/");
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
@@ -64,6 +70,7 @@ function AppLayout() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/complaint" element={<Complaint />} />
+          <Route path="/profile" element={<Profile />} />
 
           {/* Driver Management */}
           <Route path="/drivers" element={<Drivers />} />
