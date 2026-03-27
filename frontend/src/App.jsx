@@ -16,35 +16,35 @@ import Contact from "./pages/Contact";
 import RouteList from "./features/Shuttle & Route Management/RouteList";
 import RouteForm from "./features/Shuttle & Route Management/RouteForm";
 import StopManagerPage from "./features/Shuttle & Route Management/StopManagerPage";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
     <Router>
       <div className="flex min-h-screen flex-col bg-gray-50">
-
         {/* Fixed/sticky Navbar */}
         <Navbar />
 
         {/* Main content area – grows to fill space + padding below navbar */}
         <main className="flex-grow pt-16 md:pt-20">
           <Routes>
-            <Route path="/"          element={<Home />} />
-            <Route path="/home"      element={<Home />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/home" element={<Home />} />
             <Route path="/schedules" element={<Schedules />} />
-            <Route path="/book"      element={<BookRide />} />
-            <Route path="/myrides"   element={<MyRides />} />
-            <Route path="/drivers"   element={<Drivers />} />
-            <Route path="/about"     element={<About />} />
-            <Route path="/contact"   element={<Contact />} />
-            <Route path="/login"     element={<Login />} />
-            <Route path="/RouteList" element={<RouteList/>} />
-            <Route path="/RouteForm" element={<RouteForm/>} />
-            <Route path="/stop"      element={<StopManagerPage/>}/>
-            <Route path="/stop/:routeId" element={<StopManagerPage/>}/>
-            
+            <Route path="/book" element={<BookRide />} />
+            <Route path="/myrides" element={<MyRides />} />
+            <Route path="/drivers" element={<Drivers />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/RouteList" element={<RouteList />} />
+            <Route path="/RouteForm" element={<RouteForm />} />
+            <Route path="/stop" element={<StopManagerPage />} />
+            <Route path="/stop/:routeId" element={<StopManagerPage />} />
+            <Route path="/profile" element={<Profile />} />
 
             {/* Fallback route – better to show 404 page in future */}
-            <Route path="*"          element={<Home />} />
+            <Route path="*" element={<Home />} />
           </Routes>
         </main>
 

@@ -43,6 +43,16 @@ exports.getRoutes = async (req, res) => {
   }
 };
 
+// GET ACTIVE ROUTES
+exports.getActiveRoutes = async (req, res) => {
+  try {
+    const routes = await Route.find({ active: true }).sort({ createdAt: -1 });
+    res.json(routes);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 // GET BY ID
 exports.getRouteById = async (req, res) => {
   try {

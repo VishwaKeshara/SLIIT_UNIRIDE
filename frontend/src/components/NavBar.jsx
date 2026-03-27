@@ -24,6 +24,7 @@ function Navbar() {
     { to: "/drivers", label: "Drivers", icon: <FaUsers /> },
     { to: "/about", label: "About Us", icon: <FaInfoCircle /> },
     { to: "/contact", label: "Contact", icon: <FaPhoneAlt /> },
+    { to: "/profile", label: "Profile", icon: <FaUser /> },
   ];
 
   return (
@@ -46,7 +47,10 @@ function Navbar() {
               {item.icon} {item.label}
             </Link>
           ))}
-          <Link to="/login" className="flex items-center gap-2 transition hover:text-yellow-100">
+          <Link
+            to="/login"
+            className="flex items-center gap-2 transition hover:text-yellow-100"
+          >
             <FaSignInAlt /> Sign In
           </Link>
           <Link

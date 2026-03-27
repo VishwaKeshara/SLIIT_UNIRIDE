@@ -5,6 +5,7 @@ const router = express.Router();
 const {
   createRoute,
   getRoutes,
+  getActiveRoutes,
   getRouteById,
   updateRoute,
   deleteRoute
@@ -15,6 +16,9 @@ router.post("/", createRoute);
 
 // GET ALL
 router.get("/", getRoutes);
+
+// GET ACTIVE ROUTES (must be before /:id)
+router.get("/active", getActiveRoutes);
 
 // GET BY ID
 router.get("/:id", getRouteById);
