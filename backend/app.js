@@ -4,6 +4,8 @@ const cors = require("cors");
 const adminRoutes = require("./routes/adminRoutes");
 const userRoutes = require("./routes/userRoutes");
 const complaintRoutes = require("./routes/complaintRoutes");
+const driverRoutes = require("./routes/driverRoutes");
+const tripRoutes = require("./routes/tripRoutes");
 
 const app = express();
 
@@ -15,6 +17,8 @@ app.use(express.json());
 app.use("/api/admin", adminRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/complaints", complaintRoutes);
+app.use("/api/drivers", driverRoutes);
+app.use("/api/trips", tripRoutes);
 
 // Test route
 app.get("/", (req, res) => {

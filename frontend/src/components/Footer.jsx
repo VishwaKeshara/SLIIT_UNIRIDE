@@ -19,7 +19,7 @@ function Footer() {
   ];
 
   return (
-    <footer className="mt-16 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-inner">
+    <footer className="mt-16 bg-gradient-to-r from-indigo-700 to-indigo-900 text-white shadow-inner">
       <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 py-14 text-center md:grid-cols-3 md:gap-12 md:text-left">
         <div className="space-y-4">
           <h3 className="text-2xl font-bold tracking-wide">SLIIT-UniRide</h3>
