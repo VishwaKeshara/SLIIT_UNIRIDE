@@ -66,11 +66,15 @@ function Navbar() {
   };
 
   return (
-    <nav className="fixed left-0 right-0 top-0 z-50 bg-yellow-500 text-white shadow-lg">
+    <nav className="fixed left-0 right-0 top-0 z-50 border-b border-orange-500/20 bg-gradient-to-r from-[#0A2233] via-[#123B57] to-[#16476A] text-white shadow-lg">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 md:h-20 lg:px-8">
         <div className="flex items-center gap-2.5 text-xl font-bold md:text-2xl">
-          <FaBus size={28} className="hidden sm:block" />
-          <Link to="/home" onClick={() => setMobileOpen(false)}>
+          <FaBus size={28} className="hidden text-orange-400 sm:block" />
+          <Link
+            to="/home"
+            onClick={() => setMobileOpen(false)}
+            className="transition hover:text-orange-300"
+          >
             SLIIT-UniRide
           </Link>
         </div>
@@ -80,7 +84,7 @@ function Navbar() {
             <Link
               key={item.to}
               to={item.to}
-              className="flex items-center gap-2 transition hover:text-yellow-100"
+              className="flex items-center gap-2 transition hover:text-orange-300"
             >
               {item.icon} {item.label}
             </Link>
@@ -91,7 +95,7 @@ function Navbar() {
               <Link
                 key={item.to}
                 to={item.to}
-                className="flex items-center gap-2 transition hover:text-yellow-100"
+                className="flex items-center gap-2 transition hover:text-orange-300"
               >
                 {item.icon} {item.label}
               </Link>
@@ -101,29 +105,29 @@ function Navbar() {
             <>
               <Link
                 to="/login"
-                className="flex items-center gap-2 transition hover:text-yellow-100"
+                className="flex items-center gap-2 transition hover:text-orange-300"
               >
                 <FaSignInAlt /> Sign In
               </Link>
 
               <Link
                 to="/adminlogin"
-                className="flex items-center gap-2 rounded-lg bg-white/20 px-4 py-2 transition hover:bg-white/30"
+                className="flex items-center gap-2 rounded-lg border border-orange-400/30 bg-orange-500/20 px-4 py-2 transition hover:bg-orange-500/35"
               >
-                <FaUserShield /> Admin
+                <FaUserShield className="text-orange-300" /> Admin
               </Link>
             </>
           ) : (
             <>
-              <div className="rounded-lg bg-white/15 px-4 py-2 text-sm font-semibold">
+              <div className="rounded-lg border border-white/10 bg-white/10 px-4 py-2 text-sm font-semibold">
                 Hi, {loggedUser.name?.split(" ")[0] || "User"}
               </div>
 
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 rounded-lg bg-white/20 px-4 py-2 transition hover:bg-white/30"
+                className="flex items-center gap-2 rounded-lg border border-orange-400/30 bg-orange-500/20 px-4 py-2 transition hover:bg-orange-500/35"
               >
-                <FaSignOutAlt /> Logout
+                <FaSignOutAlt className="text-orange-300" /> Logout
               </button>
             </>
           )}
@@ -131,7 +135,7 @@ function Navbar() {
 
         <button
           type="button"
-          className="text-2xl md:hidden"
+          className="text-2xl text-orange-300 md:hidden"
           aria-label="Toggle menu"
           onClick={() => setMobileOpen((prev) => !prev)}
         >
@@ -140,14 +144,14 @@ function Navbar() {
       </div>
 
       {mobileOpen && (
-        <div className="border-t border-yellow-400/40 bg-yellow-500 px-4 pb-4 pt-3 md:hidden">
+        <div className="border-t border-orange-500/20 bg-gradient-to-b from-[#0A2233] to-[#16476A] px-4 pb-4 pt-3 md:hidden">
           <div className="flex flex-col gap-2 text-sm font-medium">
             {commonLinks.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-2 rounded-md px-2 py-2 transition hover:bg-yellow-600"
+                className="flex items-center gap-2 rounded-md px-2 py-2 transition hover:bg-white/10 hover:text-orange-300"
               >
                 {item.icon} {item.label}
               </Link>
@@ -159,7 +163,7 @@ function Navbar() {
                   key={item.to}
                   to={item.to}
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2 rounded-md px-2 py-2 transition hover:bg-yellow-600"
+                  className="flex items-center gap-2 rounded-md px-2 py-2 transition hover:bg-white/10 hover:text-orange-300"
                 >
                   {item.icon} {item.label}
                 </Link>
@@ -170,7 +174,7 @@ function Navbar() {
                 <Link
                   to="/login"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2 rounded-md px-2 py-2 transition hover:bg-yellow-600"
+                  className="flex items-center gap-2 rounded-md px-2 py-2 transition hover:bg-white/10 hover:text-orange-300"
                 >
                   <FaSignInAlt /> Sign In
                 </Link>
@@ -178,22 +182,22 @@ function Navbar() {
                 <Link
                   to="/adminlogin"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2 rounded-md bg-white/20 px-2 py-2 transition hover:bg-white/30"
+                  className="flex items-center gap-2 rounded-md border border-orange-400/30 bg-orange-500/20 px-2 py-2 transition hover:bg-orange-500/35"
                 >
-                  <FaUserShield /> Admin
+                  <FaUserShield className="text-orange-300" /> Admin
                 </Link>
               </>
             ) : (
               <>
-                <div className="rounded-md bg-white/15 px-2 py-2 font-semibold">
+                <div className="rounded-md border border-white/10 bg-white/10 px-2 py-2 font-semibold">
                   Hi, {loggedUser.name?.split(" ")[0] || "User"}
                 </div>
 
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-2 rounded-md bg-white/20 px-2 py-2 text-left transition hover:bg-white/30"
+                  className="flex items-center gap-2 rounded-md border border-orange-400/30 bg-orange-500/20 px-2 py-2 text-left transition hover:bg-orange-500/35"
                 >
-                  <FaSignOutAlt /> Logout
+                  <FaSignOutAlt className="text-orange-300" /> Logout
                 </button>
               </>
             )}
