@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import heroBusImage from "../assets/hero-bus.jpg";
 import {
   FaMapMarkedAlt,
   FaBus,
@@ -60,8 +61,18 @@ function Home() {
   return (
     <>
       {/* Hero */}
-      <section className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-24 lg:py-32">
+      <section
+        className="relative overflow-hidden text-white"
+        style={{
+          backgroundImage: `url(${heroBusImage})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <div className="absolute inset-0 bg-slate-950/75"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-900/70 to-slate-950/55"></div>
+
+        <div className="relative max-w-7xl mx-auto px-5 sm:px-8 py-24 lg:py-32">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div>
               {loggedUser ? (
