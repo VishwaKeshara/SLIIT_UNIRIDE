@@ -13,6 +13,8 @@ const driverSchema = new mongoose.Schema(
       unique: true,
       trim: true,
       uppercase: true,
+      minlength: [8, "License Number must be exactly 8 characters"],
+      maxlength: [8, "License Number must be exactly 8 characters"],
     },
     contactNumber: {
       type: String,
