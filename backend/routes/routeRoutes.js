@@ -1,28 +1,21 @@
 // backend/routes/routeRoutes.js
 const express = require("express");
-const router = express.Router();
+const router  = express.Router();
 
 const {
   createRoute,
   getRoutes,
+  getActiveRoutes,
   getRouteById,
   updateRoute,
   deleteRoute
 } = require("../controllers/routeController");
 
-// CREATE
-router.post("/", createRoute);
-
-// GET ALL
-router.get("/", getRoutes);
-
-// GET BY ID
-router.get("/:id", getRouteById);
-
-// UPDATE
-router.put("/:id", updateRoute);
-
-// DELETE
-router.delete("/:id", deleteRoute);
+router.post("/",         createRoute);
+router.get("/",          getRoutes);
+router.get("/active",    getActiveRoutes);  // must be before /:id
+router.get("/:id",       getRouteById);
+router.put("/:id",       updateRoute);
+router.delete("/:id",    deleteRoute);
 
 module.exports = router;
