@@ -53,6 +53,7 @@ function AppLayout() {
     location.pathname === "/adminlogin" ||
     location.pathname.startsWith("/admin/") ||
     location.pathname === "/routes/new" ||
+    location.pathname === "/RouteForm" ||
     location.pathname === "/RouteList" ||
     location.pathname === "/stop" ||
     location.pathname.startsWith("/stop/");
@@ -78,11 +79,31 @@ function AppLayout() {
           <Route path="/complaint" element={<Complaint />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/routes" element={<RouteList />} />
-          <Route path="/routes/new" element={<RouteForm />} />
           <Route path="/RouteList" element={<RouteList />} />
-          <Route path="/RouteForm" element={<RouteForm />} />
-          <Route path="/stop" element={<StopManagerPage />} />
-          <Route path="/stop/:routeId" element={<StopManagerPage />} />
+          <Route
+            path="/RouteForm"
+            element={
+              <ProtectedAdminRoute allowedRoles={["admin", "routemanager"]}>
+                <RouteForm />
+              </ProtectedAdminRoute>
+            }
+          />
+          <Route
+            path="/stop"
+            element={
+              <ProtectedAdminRoute allowedRoles={["admin", "routemanager"]}>
+                <StopManagerPage />
+              </ProtectedAdminRoute>
+            }
+          />
+          <Route
+            path="/stop/:routeId"
+            element={
+              <ProtectedAdminRoute allowedRoles={["admin", "routemanager"]}>
+                <StopManagerPage />
+              </ProtectedAdminRoute>
+            }
+          />
 
           {/* Driver Management */}
           <Route path="/drivers" element={<Drivers />} />
@@ -113,7 +134,7 @@ function AppLayout() {
           <Route
             path="/admin/users"
             element={
-              <ProtectedAdminRoute>
+              <ProtectedAdminRoute allowedRoles={["admin"]}>
                 <UserManagement />
               </ProtectedAdminRoute>
             }
@@ -122,7 +143,7 @@ function AppLayout() {
           <Route
             path="/admin/complaints"
             element={
-              <ProtectedAdminRoute>
+              <ProtectedAdminRoute allowedRoles={["admin"]}>
                 <ComplaintManagement />
               </ProtectedAdminRoute>
             }
@@ -131,8 +152,17 @@ function AppLayout() {
           <Route
             path="/admin/routes"
             element={
-              <ProtectedAdminRoute>
+              <ProtectedAdminRoute allowedRoles={["admin"]}>
                 <ManageRoutes />
+              </ProtectedAdminRoute>
+            }
+          />
+
+          <Route
+            path="/routes/new"
+            element={
+              <ProtectedAdminRoute allowedRoles={["admin", "routemanager"]}>
+                <RouteForm />
               </ProtectedAdminRoute>
             }
           />

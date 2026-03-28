@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { getStoredAdminRole, isRouteManager } from "../../admin/adminAccess";
 import {
   ArrowLeft,
   BusFront,
@@ -14,6 +15,8 @@ import {
 
 function RouteFormAdmin() {
   const navigate = useNavigate();
+  const adminRole = getStoredAdminRole();
+  const routeManager = isRouteManager(adminRole);
 
   const [form, setForm] = useState({
     routeName: "",

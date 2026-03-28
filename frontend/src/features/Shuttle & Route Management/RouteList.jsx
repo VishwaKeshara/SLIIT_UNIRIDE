@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Link, useLocation } from "react-router-dom";
+import { getStoredAdminRole, isRouteManager } from "../../admin/adminAccess";
 import {
   BusFront,
   MapPin,
@@ -29,6 +30,8 @@ function RouteList({
   allowStatusToggle = false,
 }) {
   const location = useLocation();
+  const adminRole = getStoredAdminRole();
+  const routeManagerView = !readOnly && isRouteManager(adminRole);
   const [routes, setRoutes] = useState([]);
   const [stopsByRoute, setStopsByRoute] = useState({});
   const [error, setError] = useState("");
@@ -50,6 +53,10 @@ function RouteList({
   });
 
   const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const canEditRoutes = allowRouteEditing;
+  const canManageStops = allowStopManagement;
+  const canToggleStatus = allowStatusToggle && !routeManagerView;
+  const canDeleteRoutes = true;
 
   useEffect(() => {
     setSuccessMessage(location.state?.successMessage || "");
@@ -370,7 +377,11 @@ function RouteList({
               <div className={statCardClass}>
                 <p className={statLabelClass}>Mode</p>
                 <p className="mt-2 text-lg font-semibold">
-                  {readOnly ? "Booking View" : "Admin View"}
+                  {readOnly
+                    ? "Booking View"
+                    : routeManagerView
+                      ? "Route Manager View"
+                      : "Admin View"}
                 </p>
               </div>
             </div>
@@ -386,7 +397,9 @@ function RouteList({
               <p className={searchDescClass}>
                 {readOnly
                   ? "Find routes by name, location, time, recurrence, or stop."
-                  : "Quickly find routes by name, location, time, recurrence, or stop."}
+                  : routeManagerView
+                    ? "Manage route details and stops while route status controls stay disabled."
+                    : "Quickly find routes by name, location, time, recurrence, or stop."}
               </p>
             </div>
 
@@ -453,7 +466,7 @@ function RouteList({
         <div className="grid gap-6">
           {filteredRoutes.map((route) => (
             <div key={route._id} className={routeCardClass}>
-              {!readOnly && allowRouteEditing && editingRouteId === route._id ? (
+              {!readOnly && canEditRoutes && editingRouteId === route._id ? (
                 <div className="p-6 md:p-8">
                   <div className="mb-6 flex items-center gap-3">
                     <div className="rounded-xl bg-amber-100 p-3 text-amber-600">
@@ -710,7 +723,7 @@ function RouteList({
                                   key={stop._id}
                                   className="rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm"
                                 >
-                                  {editingStopId === stop._id && !readOnly ? (
+                                  {editingStopId === stop._id && !readOnly && canManageStops ? (
                                     <div className="flex flex-col gap-3 md:flex-row md:items-center">
                                       <span className="text-sm font-semibold text-slate-700">
                                         #{index + 1}
@@ -746,7 +759,7 @@ function RouteList({
                                         #{index + 1} {stop.stopName}
                                       </p>
 
-                                      {!readOnly && (
+                                      {!readOnly && canManageStops && (
                                         <div className="flex flex-wrap gap-2">
                                           <button
                                             type="button"
@@ -795,7 +808,7 @@ function RouteList({
                         </Link>
                       ) : (
                         <>
-                          {allowStopManagement && (
+                          {canManageStops && (
                             <Link
                               to={`/stop/${route._id}`}
                               state={{ route }}
@@ -806,7 +819,7 @@ function RouteList({
                             </Link>
                           )}
 
-                          {allowRouteEditing && (
+                          {canEditRoutes && (
                             <button
                               type="button"
                               onClick={() => startEditing(route)}
@@ -817,7 +830,7 @@ function RouteList({
                             </button>
                           )}
 
-                          {allowStatusToggle && (
+                          {canToggleStatus && (
                             <button
                               type="button"
                               onClick={() => toggleRouteStatus(route)}
@@ -833,14 +846,16 @@ function RouteList({
                             </button>
                           )}
 
-                          <button
-                            type="button"
-                            onClick={() => deleteRoute(route._id)}
-                            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-red-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-700"
-                          >
-                            <Trash2 size={18} />
-                            Delete Route
-                          </button>
+                          {canDeleteRoutes && (
+                            <button
+                              type="button"
+                              onClick={() => deleteRoute(route._id)}
+                              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-red-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-700"
+                            >
+                              <Trash2 size={18} />
+                              Delete Route
+                            </button>
+                          )}
                         </>
                       )}
                     </div>

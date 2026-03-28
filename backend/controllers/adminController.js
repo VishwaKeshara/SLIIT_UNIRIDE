@@ -14,21 +14,21 @@ const adminLogin = async (req, res) => {
 
     const admin = await User.findOne({
       email: email.toLowerCase(),
-      role: "admin",
+      role: { $in: ["admin", "routemanager"] },
     });
 
     if (!admin) {
-      return res.status(401).json({ message: "Invalid admin credentials" });
+      return res.status(401).json({ message: "Invalid portal credentials" });
     }
 
     if (!admin.isActive) {
-      return res.status(403).json({ message: "Admin account is inactive" });
+      return res.status(403).json({ message: "Portal account is inactive" });
     }
 
     const isMatch = await bcrypt.compare(password, admin.password);
 
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid admin credentials" });
+      return res.status(401).json({ message: "Invalid portal credentials" });
     }
 
     const token = jwt.sign(
@@ -38,7 +38,7 @@ const adminLogin = async (req, res) => {
     );
 
     res.status(200).json({
-      message: "Admin login successful",
+      message: "Portal login successful",
       token,
       admin: {
         id: admin._id,
@@ -89,7 +89,7 @@ const createUser = async (req, res) => {
       });
     }
 
-    const allowedRoles = ["student", "instructor", "lecturer", "admin"];
+    const allowedRoles = ["student", "instructor", "lecturer", "admin", "routemanager"];
 
     if (!allowedRoles.includes(role)) {
       return res.status(400).json({ message: "Invalid role selected" });
