@@ -20,7 +20,7 @@ import MyRides from "./pages/MyRides";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import RouteList from "./features/Shuttle & Route Management/RouteList";
-import RouteForm from "./features/Shuttle & Route Management/RouteForm";
+import RouteForm from "./features/Shuttle & Route Management/RouteFormAdmin";
 import StopManagerPage from "./features/Shuttle & Route Management/StopManagerPage";
 import Profile from "./pages/Profile";
 
@@ -50,7 +50,8 @@ function AppLayout() {
 
   const isAdminRoute =
     location.pathname === "/adminlogin" ||
-    location.pathname.startsWith("/admin/");
+    location.pathname.startsWith("/admin/") ||
+    location.pathname === "/routes/new";
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
@@ -71,6 +72,12 @@ function AppLayout() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/complaint" element={<Complaint />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/routes" element={<RouteList />} />
+          <Route path="/routes/new" element={<RouteForm />} />
+          <Route path="/RouteList" element={<RouteList />} />
+          <Route path="/RouteForm" element={<RouteForm />} />
+          <Route path="/stop" element={<StopManagerPage />} />
+          <Route path="/stop/:routeId" element={<StopManagerPage />} />
 
           {/* Driver Management */}
           <Route path="/drivers" element={<Drivers />} />

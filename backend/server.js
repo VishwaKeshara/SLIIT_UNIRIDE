@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 require("dotenv").config();
 
-const app = require("./app"); // import app.js
+const app = require("./App"); 
 
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
@@ -15,7 +15,6 @@ const startServer = async () => {
       console.log(`Server running on port ${PORT}`)
     );
 
-    // Handle server errors
     server.on("error", (err) => {
       if (err.code === "EADDRINUSE") {
         console.error(

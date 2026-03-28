@@ -5,6 +5,7 @@ import {
   FaUsers,
   FaExclamationCircle,
   FaBus,
+  FaRoute,
   FaClock,
   FaTachometerAlt,
   FaUserCog,
@@ -71,6 +72,13 @@ function AdminDashboard() {
             className="flex items-center gap-3 hover:bg-gray-700 px-5 py-3 rounded-xl transition text-lg"
           >
             <FaClipboardList /> Complaints
+          </Link>
+
+          <Link
+            to="/routes/new"
+            className="flex items-center gap-3 hover:bg-gray-700 px-5 py-3 rounded-xl transition text-lg"
+          >
+            <FaRoute /> Add Route
           </Link>
         </nav>
 
@@ -197,6 +205,12 @@ function AdminDashboard() {
             </p>
 
             <div className="flex flex-wrap gap-5">
+              <Link to="/routes/new">
+                <button className="bg-gradient-to-r from-amber-500 to-orange-400 text-white px-8 py-4 rounded-2xl text-lg font-semibold hover:scale-105 transition shadow-md">
+                  Add Route
+                </button>
+              </Link>
+
               <Link to="/admin/users">
                 <button className="bg-gradient-to-r from-blue-500 to-sky-400 text-white px-8 py-4 rounded-2xl text-lg font-semibold hover:scale-105 transition shadow-md">
                   Manage Users
