@@ -43,6 +43,7 @@ import AdminLogin from "./admin/Adminlogin";
 import AdminDashboard from "./admin/AdminDashboard";
 import UserManagement from "./admin/UserManagement";
 import ComplaintManagement from "./admin/ComplaintManagement";
+import ManageRoutes from "./admin/ManageRoutes";
 import ProtectedAdminRoute from "./admin/ProtectedAdminRoute";
 
 function AppLayout() {
@@ -51,7 +52,10 @@ function AppLayout() {
   const isAdminRoute =
     location.pathname === "/adminlogin" ||
     location.pathname.startsWith("/admin/") ||
-    location.pathname === "/routes/new";
+    location.pathname === "/routes/new" ||
+    location.pathname === "/RouteList" ||
+    location.pathname === "/stop" ||
+    location.pathname.startsWith("/stop/");
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
@@ -120,6 +124,15 @@ function AppLayout() {
             element={
               <ProtectedAdminRoute>
                 <ComplaintManagement />
+              </ProtectedAdminRoute>
+            }
+          />
+
+          <Route
+            path="/admin/routes"
+            element={
+              <ProtectedAdminRoute>
+                <ManageRoutes />
               </ProtectedAdminRoute>
             }
           />

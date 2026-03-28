@@ -23,6 +23,10 @@ function RouteList({
   readOnly = false,
   title = "Route List",
   description = "All saved shuttle routes appear here.",
+  embedded = false,
+  allowRouteEditing = true,
+  allowStopManagement = true,
+  allowStatusToggle = false,
 }) {
   const location = useLocation();
   const [routes, setRoutes] = useState([]);
@@ -48,8 +52,9 @@ function RouteList({
   const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   useEffect(() => {
+    setSuccessMessage(location.state?.successMessage || "");
     fetchRoutes();
-  }, []);
+  }, [location.key]);
 
   const startEditing = (route) => {
     setEditingRouteId(route._id);
@@ -82,7 +87,10 @@ function RouteList({
   const fetchRoutes = async () => {
     try {
       setError("");
-      const res = await axios.get("http://localhost:5000/api/routes");
+      const endpoint = readOnly
+        ? "http://localhost:5000/api/routes/active"
+        : "http://localhost:5000/api/routes";
+      const res = await axios.get(endpoint);
       setRoutes(res.data);
       await fetchStopsForRoutes(res.data);
     } catch (err) {
@@ -133,6 +141,31 @@ function RouteList({
       fetchRoutes();
     } catch (err) {
       setError(err.response?.data?.message || "Unable to update route.");
+    }
+  };
+
+  const toggleRouteStatus = async (route) => {
+    try {
+      setError("");
+      setSuccessMessage("");
+      await axios.put(`http://localhost:5000/api/routes/${route._id}`, {
+        routeName: route.routeName,
+        startLocation: route.startLocation,
+        endLocation: route.endLocation,
+        seatCapacity: Number(route.seatCapacity),
+        startTime: route.startTime,
+        recurrence: route.recurrence || "none",
+        days: route.days || [],
+        active: !route.active,
+      });
+      setSuccessMessage(
+        route.active
+          ? "Route deactivated successfully."
+          : "Route activated successfully."
+      );
+      fetchRoutes();
+    } catch (err) {
+      setError(err.response?.data?.message || "Unable to update route status.");
     }
   };
 
@@ -215,35 +248,127 @@ function RouteList({
     return searchableText.includes(normalizedSearch);
   });
 
+  const wrapperClass = embedded
+    ? "relative min-h-full bg-transparent"
+    : readOnly
+      ? "relative min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800"
+      : "relative min-h-screen bg-gradient-to-br from-[#f8fbff] via-[#eef6ff] to-[#f5f9ff]";
+
+  const overlayClass =
+    embedded || !readOnly
+      ? "hidden"
+      : "absolute inset-0 bg-slate-950/65";
+
+  const headerCardClass =
+    readOnly
+      ? "mb-8 overflow-hidden rounded-[32px] border border-cyan-400/10 bg-gradient-to-r from-slate-950/95 via-[#0d2237]/95 to-[#123b57]/95 shadow-[0_30px_90px_rgba(2,8,23,0.45)] backdrop-blur-xl"
+      : "mb-8 overflow-hidden rounded-3xl border border-blue-100 bg-white/90 shadow-[0_10px_30px_rgba(59,130,246,0.08)] backdrop-blur-sm";
+
+  const pillClass =
+    readOnly
+      ? "mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-400/10 px-4 py-2 text-sm font-medium text-cyan-100"
+      : "mb-4 inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700";
+
+  const titleClass =
+    readOnly
+      ? "text-3xl font-bold tracking-tight text-white md:text-4xl"
+      : "text-3xl font-bold tracking-tight text-slate-800 md:text-4xl";
+
+  const descriptionClass =
+    readOnly
+      ? "mt-3 max-w-2xl text-sm leading-6 text-slate-200 md:text-base"
+      : "mt-3 max-w-2xl text-sm leading-6 text-slate-500 md:text-base";
+
+  const statCardClass =
+    readOnly
+      ? "rounded-2xl border border-white/10 bg-white/10 p-4 text-white shadow-inner"
+      : "rounded-2xl border border-blue-100 bg-blue-50/70 p-4 text-slate-800";
+
+  const statLabelClass = readOnly ? "text-sm text-slate-200" : "text-sm text-slate-500";
+
+  const searchPanelClass =
+    readOnly
+      ? "mb-6 rounded-[28px] border border-cyan-400/10 bg-white/10 p-4 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl sm:p-5"
+      : "mb-6 rounded-3xl border border-blue-100 bg-white/90 p-4 shadow-[0_10px_30px_rgba(59,130,246,0.08)] backdrop-blur-sm sm:p-5";
+
+  const searchTitleClass =
+    readOnly
+      ? "text-sm font-semibold uppercase tracking-[0.2em] text-slate-300"
+      : "text-sm font-semibold uppercase tracking-[0.2em] text-slate-600";
+
+  const searchDescClass =
+    readOnly
+      ? "mt-1 text-sm text-slate-200"
+      : "mt-1 text-sm text-slate-500";
+
+  const searchInputClass =
+    readOnly
+      ? "w-full rounded-2xl border border-white/10 bg-slate-950/60 py-3 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20"
+      : "w-full rounded-2xl border border-blue-100 bg-white py-3 pl-11 pr-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
+
+  const emptyStateClass =
+    readOnly
+      ? "rounded-[28px] border border-white/10 bg-white/10 px-6 py-16 text-center shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl"
+      : "rounded-3xl border border-blue-100 bg-white/90 px-6 py-16 text-center shadow-[0_10px_30px_rgba(59,130,246,0.08)] backdrop-blur-sm";
+
+  const emptyIconClass =
+    readOnly
+      ? "mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 text-white"
+      : "mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600";
+
+  const emptyTitleClass = readOnly ? "text-xl font-semibold text-white" : "text-xl font-semibold text-slate-800";
+
+  const emptyTextClass = readOnly ? "mt-2 text-sm text-slate-200" : "mt-2 text-sm text-slate-500";
+
+  const routeCardClass = readOnly
+    ? "overflow-hidden rounded-[28px] border border-white/10 bg-white shadow-[0_20px_60px_rgba(2,8,23,0.18)]"
+    : "overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl";
+
+  const routeShellClass = readOnly
+    ? "bg-gradient-to-r from-cyan-50 via-white to-slate-50 p-6 md:p-8"
+    : "p-6 md:p-8";
+
+  const routeIconClass = readOnly
+    ? "rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 p-3 text-white shadow-lg"
+    : "rounded-2xl bg-blue-100 p-3 text-blue-700";
+
+  const infoCardClass = readOnly
+    ? "rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-cyan-200 hover:bg-cyan-50/50"
+    : "rounded-2xl border border-slate-200 bg-slate-50 p-4";
+
+  const stopsPanelClass = readOnly
+    ? "mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+    : "mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5";
+
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-      <div className="absolute inset-0 bg-slate-950/65"></div>
+    <div className={wrapperClass}>
+      <div className={overlayClass}></div>
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8 overflow-hidden rounded-3xl border border-white/10 bg-white/10 shadow-2xl backdrop-blur-md">
+        <div className={headerCardClass}>
           <div className="grid gap-6 p-6 md:grid-cols-[1.5fr_1fr] md:p-8">
             <div>
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-medium text-white">
+              <div className={pillClass}>
                 <BusFront size={16} />
                 Shuttle Route Management
               </div>
 
-              <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">
+              <h1 className={titleClass}>
                 {title}
               </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-200 md:text-base">
+              <p className={descriptionClass}>
                 {description}
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-2xl bg-white/10 p-4 text-white">
-                <p className="text-sm text-slate-200">Total Routes</p>
+              <div className={statCardClass}>
+                <p className={statLabelClass}>Total Routes</p>
                 <p className="mt-2 text-3xl font-bold">{filteredRoutes.length}</p>
               </div>
-              <div className="rounded-2xl bg-white/10 p-4 text-white">
-                <p className="text-sm text-slate-200">Mode</p>
+              <div className={statCardClass}>
+                <p className={statLabelClass}>Mode</p>
                 <p className="mt-2 text-lg font-semibold">
                   {readOnly ? "Booking View" : "Admin View"}
                 </p>
@@ -252,13 +377,13 @@ function RouteList({
           </div>
         </div>
 
-        <div className="mb-6 rounded-3xl border border-white/10 bg-white/10 p-4 shadow-xl backdrop-blur-md sm:p-5">
+        <div className={searchPanelClass}>
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">
+              <p className={searchTitleClass}>
                 {readOnly ? "Search Schedules" : "Search Routes"}
               </p>
-              <p className="mt-1 text-sm text-slate-200">
+              <p className={searchDescClass}>
                 {readOnly
                   ? "Find routes by name, location, time, recurrence, or stop."
                   : "Quickly find routes by name, location, time, recurrence, or stop."}
@@ -275,10 +400,22 @@ function RouteList({
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="Search routes, stops, or locations"
-                className="w-full rounded-2xl border border-white/15 bg-slate-950/50 py-3 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20"
+                className={searchInputClass}
               />
             </div>
           </div>
+
+          {!readOnly && (
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link
+                to="/routes/new"
+                className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+              >
+                <PlusCircle size={18} />
+                Add New Route
+              </Link>
+            </div>
+          )}
         </div>
 
         {!readOnly && successMessage && (
@@ -297,14 +434,14 @@ function RouteList({
 
         {/* Empty State */}
         {filteredRoutes.length === 0 && !error && (
-          <div className="rounded-3xl border border-white/10 bg-white/10 px-6 py-16 text-center shadow-xl backdrop-blur-md">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 text-white">
+          <div className={emptyStateClass}>
+            <div className={emptyIconClass}>
               <Navigation size={28} />
             </div>
-            <h3 className="text-xl font-semibold text-white">
+            <h3 className={emptyTitleClass}>
               {searchTerm ? "No matching routes found" : "No routes available yet"}
             </h3>
-            <p className="mt-2 text-sm text-slate-200">
+            <p className={emptyTextClass}>
               {searchTerm
                 ? "Try another route name, stop, location, or departure time."
                 : "Added shuttle routes will appear here once they are created."}
@@ -315,11 +452,8 @@ function RouteList({
         {/* Route Cards */}
         <div className="grid gap-6">
           {filteredRoutes.map((route) => (
-            <div
-              key={route._id}
-              className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl"
-            >
-              {!readOnly && editingRouteId === route._id ? (
+            <div key={route._id} className={routeCardClass}>
+              {!readOnly && allowRouteEditing && editingRouteId === route._id ? (
                 <div className="p-6 md:p-8">
                   <div className="mb-6 flex items-center gap-3">
                     <div className="rounded-xl bg-amber-100 p-3 text-amber-600">
@@ -464,18 +598,29 @@ function RouteList({
                   </div>
                 </div>
               ) : (
-                <div className="p-6 md:p-8">
+                <div className={routeShellClass}>
                   <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
                     {/* Left Section */}
                     <div className="flex-1">
                       <div className="mb-5 flex items-start gap-4">
-                        <div className="rounded-2xl bg-blue-100 p-3 text-blue-700">
+                        <div className={routeIconClass}>
                           <RouteIcon size={22} />
                         </div>
                         <div>
-                          <h3 className="text-2xl font-bold text-slate-900">
-                            {route.routeName}
-                          </h3>
+                          <div className="flex flex-wrap items-center gap-3">
+                            <h3 className="text-2xl font-bold text-slate-900">
+                              {route.routeName}
+                            </h3>
+                            <span
+                              className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                route.active === false
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-green-100 text-green-700"
+                              }`}
+                            >
+                              {route.active === false ? "Inactive" : "Active"}
+                            </span>
+                          </div>
                           <p className="mt-1 text-sm text-slate-500">
                             Shuttle route details and stop management
                           </p>
@@ -483,7 +628,7 @@ function RouteList({
                       </div>
 
                       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <div className={infoCardClass}>
                           <div className="mb-2 flex items-center gap-2 text-slate-600">
                             <MapPin size={16} className="text-green-600" />
                             <span className="text-xs font-semibold uppercase tracking-wide">
@@ -495,7 +640,7 @@ function RouteList({
                           </p>
                         </div>
 
-                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <div className={infoCardClass}>
                           <div className="mb-2 flex items-center gap-2 text-slate-600">
                             <MapPin size={16} className="text-red-600" />
                             <span className="text-xs font-semibold uppercase tracking-wide">
@@ -507,7 +652,7 @@ function RouteList({
                           </p>
                         </div>
 
-                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <div className={infoCardClass}>
                           <div className="mb-2 flex items-center gap-2 text-slate-600">
                             <Users size={16} className="text-blue-600" />
                             <span className="text-xs font-semibold uppercase tracking-wide">
@@ -519,7 +664,7 @@ function RouteList({
                           </p>
                         </div>
 
-                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <div className={infoCardClass}>
                           <div className="mb-2 flex items-center gap-2 text-slate-600">
                             <Clock3 size={16} className="text-purple-600" />
                             <span className="text-xs font-semibold uppercase tracking-wide">
@@ -531,7 +676,7 @@ function RouteList({
                           </p>
                         </div>
 
-                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 md:col-span-2 xl:col-span-2">
+                        <div className={`${infoCardClass} md:col-span-2 xl:col-span-2`}>
                           <div className="mb-2 flex items-center gap-2 text-slate-600">
                             <Repeat size={16} className="text-indigo-600" />
                             <span className="text-xs font-semibold uppercase tracking-wide">
@@ -549,7 +694,7 @@ function RouteList({
                       </div>
 
                       {/* Stops */}
-                      <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                      <div className={stopsPanelClass}>
                         <div className="mb-4 flex items-center gap-2">
                           <Navigation size={18} className="text-slate-700" />
                           <h4 className="text-sm font-bold uppercase tracking-wide text-slate-800">
@@ -650,23 +795,43 @@ function RouteList({
                         </Link>
                       ) : (
                         <>
-                          <Link
-                            to={`/stop/${route._id}`}
-                            state={{ route }}
-                            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-800 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-900"
-                          >
-                            <Navigation size={18} />
-                            Manage Stops
-                          </Link>
+                          {allowStopManagement && (
+                            <Link
+                              to={`/stop/${route._id}`}
+                              state={{ route }}
+                              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-800 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-900"
+                            >
+                              <Navigation size={18} />
+                              Manage Stops
+                            </Link>
+                          )}
 
-                          <button
-                            type="button"
-                            onClick={() => startEditing(route)}
-                            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-amber-600"
-                          >
-                            <Pencil size={18} />
-                            Edit Route
-                          </button>
+                          {allowRouteEditing && (
+                            <button
+                              type="button"
+                              onClick={() => startEditing(route)}
+                              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-amber-600"
+                            >
+                              <Pencil size={18} />
+                              Edit Route
+                            </button>
+                          )}
+
+                          {allowStatusToggle && (
+                            <button
+                              type="button"
+                              onClick={() => toggleRouteStatus(route)}
+                              className={`inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold text-white transition ${
+                                route.active === false
+                                  ? "bg-blue-500 hover:bg-blue-600"
+                                  : "bg-yellow-500 hover:bg-yellow-600"
+                              }`}
+                            >
+                              {route.active === false
+                                ? "Activate Route"
+                                : "Deactivate Route"}
+                            </button>
+                          )}
 
                           <button
                             type="button"

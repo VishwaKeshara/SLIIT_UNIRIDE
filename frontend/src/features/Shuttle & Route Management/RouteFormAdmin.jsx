@@ -106,7 +106,7 @@ function RouteFormAdmin() {
       });
 
       setErrors({});
-      navigate("/routes", {
+      navigate("/RouteList", {
         state: { successMessage: "Route added successfully." },
       });
     } catch (err) {
@@ -128,11 +128,11 @@ function RouteFormAdmin() {
           <div>
             <button
               type="button"
-              onClick={() => navigate("/admin/dashboard")}
+              onClick={() => navigate("/RouteList")}
               className="mb-5 inline-flex items-center gap-2 rounded-2xl border border-blue-100 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-blue-50"
             >
               <ArrowLeft size={16} />
-              Back to Dashboard
+              View Route List
             </button>
 
             <p className="mb-2 text-lg font-semibold text-blue-600">
@@ -408,12 +408,22 @@ function RouteFormAdmin() {
                 </div>
               )}
 
-              <button
-                type="submit"
-                className="w-full rounded-2xl bg-gradient-to-r from-blue-500 to-sky-400 px-4 py-3.5 text-base font-semibold text-white shadow-md transition hover:scale-[1.01]"
-              >
-                Add Route
-              </button>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="submit"
+                  className="flex-1 rounded-2xl bg-gradient-to-r from-blue-500 to-sky-400 px-4 py-3.5 text-base font-semibold text-white shadow-md transition hover:scale-[1.01]"
+                >
+                  Add Route
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => navigate("/RouteList")}
+                  className="rounded-2xl border border-blue-100 bg-white px-5 py-3.5 text-base font-semibold text-slate-700 shadow-sm transition hover:bg-blue-50"
+                >
+                  View Route List
+                </button>
+              </div>
             </form>
           </div>
 

@@ -157,34 +157,32 @@ function StopManagerPage() {
   };
 
   return (
-    <section className="relative min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-      <div className="absolute inset-0 bg-slate-950/65" />
-
-      <div className="relative z-10 mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="mb-8 overflow-hidden rounded-3xl border border-white/10 bg-white/10 shadow-2xl backdrop-blur-md">
+    <section className="min-h-screen bg-gradient-to-br from-[#f8fbff] via-[#eef6ff] to-[#f5f9ff]">
+      <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mb-8 overflow-hidden rounded-3xl border border-blue-100 bg-white/90 shadow-[0_10px_30px_rgba(59,130,246,0.08)] backdrop-blur-sm">
           <div className="grid gap-6 p-6 md:grid-cols-[1.3fr_0.7fr] md:p-8">
             <div>
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-medium text-white">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
                 <Navigation size={16} />
                 Stop Management
               </div>
 
-              <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">
+              <h1 className="text-3xl font-bold tracking-tight text-slate-800 md:text-4xl">
                 Manage Route Stops
               </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-200 md:text-base">
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500 md:text-base">
                 Add, rename, delete, and reorder stop locations for each shuttle
                 route from one dispatch-ready workspace.
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-2xl bg-white/10 p-4 text-white">
-                <p className="text-sm text-slate-200">Total Stops</p>
+              <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4 text-slate-800">
+                <p className="text-sm text-slate-500">Total Stops</p>
                 <p className="mt-2 text-3xl font-bold">{stops.length}</p>
               </div>
-              <div className="rounded-2xl bg-white/10 p-4 text-white">
-                <p className="text-sm text-slate-200">Route Status</p>
+              <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4 text-slate-800">
+                <p className="text-sm text-slate-500">Route Status</p>
                 <p className="mt-2 text-lg font-semibold">
                   {routeId ? "Connected" : "No Route"}
                 </p>
@@ -196,7 +194,7 @@ function StopManagerPage() {
         <div className="mb-6 flex flex-wrap gap-3">
           <Link
             to="/RouteList"
-            className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
+            className="inline-flex items-center gap-2 rounded-2xl border border-blue-100 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-blue-50"
           >
             <ArrowLeft size={18} />
             Back to Route List
@@ -204,17 +202,17 @@ function StopManagerPage() {
         </div>
 
         {selectedRoute && (
-          <div className="mb-6 rounded-3xl border border-white/10 bg-white/10 p-5 text-white shadow-xl backdrop-blur-md">
+          <div className="mb-6 rounded-3xl border border-blue-100 bg-white/90 p-5 text-slate-800 shadow-[0_10px_30px_rgba(59,130,246,0.08)] backdrop-blur-sm">
             <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-white/10 p-3 text-blue-200">
+              <div className="rounded-2xl bg-blue-50 p-3 text-blue-600">
                 <RouteIcon size={20} />
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
                   Active Route
                 </p>
                 <p className="mt-1 text-lg font-bold">{selectedRoute.routeName}</p>
-                <p className="mt-1 text-sm text-slate-200">
+                <p className="mt-1 text-sm text-slate-500">
                   {selectedRoute.startLocation} to {selectedRoute.endLocation}
                 </p>
               </div>
@@ -223,28 +221,28 @@ function StopManagerPage() {
         )}
 
         {!routeId && (
-          <div className="mb-6 rounded-3xl border border-amber-400/20 bg-amber-400/10 px-5 py-4 text-sm text-amber-100 shadow-xl backdrop-blur-md">
+          <div className="mb-6 rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800 shadow-sm">
             Open Stop Manager from a route to add and manage its stops.
           </div>
         )}
 
         {successMessage && (
-          <div className="mb-5 flex items-center gap-3 rounded-2xl border border-green-400/20 bg-green-400/10 px-4 py-4 text-sm text-green-100 shadow-sm backdrop-blur-md">
+          <div className="mb-5 flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50 px-4 py-4 text-sm text-green-700 shadow-sm">
             <CheckCircle2 size={18} />
             {successMessage}
           </div>
         )}
 
         {error && (
-          <div className="mb-5 flex items-center gap-3 rounded-2xl border border-red-400/20 bg-red-400/10 px-4 py-4 text-sm text-red-100 shadow-sm backdrop-blur-md">
+          <div className="mb-5 flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-700 shadow-sm">
             <AlertCircle size={18} />
             {error}
           </div>
         )}
 
-        <div className="rounded-3xl border border-white/10 bg-white/10 p-5 shadow-xl backdrop-blur-md md:p-6">
-          <div className="mb-5 flex items-center gap-2 text-white">
-            <PlusCircle size={18} className="text-blue-300" />
+        <div className="rounded-3xl border border-blue-100 bg-white/90 p-5 shadow-[0_10px_30px_rgba(59,130,246,0.08)] backdrop-blur-sm md:p-6">
+          <div className="mb-5 flex items-center gap-2 text-slate-800">
+            <PlusCircle size={18} className="text-blue-600" />
             <h2 className="text-lg font-semibold">Add Stop</h2>
           </div>
 
@@ -258,7 +256,7 @@ function StopManagerPage() {
                 value={newStop}
                 onChange={(e) => setNewStop(e.target.value)}
                 placeholder="Enter stop name"
-                className="w-full rounded-2xl border border-white/15 bg-slate-950/50 py-3 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20"
+                className="w-full rounded-2xl border border-blue-100 bg-white py-3 pl-11 pr-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 disabled={!routeId || isSaving}
               />
             </div>
@@ -274,18 +272,18 @@ function StopManagerPage() {
           </div>
         </div>
 
-        <div className="mt-6 rounded-3xl border border-white/10 bg-white/10 p-5 shadow-xl backdrop-blur-md md:p-6">
-          <div className="mb-5 flex items-center gap-2 text-white">
-            <Navigation size={18} className="text-blue-300" />
+        <div className="mt-6 rounded-3xl border border-blue-100 bg-white/90 p-5 shadow-[0_10px_30px_rgba(59,130,246,0.08)] backdrop-blur-sm md:p-6">
+          <div className="mb-5 flex items-center gap-2 text-slate-800">
+            <Navigation size={18} className="text-blue-600" />
             <h2 className="text-lg font-semibold">Stop Sequence</h2>
           </div>
 
           {isLoading ? (
-            <div className="rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-8 text-center text-slate-200">
+            <div className="rounded-2xl border border-blue-100 bg-blue-50/50 px-4 py-8 text-center text-slate-500">
               Loading stops...
             </div>
           ) : stops.length === 0 ? (
-            <div className="rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-8 text-center text-slate-200">
+            <div className="rounded-2xl border border-blue-100 bg-blue-50/50 px-4 py-8 text-center text-slate-500">
               {routeId
                 ? "No stops added for this route yet."
                 : "Select a route to view stops."}
@@ -309,17 +307,17 @@ function StopManagerPage() {
                           <div
                             ref={provided.innerRef}
                             {...provided.draggableProps}
-                            className="rounded-2xl border border-white/10 bg-slate-950/35 p-4 text-white shadow-lg"
+                            className="rounded-2xl border border-blue-100 bg-white p-4 text-slate-800 shadow-sm"
                           >
                             {editingStopId === stop._id ? (
                               <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-                                <span className="font-semibold text-slate-300">
+                                <span className="font-semibold text-slate-500">
                                   #{index + 1}
                                 </span>
                                 <input
                                   value={editingStopName}
                                   onChange={(e) => setEditingStopName(e.target.value)}
-                                  className="flex-1 rounded-2xl border border-white/15 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20"
+                                  className="flex-1 rounded-2xl border border-blue-100 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                 />
                                 <button
                                   type="button"
@@ -331,7 +329,7 @@ function StopManagerPage() {
                                 <button
                                   type="button"
                                   onClick={cancelEditingStop}
-                                  className="rounded-2xl bg-white/10 px-4 py-3 text-sm font-semibold text-slate-100 transition hover:bg-white/15"
+                                  className="rounded-2xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
                                 >
                                   Cancel
                                 </button>
@@ -341,18 +339,18 @@ function StopManagerPage() {
                                 <div className="flex items-center gap-4">
                                   <div
                                     {...provided.dragHandleProps}
-                                    className="cursor-grab rounded-2xl bg-white/10 p-2 text-slate-300 active:cursor-grabbing"
+                                    className="cursor-grab rounded-2xl bg-blue-50 p-2 text-blue-600 active:cursor-grabbing"
                                   >
                                     <GripVertical size={18} />
                                   </div>
-                                  <div className="rounded-2xl bg-blue-500/15 px-3 py-2 text-sm font-semibold text-blue-100">
+                                  <div className="rounded-2xl bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700">
                                     #{index + 1}
                                   </div>
                                   <div>
-                                    <p className="text-base font-semibold text-white">
+                                    <p className="text-base font-semibold text-slate-800">
                                       {stop.stopName}
                                     </p>
-                                    <p className="text-sm text-slate-300">
+                                    <p className="text-sm text-slate-500">
                                       Drag to reorder this stop
                                     </p>
                                   </div>
