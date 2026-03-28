@@ -1,6 +1,11 @@
 // backend/controllers/routeController.js
 const Route = require("../models/RouteModel");
 
+const MIN_SEAT_CAPACITY = 45;
+const MAX_SEAT_CAPACITY = 56;
+const MIN_START_TIME = "05:30";
+const MAX_START_TIME = "18:30";
+
 // 🔍 Validation function
 const validateRoute = (data) => {
   if (!data.routeName) return "Route name is required";
@@ -9,10 +14,15 @@ const validateRoute = (data) => {
   if (data.startLocation === data.endLocation)
     return "Start and End cannot be same";
 
-  if (!data.seatCapacity || data.seatCapacity <= 0)
-    return "Invalid seat capacity";
+  if (!data.seatCapacity) return "Seat capacity is required";
+  if (Number(data.seatCapacity) < MIN_SEAT_CAPACITY)
+    return `Seat capacity must be at least ${MIN_SEAT_CAPACITY}`;
+  if (Number(data.seatCapacity) > MAX_SEAT_CAPACITY)
+    return `Seat capacity cannot exceed ${MAX_SEAT_CAPACITY}`;
 
   if (!data.startTime) return "Start time is required";
+  if (data.startTime < MIN_START_TIME || data.startTime > MAX_START_TIME)
+    return "Start time must be between 05:30 AM and 06:30 PM";
 
   if (data.recurrence === "weekly" && (!data.days || data.days.length === 0))
     return "Select at least one day for weekly schedule";

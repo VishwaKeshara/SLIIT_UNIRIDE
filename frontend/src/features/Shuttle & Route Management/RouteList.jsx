@@ -29,6 +29,11 @@ function RouteList({
   allowStopManagement = true,
   allowStatusToggle = false,
 }) {
+  const MIN_SEAT_CAPACITY = 45;
+  const MAX_SEAT_CAPACITY = 56;
+  const MIN_START_TIME = "05:30";
+  const MAX_START_TIME = "18:30";
+
   const location = useLocation();
   const adminRole = getStoredAdminRole();
   const routeManagerView = !readOnly && isRouteManager(adminRole);
@@ -136,7 +141,48 @@ function RouteList({
     }
   };
 
+  const validateRouteForm = (routeData) => {
+    if (!routeData.routeName.trim()) return "Route name is required.";
+    if (!routeData.startLocation.trim()) return "Start location is required.";
+    if (!routeData.endLocation.trim()) return "End location is required.";
+    if (
+      routeData.startLocation.trim().toLowerCase() ===
+      routeData.endLocation.trim().toLowerCase()
+    ) {
+      return "Start and end locations cannot be the same.";
+    }
+
+    const seatCapacity = Number(routeData.seatCapacity);
+    if (!routeData.seatCapacity) return "Seat capacity is required.";
+    if (seatCapacity < MIN_SEAT_CAPACITY) {
+      return `Seat capacity must be at least ${MIN_SEAT_CAPACITY}.`;
+    }
+    if (seatCapacity > MAX_SEAT_CAPACITY) {
+      return `Seat capacity cannot exceed ${MAX_SEAT_CAPACITY}.`;
+    }
+
+    if (!routeData.startTime) return "Start time is required.";
+    if (
+      routeData.startTime < MIN_START_TIME ||
+      routeData.startTime > MAX_START_TIME
+    ) {
+      return "Start time must be between 05:30 AM and 06:30 PM.";
+    }
+
+    if (routeData.recurrence === "weekly" && routeData.days.length === 0) {
+      return "Please select at least one day for a weekly schedule.";
+    }
+
+    return null;
+  };
+
   const updateRoute = async (id) => {
+    const validationError = validateRouteForm(editForm);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     try {
       setError("");
       await axios.put(`http://localhost:5000/api/routes/${id}`, {

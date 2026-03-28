@@ -14,6 +14,11 @@ import {
 } from "lucide-react";
 
 function RouteFormAdmin() {
+  const MIN_SEAT_CAPACITY = 45;
+  const MAX_SEAT_CAPACITY = 56;
+  const MIN_START_TIME = "05:30";
+  const MAX_START_TIME = "18:30";
+
   const navigate = useNavigate();
   const adminRole = getStoredAdminRole();
   const routeManager = isRouteManager(adminRole);
@@ -53,12 +58,19 @@ function RouteFormAdmin() {
     }
     if (!form.seatCapacity) {
       newErrors.seatCapacity = "Seat capacity is required";
-    } else if (Number(form.seatCapacity) <= 0) {
-      newErrors.seatCapacity = "Seat capacity must be greater than 0";
-    } else if (Number(form.seatCapacity) > 100) {
-      newErrors.seatCapacity = "Maximum 100 seats allowed";
+    } else if (Number(form.seatCapacity) < MIN_SEAT_CAPACITY) {
+      newErrors.seatCapacity = `Seat capacity must be at least ${MIN_SEAT_CAPACITY}`;
+    } else if (Number(form.seatCapacity) > MAX_SEAT_CAPACITY) {
+      newErrors.seatCapacity = `Seat capacity cannot exceed ${MAX_SEAT_CAPACITY}`;
     }
-    if (!form.startTime) newErrors.startTime = "Start time is required";
+    if (!form.startTime) {
+      newErrors.startTime = "Start time is required";
+    } else if (
+      form.startTime < MIN_START_TIME ||
+      form.startTime > MAX_START_TIME
+    ) {
+      newErrors.startTime = "Start time must be between 05:30 AM and 06:30 PM";
+    }
     if (form.recurrence === "weekly" && form.days.length === 0) {
       newErrors.days = "Please select at least one day";
     }
@@ -129,14 +141,25 @@ function RouteFormAdmin() {
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <button
-              type="button"
-              onClick={() => navigate("/RouteList")}
-              className="mb-5 inline-flex items-center gap-2 rounded-2xl border border-blue-100 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-blue-50"
-            >
-              <ArrowLeft size={16} />
-              View Route List
-            </button>
+            <div className="mb-5 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => navigate("/admin/dashboard")}
+                className="inline-flex items-center gap-2 rounded-2xl border border-blue-100 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-blue-50"
+              >
+                <ArrowLeft size={16} />
+                Back to Dashboard
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigate("/RouteList")}
+                className="inline-flex items-center gap-2 rounded-2xl border border-blue-100 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-blue-50"
+              >
+                <ArrowLeft size={16} />
+                View Route List
+              </button>
+            </div>
 
             <p className="mb-2 text-lg font-semibold text-blue-600">
               Route Administration
