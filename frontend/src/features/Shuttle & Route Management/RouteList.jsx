@@ -15,6 +15,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Navigation,
+  Search,
 } from "lucide-react";
 
 
@@ -33,6 +34,7 @@ function RouteList({
   const [editingRouteId, setEditingRouteId] = useState("");
   const [editingStopId, setEditingStopId] = useState("");
   const [editingStopName, setEditingStopName] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [editForm, setEditForm] = useState({
     routeName: "",
     startLocation: "",
@@ -192,6 +194,27 @@ function RouteList({
   const inputClass =
     "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200";
 
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const filteredRoutes = routes.filter((route) => {
+    if (!normalizedSearch) return true;
+
+    const routeStops = stopsByRoute[route._id] || [];
+    const searchableText = [
+      route.routeName,
+      route.startLocation,
+      route.endLocation,
+      route.startTime,
+      route.recurrence,
+      ...(route.days || []),
+      ...routeStops.map((stop) => stop.stopName),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return searchableText.includes(normalizedSearch);
+  });
+
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
       <div className="absolute inset-0 bg-slate-950/65"></div>
@@ -217,7 +240,7 @@ function RouteList({
             <div className="grid grid-cols-2 gap-4">
               <div className="rounded-2xl bg-white/10 p-4 text-white">
                 <p className="text-sm text-slate-200">Total Routes</p>
-                <p className="mt-2 text-3xl font-bold">{routes.length}</p>
+                <p className="mt-2 text-3xl font-bold">{filteredRoutes.length}</p>
               </div>
               <div className="rounded-2xl bg-white/10 p-4 text-white">
                 <p className="text-sm text-slate-200">Mode</p>
@@ -225,6 +248,35 @@ function RouteList({
                   {readOnly ? "Booking View" : "Admin View"}
                 </p>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-6 rounded-3xl border border-white/10 bg-white/10 p-4 shadow-xl backdrop-blur-md sm:p-5">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-300">
+                {readOnly ? "Search Schedules" : "Search Routes"}
+              </p>
+              <p className="mt-1 text-sm text-slate-200">
+                {readOnly
+                  ? "Find routes by name, location, time, recurrence, or stop."
+                  : "Quickly find routes by name, location, time, recurrence, or stop."}
+              </p>
+            </div>
+
+            <div className="relative w-full md:max-w-md">
+              <Search
+                size={18}
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search routes, stops, or locations"
+                className="w-full rounded-2xl border border-white/15 bg-slate-950/50 py-3 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20"
+              />
             </div>
           </div>
         </div>
@@ -244,23 +296,25 @@ function RouteList({
         )}
 
         {/* Empty State */}
-        {routes.length === 0 && !error && (
+        {filteredRoutes.length === 0 && !error && (
           <div className="rounded-3xl border border-white/10 bg-white/10 px-6 py-16 text-center shadow-xl backdrop-blur-md">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 text-white">
               <Navigation size={28} />
             </div>
             <h3 className="text-xl font-semibold text-white">
-              No routes available yet
+              {searchTerm ? "No matching routes found" : "No routes available yet"}
             </h3>
             <p className="mt-2 text-sm text-slate-200">
-              Added shuttle routes will appear here once they are created.
+              {searchTerm
+                ? "Try another route name, stop, location, or departure time."
+                : "Added shuttle routes will appear here once they are created."}
             </p>
           </div>
         )}
 
         {/* Route Cards */}
         <div className="grid gap-6">
-          {routes.map((route) => (
+          {filteredRoutes.map((route) => (
             <div
               key={route._id}
               className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl"
