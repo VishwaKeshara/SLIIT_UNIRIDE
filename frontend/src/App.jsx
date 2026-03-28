@@ -71,6 +71,12 @@ function AppLayout() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/complaint" element={<Complaint />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/routes" element={<RouteList />} />
+          <Route path="/routes/new" element={<RouteForm />} />
+          <Route path="/RouteList" element={<RouteList />} />
+          <Route path="/RouteForm" element={<RouteForm />} />
+          <Route path="/stop" element={<StopManagerPage />} />
+          <Route path="/stop/:routeId" element={<StopManagerPage />} />
 
           {/* Driver Management */}
           <Route path="/drivers" element={<Drivers />} />
