@@ -65,6 +65,7 @@ function AppLayout() {
           <Route path="/schedules" element={<Schedules />} />
           <Route path="/book" element={<BookRide />} />
           <Route path="/myrides" element={<MyRides />} />
+          <Route path="/terms-and-conditions" element={<MyRides />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />

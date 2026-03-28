@@ -4,7 +4,6 @@ import {
   FaBus,
   FaCalendarAlt,
   FaTicketAlt,
-  FaUser,
   FaUsers,
   FaSignInAlt,
   FaSignOutAlt,
@@ -13,7 +12,6 @@ import {
   FaPhoneAlt,
   FaBars,
   FaTimes,
-  FaRoute,
   FaTachometerAlt,
   FaExclamationCircle,
 } from "react-icons/fa";
@@ -69,7 +67,7 @@ function Navbar() {
   const commonLinks = [
     { to: "/schedules", label: "Schedules", icon: <FaCalendarAlt /> },
     { to: "/book", label: "Book Ride", icon: <FaTicketAlt /> },
-    { to: "/myrides", label: "My Rides", icon: <FaUser /> },
+    { to: "/terms-and-conditions", label: "Terms & Conditions", icon: <FaInfoCircle /> },
     { to: "/drivers", label: "Drivers", icon: <FaUsers /> },
     { to: "/about", label: "About Us", icon: <FaInfoCircle /> },
     { to: "/contact", label: "Contact", icon: <FaPhoneAlt /> },
