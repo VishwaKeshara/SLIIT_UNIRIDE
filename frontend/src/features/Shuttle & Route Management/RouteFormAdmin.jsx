@@ -13,6 +13,8 @@ import {
   Users,
 } from "lucide-react";
 
+const CAPITALIZED_WORD_PATTERN = /^[A-Z][A-Za-z]*$/;
+
 function RouteFormAdmin() {
   const MIN_SEAT_CAPACITY = 45;
   const MAX_SEAT_CAPACITY = 56;
@@ -38,15 +40,49 @@ function RouteFormAdmin() {
 
   const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
+  const capitalizeWords = (value) =>
+    value
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((word) =>
+        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      )
+      .join(" ");
+
+  const hasCapitalizedWords = (value) =>
+    value
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .every((word) => CAPITALIZED_WORD_PATTERN.test(word));
+
+  const capitalizeFieldOnBlur = (field) => {
+    setForm((current) => ({
+      ...current,
+      [field]: capitalizeWords(current[field]),
+    }));
+  };
+
   const validate = () => {
     const newErrors = {};
 
     if (!form.routeName.trim()) newErrors.routeName = "Route name is required";
+    else if (!hasCapitalizedWords(form.routeName)) {
+      newErrors.routeName =
+        "Each word in the route name must start with a capital letter";
+    }
     if (!form.startLocation.trim()) {
       newErrors.startLocation = "Start location is required";
+    } else if (!hasCapitalizedWords(form.startLocation)) {
+      newErrors.startLocation =
+        "Each word in the start location must start with a capital letter";
     }
     if (!form.endLocation.trim()) {
       newErrors.endLocation = "End location is required";
+    } else if (!hasCapitalizedWords(form.endLocation)) {
+      newErrors.endLocation =
+        "Each word in the end location must start with a capital letter";
     }
     if (
       form.startLocation.trim() &&
@@ -276,6 +312,7 @@ function RouteFormAdmin() {
                     onChange={(e) =>
                       setForm({ ...form, routeName: e.target.value })
                     }
+                    onBlur={() => capitalizeFieldOnBlur("routeName")}
                     className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
                     placeholder="Ex: Malabe - Colombo"
                   />
@@ -298,6 +335,7 @@ function RouteFormAdmin() {
                       onChange={(e) =>
                         setForm({ ...form, startLocation: e.target.value })
                       }
+                      onBlur={() => capitalizeFieldOnBlur("startLocation")}
                       className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
                       placeholder="Enter starting point"
                     />
@@ -321,6 +359,7 @@ function RouteFormAdmin() {
                       onChange={(e) =>
                         setForm({ ...form, endLocation: e.target.value })
                       }
+                      onBlur={() => capitalizeFieldOnBlur("endLocation")}
                       className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
                       placeholder="Enter destination"
                     />
