@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { getStoredAdminRole, isRouteManager } from "../../admin/adminAccess";
 import {
   ArrowLeft,
+  Banknote,
   BusFront,
   CalendarDays,
   Clock,
@@ -33,6 +34,7 @@ function RouteFormAdmin() {
     startTime: "",
     recurrence: "none",
     days: [],
+    pricePerDay: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -45,9 +47,7 @@ function RouteFormAdmin() {
       .trim()
       .split(/\s+/)
       .filter(Boolean)
-      .map((word) =>
-        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-      )
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(" ");
 
   const hasCapitalizedWords = (value) =>
@@ -110,6 +110,9 @@ function RouteFormAdmin() {
     if (form.recurrence === "weekly" && form.days.length === 0) {
       newErrors.days = "Please select at least one day";
     }
+    if (form.pricePerDay !== "" && Number(form.pricePerDay) < 0) {
+      newErrors.pricePerDay = "Price cannot be negative";
+    }
 
     return newErrors;
   };
@@ -142,6 +145,7 @@ function RouteFormAdmin() {
       await axios.post("http://localhost:5000/api/routes", {
         ...form,
         seatCapacity: Number(form.seatCapacity),
+        pricePerDay: form.pricePerDay !== "" ? Number(form.pricePerDay) : 0,
       });
 
       alert("Route added successfully");
@@ -154,6 +158,7 @@ function RouteFormAdmin() {
         startTime: "",
         recurrence: "none",
         days: [],
+        pricePerDay: "",
       });
 
       setErrors({});
@@ -318,7 +323,9 @@ function RouteFormAdmin() {
                   />
                 </div>
                 {errors.routeName && (
-                  <p className="mt-2 text-sm text-red-500">{errors.routeName}</p>
+                  <p className="mt-2 text-sm text-red-500">
+                    {errors.routeName}
+                  </p>
                 )}
               </div>
 
@@ -365,7 +372,9 @@ function RouteFormAdmin() {
                     />
                   </div>
                   {errors.endLocation && (
-                    <p className="mt-2 text-sm text-red-500">{errors.endLocation}</p>
+                    <p className="mt-2 text-sm text-red-500">
+                      {errors.endLocation}
+                    </p>
                   )}
                 </div>
               </div>
@@ -394,6 +403,33 @@ function RouteFormAdmin() {
                   )}
                 </div>
 
+                <div>
+                  <label className="text-sm font-semibold text-slate-700">
+                    Price per Day (LKR)
+                  </label>
+                  <div className={inputWrapperClass("pricePerDay")}>
+                    <Banknote className="mr-3 text-emerald-600" size={18} />
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={form.pricePerDay}
+                      onChange={(e) =>
+                        setForm({ ...form, pricePerDay: e.target.value })
+                      }
+                      className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                      placeholder="Ex: 150"
+                    />
+                  </div>
+                  {errors.pricePerDay && (
+                    <p className="mt-2 text-sm text-red-500">
+                      {errors.pricePerDay}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <div>
                   <label className="text-sm font-semibold text-slate-700">
                     Start Time
@@ -512,7 +548,8 @@ function RouteFormAdmin() {
                 <div className="rounded-2xl border border-sky-100 bg-sky-50 p-4">
                   <p className="text-sm text-slate-500">Journey</p>
                   <h4 className="mt-1 text-xl font-bold text-slate-800">
-                    {form.startLocation || "Start"} to {form.endLocation || "End"}
+                    {form.startLocation || "Start"} to{" "}
+                    {form.endLocation || "End"}
                   </h4>
                 </div>
 
@@ -530,6 +567,15 @@ function RouteFormAdmin() {
                   <p className="text-sm text-slate-500">Capacity</p>
                   <h4 className="mt-1 text-xl font-bold text-slate-800">
                     {form.seatCapacity || "--"} seats
+                  </h4>
+                </div>
+
+                <div className="rounded-2xl border border-yellow-100 bg-yellow-50 p-4">
+                  <p className="text-sm text-slate-500">Price per Day</p>
+                  <h4 className="mt-1 text-xl font-bold text-slate-800">
+                    {form.pricePerDay !== ""
+                      ? `LKR ${Number(form.pricePerDay).toFixed(2)}`
+                      : "Not set"}
                   </h4>
                 </div>
               </div>

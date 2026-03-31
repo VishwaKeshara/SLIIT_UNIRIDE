@@ -5,17 +5,29 @@ const Route   = require("../models/RouteModel");
 // CREATE BOOKING
 exports.createBooking = async (req, res) => {
   try {
-    const { passengerName, mobileNumber, route, travelDate } = req.body;
+    const { passengerName, mobileNumber, route, travelStartDate, travelEndDate } = req.body;
 
-    if (!passengerName) return res.status(400).json({ message: "Passenger name is required" });
-    if (!mobileNumber)  return res.status(400).json({ message: "Mobile number is required" });
-    if (!route)         return res.status(400).json({ message: "Route is required" });
-    if (!travelDate)    return res.status(400).json({ message: "Travel date is required" });
+    if (!passengerName)    return res.status(400).json({ message: "Passenger name is required" });
+    if (!mobileNumber)     return res.status(400).json({ message: "Mobile number is required" });
+    if (!route)            return res.status(400).json({ message: "Route is required" });
+    if (!travelStartDate)  return res.status(400).json({ message: "Travel start date is required" });
+    if (!travelEndDate)    return res.status(400).json({ message: "Travel end date is required" });
 
     // Validate mobile format (7–15 digits/+/spaces/dashes)
     if (!/^[0-9+\-\s]{7,15}$/.test(mobileNumber)) {
       return res.status(400).json({ message: "Invalid mobile number format" });
     }
+
+    const start = new Date(travelStartDate);
+    const end   = new Date(travelEndDate);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return res.status(400).json({ message: "Invalid travel dates" });
+    }
+    if (end < start) {
+      return res.status(400).json({ message: "End date cannot be before start date" });
+    }
+
+    const totalDays = Math.round((end - start) / 86400000) + 1;
 
     // Verify route exists, is active, and has available seats
     const routeDoc = await Route.findById(route);
@@ -23,14 +35,25 @@ exports.createBooking = async (req, res) => {
     if (!routeDoc.active)       return res.status(400).json({ message: "Selected route is not currently active" });
     if (routeDoc.seatCapacity <= 0) return res.status(400).json({ message: "No seats available on this route" });
 
+    const pricePerDay = routeDoc.pricePerDay || 0;
+    const totalAmount = pricePerDay * totalDays;
+
     // Decrement seat capacity atomically and create booking together
-    const [updatedRoute, booking] = await Promise.all([
+    const [, booking] = await Promise.all([
       Route.findByIdAndUpdate(route, { $inc: { seatCapacity: -1 } }, { new: true }),
-      Booking.create({ ...req.body, status: "confirmed" })
+      Booking.create({
+        ...req.body,
+        travelStartDate: start,
+        travelEndDate: end,
+        totalDays,
+        pricePerDay,
+        totalAmount,
+        status: "confirmed"
+      })
     ]);
 
     const populated = await booking.populate([
-      { path: "route", select: "routeName startLocation endLocation startTime seatCapacity" },
+      { path: "route", select: "routeName startLocation endLocation startTime seatCapacity pricePerDay" },
       { path: "boardingStop", select: "stopName order" }
     ]);
 
@@ -72,7 +95,7 @@ exports.getBookingsByMobile = async (req, res) => {
     const bookings = await Booking.find({ mobileNumber: req.params.mobile })
       .populate("route", "routeName startLocation endLocation startTime")
       .populate("boardingStop", "stopName order")
-      .sort({ travelDate: -1 });
+      .sort({ travelStartDate: -1 });
     res.json(bookings);
   } catch (err) {
     res.status(500).json({ message: err.message });
