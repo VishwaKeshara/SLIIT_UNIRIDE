@@ -25,7 +25,10 @@ const routeSchema = new mongoose.Schema(
       default: []
     },
 
-    active: { type: Boolean, default: true }
+    active: { type: Boolean, default: true },
+
+    // 💰 Price per travel day (LKR)
+    pricePerDay: { type: Number, default: 0, min: 0 }
   },
   { timestamps: true }
 );

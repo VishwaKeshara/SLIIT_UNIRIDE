@@ -20,13 +20,29 @@ const bookingSchema = new mongoose.Schema(
       ref: "Stop"
     },
 
-    travelDate: { type: Date, required: true },
+    travelStartDate: { type: Date, required: true },
+    travelEndDate:   { type: Date, required: true },
+    totalDays:       { type: Number, required: true, min: 1 },
+    pricePerDay:     { type: Number, default: 0 },
+    totalAmount:     { type: Number, default: 0 },
 
     status: {
       type: String,
       enum: ["confirmed", "cancelled"],
       default: "confirmed"
-    }
+    },
+
+    paymentMethod: {
+      type: String,
+      enum: ["card", "cash", "wallet"],
+      default: "cash",
+    },
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "paid"],
+      default: "pending",
+    },
+    paymentReference: { type: String },
   },
   { timestamps: true }
 );

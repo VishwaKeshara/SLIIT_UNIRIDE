@@ -34,6 +34,10 @@ function Profile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [cancelling, setCancelling] = useState(null); // booking _id being cancelled
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   useEffect(() => {
     if (!CURRENT_USER_ID) {
@@ -110,13 +114,14 @@ function Profile() {
   const tomorrowTs = todayTs + 86_400_000;
 
   const todayBookings = bookings.filter(
-    (b) => startOfDay(b.travelDate) === todayTs,
+    (b) => startOfDay(b.travelStartDate) === todayTs,
   );
   const upcomingBookings = bookings.filter(
-    (b) => startOfDay(b.travelDate) >= tomorrowTs && b.status === "confirmed",
+    (b) =>
+      startOfDay(b.travelStartDate) >= tomorrowTs && b.status === "confirmed",
   );
   const pastBookings = bookings.filter(
-    (b) => startOfDay(b.travelDate) < todayTs,
+    (b) => startOfDay(b.travelStartDate) < todayTs,
   );
 
   const confirmedCount = bookings.filter(
@@ -125,6 +130,47 @@ function Profile() {
   const cancelledCount = bookings.filter(
     (b) => b.status === "cancelled",
   ).length;
+
+  // ── Filter helper ────────────────────────────────────────────────────────
+  const applyFilters = (list) => {
+    const q = searchQuery.trim().toLowerCase();
+    return list.filter((b) => {
+      // Text search: route name, locations, boarding stop, ref ID
+      if (q) {
+        const haystack = [
+          b.route?.routeName,
+          b.route?.startLocation,
+          b.route?.endLocation,
+          b.boardingStop?.stopName,
+          b._id.slice(-8).toUpperCase(),
+          b.passengerName,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      // Status filter
+      if (statusFilter !== "all" && b.status !== statusFilter) return false;
+      // Date from
+      if (dateFrom) {
+        const from = new Date(dateFrom).setHours(0, 0, 0, 0);
+        if (startOfDay(b.travelStartDate) < from) return false;
+      }
+      // Date to
+      if (dateTo) {
+        const to = new Date(dateTo).setHours(23, 59, 59, 999);
+        if (new Date(b.travelStartDate).getTime() > to) return false;
+      }
+      return true;
+    });
+  };
+
+  const hasActiveFilters =
+    searchQuery.trim() !== "" ||
+    statusFilter !== "all" ||
+    dateFrom !== "" ||
+    dateTo !== "";
 
   // ── Shared booking card renderer ─────────────────────────────────────────
   const BookingCard = ({ b, allowCancel = false }) => (
@@ -154,13 +200,31 @@ function Profile() {
           {b.status}
         </span>
         <span className="text-xs text-slate-400">
-          {new Date(b.travelDate).toLocaleDateString("en-US", {
+          {new Date(b.travelStartDate).toLocaleDateString("en-US", {
             weekday: "short",
             year: "numeric",
             month: "short",
             day: "numeric",
           })}
+          {b.totalDays > 1 && (
+            <>
+              {" → "}
+              {new Date(b.travelEndDate).toLocaleDateString("en-US", {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+              })}
+              {" ("}
+              {b.totalDays}
+              {" days)"}
+            </>
+          )}
         </span>
+        {b.totalAmount > 0 && (
+          <span className="text-xs font-semibold text-orange-400">
+            LKR {b.totalAmount.toLocaleString()}
+          </span>
+        )}
         <span className="text-xs font-mono text-slate-500">
           #{b._id.slice(-8).toUpperCase()}
         </span>
@@ -265,6 +329,94 @@ function Profile() {
           </div>
         </div>
 
+        {/* ── Filter Bar ───────────────────────────────────────────────── */}
+        <div className="rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-bold text-white uppercase tracking-[0.2em] flex items-center gap-2">
+              🔍 Filter Bookings
+            </h2>
+            {hasActiveFilters && (
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setStatusFilter("all");
+                  setDateFrom("");
+                  setDateTo("");
+                }}
+                className="text-xs text-orange-400 hover:text-orange-300 border border-orange-400/30 px-2.5 py-1 rounded-lg bg-orange-400/10 hover:bg-orange-400/20 transition-colors"
+              >
+                Clear All
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Search input */}
+            <div className="relative sm:col-span-2">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none">
+                🔍
+              </span>
+              <input
+                type="text"
+                placeholder="Search by route, location, stop or ref ID…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-orange-400/50 focus:bg-white/10 transition-colors"
+              />
+            </div>
+            {/* Status filter */}
+            <div>
+              <label className="block text-xs text-slate-400 mb-1 ml-1">
+                Status
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:border-orange-400/50 transition-colors appearance-none"
+              >
+                <option value="all" className="bg-[#0A2233]">
+                  All Statuses
+                </option>
+                <option value="confirmed" className="bg-[#0A2233]">
+                  Confirmed
+                </option>
+                <option value="cancelled" className="bg-[#0A2233]">
+                  Cancelled
+                </option>
+              </select>
+            </div>
+            {/* Date from */}
+            <div>
+              <label className="block text-xs text-slate-400 mb-1 ml-1">
+                From Date
+              </label>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:border-orange-400/50 transition-colors [color-scheme:dark]"
+              />
+            </div>
+            {/* Date to */}
+            <div>
+              <label className="block text-xs text-slate-400 mb-1 ml-1">
+                To Date
+              </label>
+              <input
+                type="date"
+                value={dateTo}
+                min={dateFrom || undefined}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:border-orange-400/50 transition-colors [color-scheme:dark]"
+              />
+            </div>
+          </div>
+          {hasActiveFilters && (
+            <p className="mt-3 text-xs text-slate-400">
+              Showing filtered results across all sections.
+            </p>
+          )}
+        </div>
+
         {/* ── Today's Rides ─────────────────────────────────────────────── */}
         <div className="rounded-3xl bg-white/10 backdrop-blur-md border border-orange-500/30 shadow-2xl p-6">
           <h2 className="text-sm font-bold text-orange-400 uppercase tracking-[0.2em] mb-1 flex items-center gap-2">
@@ -273,15 +425,24 @@ function Profile() {
           <p className="text-xs text-slate-400 mb-4">
             Today's bookings cannot be cancelled.
           </p>
-          {todayBookings.length === 0 ? (
-            <EmptyState message="No rides scheduled for today." />
-          ) : (
-            <div className="space-y-3">
-              {todayBookings.map((b) => (
-                <BookingCard key={b._id} b={b} allowCancel={false} />
-              ))}
-            </div>
-          )}
+          {(() => {
+            const filtered = applyFilters(todayBookings);
+            return filtered.length === 0 ? (
+              <EmptyState
+                message={
+                  hasActiveFilters
+                    ? "No rides match your filters."
+                    : "No rides scheduled for today."
+                }
+              />
+            ) : (
+              <div className="space-y-3">
+                {filtered.map((b) => (
+                  <BookingCard key={b._id} b={b} allowCancel={false} />
+                ))}
+              </div>
+            );
+          })()}
         </div>
 
         {/* ── Upcoming Bookings ─────────────────────────────────────────── */}
@@ -292,15 +453,24 @@ function Profile() {
           <p className="text-xs text-slate-400 mb-4">
             Tomorrow onwards · You can cancel these.
           </p>
-          {upcomingBookings.length === 0 ? (
-            <EmptyState message="No upcoming bookings." />
-          ) : (
-            <div className="space-y-3">
-              {upcomingBookings.map((b) => (
-                <BookingCard key={b._id} b={b} allowCancel={true} />
-              ))}
-            </div>
-          )}
+          {(() => {
+            const filtered = applyFilters(upcomingBookings);
+            return filtered.length === 0 ? (
+              <EmptyState
+                message={
+                  hasActiveFilters
+                    ? "No bookings match your filters."
+                    : "No upcoming bookings."
+                }
+              />
+            ) : (
+              <div className="space-y-3">
+                {filtered.map((b) => (
+                  <BookingCard key={b._id} b={b} allowCancel={true} />
+                ))}
+              </div>
+            );
+          })()}
         </div>
 
         {/* ── Past Booking History ──────────────────────────────────────── */}
@@ -309,15 +479,24 @@ function Profile() {
             🕙 Past Booking History
           </h2>
           <p className="text-xs text-slate-400 mb-4">All rides before today.</p>
-          {pastBookings.length === 0 ? (
-            <EmptyState message="No past bookings." />
-          ) : (
-            <div className="space-y-3">
-              {pastBookings.map((b) => (
-                <BookingCard key={b._id} b={b} allowCancel={false} />
-              ))}
-            </div>
-          )}
+          {(() => {
+            const filtered = applyFilters(pastBookings);
+            return filtered.length === 0 ? (
+              <EmptyState
+                message={
+                  hasActiveFilters
+                    ? "No bookings match your filters."
+                    : "No past bookings."
+                }
+              />
+            ) : (
+              <div className="space-y-3">
+                {filtered.map((b) => (
+                  <BookingCard key={b._id} b={b} allowCancel={false} />
+                ))}
+              </div>
+            );
+          })()}
         </div>
       </div>
     </div>
