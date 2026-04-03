@@ -1,22 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import axios from "../axiosinstance";
 import { getStoredAdminData, isRouteManager } from "./adminAccess";
-import {
-  FaUsers,
-  FaExclamationCircle,
-  FaBus,
-  FaRoute,
-  FaClock,
-  FaTachometerAlt,
-  FaUserCog,
-  FaClipboardList,
-  FaSignOutAlt,
-  FaArrowUp,
-} from "react-icons/fa";
+import AdminSidebar from "./AdminSidebar";
 
 function AdminDashboard() {
-  const navigate = useNavigate();
   const adminData = getStoredAdminData();
   const routeManager = isRouteManager(adminData?.role);
 
@@ -40,294 +28,294 @@ function AdminDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("adminData");
-    navigate("/adminlogin");
-  };
-
-  const navigationItems = [
+  const headerActions = [
     {
-      label: "Dashboard",
-      to: "/admin/dashboard",
-      icon: <FaTachometerAlt />,
+      label: "Open Complaints",
+      to: "/admin/complaints",
+      enabled: !routeManager,
+      className: "bg-[#e8eefb] text-[#0a3772]",
+    },
+    {
+      label: routeManager ? "Route Reports" : "View Reports",
+      to: routeManager ? "/admin/routes" : "/admin/dashboard",
       enabled: true,
-      active: true,
+      className: "bg-[#ffbf00] text-[#111827]",
     },
     {
       label: "Manage Users",
       to: "/admin/users",
-      icon: <FaUserCog />,
       enabled: !routeManager,
-    },
-    {
-      label: "Complaints",
-      to: "/admin/complaints",
-      icon: <FaClipboardList />,
-      enabled: !routeManager,
-    },
-    {
-      label: "Add Route",
-      to: "/routes/new",
-      icon: <FaRoute />,
-      enabled: true,
-    },
-    {
-      label: "Manage Routes",
-      to: "/admin/routes",
-      icon: <FaRoute />,
-      enabled: !routeManager,
+      className: "bg-[#143d7a] text-white",
     },
   ];
 
-  const quickActions = [
+  const statCards = [
     {
-      label: "View Route List",
-      to: "/RouteList",
-      enabled: !routeManager,
-      className:
-        "bg-gradient-to-r from-amber-500 to-orange-400 text-white shadow-md",
+      label: "Total Users",
+      value: summary.totalUsers,
     },
     {
-      label: "Manage Users",
-      to: "/admin/users",
-      enabled: !routeManager,
-      className:
-        "bg-gradient-to-r from-blue-500 to-sky-400 text-white shadow-md",
+      label: "Open Complaints",
+      value: summary.totalComplaints,
     },
     {
-      label: "Manage Complaints",
-      to: "/admin/complaints",
-      enabled: !routeManager,
-      className:
-        "bg-white border border-blue-200 text-blue-600 shadow-sm",
+      label: "Active Routes",
+      value: routeManager ? summary.totalBookings : 2,
+    },
+    {
+      label: "Trips Today",
+      value: summary.totalBookings,
+    },
+  ];
+
+  const moduleSteps = [
+    {
+      title: "1. Dashboard loads first",
+      description:
+        "Admin immediately sees users, complaints, routes, and trip health.",
+    },
+    {
+      title: "2. Problem areas are identified",
+      description:
+        "Admin checks overdue complaints, inactive routes, or delayed trips.",
+    },
+    {
+      title: "3. Action is taken on related page",
+      description:
+        "Admin can add users, deactivate access, resolve complaints, or update routes.",
+    },
+    {
+      title: "4. System records updates",
+      description:
+        "Counts, statuses, lists, and dashboard values refresh after each action.",
+    },
+  ];
+
+  const peakHours = [
+    { count: 90, time: "6 AM" },
+    { count: 160, time: "7 AM" },
+    { count: 190, time: "8 AM" },
+    { count: 145, time: "9 AM" },
+    { count: 66, time: "10 AM" },
+  ];
+
+  const recentComplaints = [
+    {
+      title: "Bus arrived late for Route R-07",
+      meta: "Delay · High Priority",
+      status: "Open",
+    },
+    {
+      title: "Morning shuttle overcrowded",
+      meta: "Capacity · Medium Priority",
+      status: "Open",
+    },
+    {
+      title: "Driver missed pickup point",
+      meta: "Route Issue · High Priority",
+      status: "Open",
+    },
+  ];
+
+  const tripStatuses = [
+    {
+      trip: "TRP-2204 · R-04 Malabe",
+      driver: "Driver: Nuwan Silva",
+      status: "Pending",
+      badgeClass: "bg-[#fff3dc] text-[#d08a00]",
+    },
+    {
+      trip: "TRP-2207 · R-07 Kadawatha",
+      driver: "Driver: Ramesh Fernando",
+      status: "Delayed",
+      badgeClass: "bg-[#ffe3e1] text-[#ef534f]",
+    },
+    {
+      trip: "TRP-2212 · R-01 Kottawa",
+      driver: "Driver: Kasun Perera",
+      status: "Completed",
+      badgeClass: "bg-[#dff7ec] text-[#049b63]",
+    },
+    {
+      trip: "TRP-2218 · R-10 Maharagama",
+      driver: "Driver: Tharindu Jay",
+      status: "Pending",
+      badgeClass: "bg-[#fff3dc] text-[#d08a00]",
     },
   ];
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-[#f8fbff] via-[#eef6ff] to-[#f5f9ff]">
-      {/* Sidebar */}
-      <aside className="w-72 bg-[#1e293b] text-white flex flex-col p-8 shadow-xl">
-        <div className="mb-12">
-          <h2 className="text-3xl font-bold">UniRide</h2>
-          <p className="text-gray-400 text-sm mt-1">Admin Panel</p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-[#eff4fb] via-[#f7fbff] to-[#eef3f9] lg:flex">
+      <AdminSidebar />
 
-        <nav className="flex flex-col gap-4 text-base">
-          {navigationItems.map((item) =>
-            item.enabled ? (
-              <Link
-                key={item.label}
-                to={item.to}
-                className={`flex items-center gap-3 px-5 py-3 rounded-xl text-lg transition ${
-                  item.active
-                    ? "bg-blue-600 font-semibold"
-                    : "hover:bg-gray-700"
-                }`}
-              >
-                {item.icon} {item.label}
-              </Link>
-            ) : (
-              <button
-                key={item.label}
-                type="button"
-                disabled
-                title="Only admins can access this section"
-                className="flex items-center gap-3 px-5 py-3 rounded-xl text-lg text-gray-400 bg-slate-800/70 cursor-not-allowed"
-              >
-                {item.icon} {item.label}
-              </button>
-            )
-          )}
-        </nav>
-
-        <div className="mt-auto">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 px-5 py-3 rounded-xl font-semibold text-lg"
-          >
-            <FaSignOutAlt /> Logout
-          </button>
-        </div>
-      </aside>
-
-      {/* Main */}
-      <main className="flex-1 p-10">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-10">
+      <main className="flex-1 p-6 lg:p-10">
+        <div className="mb-10 flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
           <div>
-            <p className="text-blue-600 font-semibold text-lg mb-2">
-              Dashboard Overview
-            </p>
-            <h1 className="text-5xl font-bold text-slate-800">
-              Welcome back
+            <h1 className="text-4xl font-extrabold text-[#0b2f67] sm:text-6xl">
+              Admin Dashboard
             </h1>
-            <p className="text-slate-500 mt-2 text-lg">
-              Here’s what’s happening in your system today.
-            </p>
           </div>
 
-          <div className="bg-white px-6 py-4 rounded-2xl shadow-md border border-blue-100 text-base">
-            <p className="text-slate-500 text-sm">Logged in as</p>
-            <span className="font-bold text-blue-600 text-xl capitalize">
-              {adminData?.role || "admin"}
-            </span>
-          </div>
-        </div>
-
-        {/* Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-8 mb-12">
-          {/* Users */}
-          <div className="bg-white/90 backdrop-blur-sm p-7 rounded-3xl shadow-[0_10px_30px_rgba(59,130,246,0.08)] border border-blue-100">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-slate-500 text-lg">Users</p>
-                <h2 className="text-5xl font-bold mt-3 text-slate-800">
-                  {summary.totalUsers}
-                </h2>
-                <div className="flex items-center gap-2 mt-4 text-emerald-500 text-sm font-medium">
-                  <FaArrowUp />
-                  Active records
-                </div>
-              </div>
-              <div className="w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center">
-                <FaUsers className="text-blue-600 text-2xl" />
-              </div>
-            </div>
-          </div>
-
-          {/* Complaints */}
-          <div className="bg-white/90 backdrop-blur-sm p-7 rounded-3xl shadow-[0_10px_30px_rgba(59,130,246,0.08)] border border-blue-100">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-slate-500 text-lg">Complaints</p>
-                <h2 className="text-5xl font-bold mt-3 text-slate-800">
-                  {summary.totalComplaints}
-                </h2>
-                <div className="flex items-center gap-2 mt-4 text-red-500 text-sm font-medium">
-                  <FaArrowUp />
-                  Need attention
-                </div>
-              </div>
-              <div className="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center">
-                <FaExclamationCircle className="text-red-500 text-2xl" />
-              </div>
-            </div>
-          </div>
-
-          {/* Bookings */}
-          <div className="bg-white/90 backdrop-blur-sm p-7 rounded-3xl shadow-[0_10px_30px_rgba(59,130,246,0.08)] border border-blue-100">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-slate-500 text-lg">Bookings</p>
-                <h2 className="text-5xl font-bold mt-3 text-slate-800">
-                  {summary.totalBookings}
-                </h2>
-                <div className="flex items-center gap-2 mt-4 text-emerald-500 text-sm font-medium">
-                  <FaArrowUp />
-                  Daily system usage
-                </div>
-              </div>
-              <div className="w-14 h-14 rounded-2xl bg-green-100 flex items-center justify-center">
-                <FaBus className="text-green-500 text-2xl" />
-              </div>
-            </div>
-          </div>
-
-          {/* Peak Hour */}
-          <div className="bg-white/90 backdrop-blur-sm p-7 rounded-3xl shadow-[0_10px_30px_rgba(59,130,246,0.08)] border border-blue-100">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-slate-500 text-lg">Peak Hour</p>
-                <h2 className="text-2xl font-bold mt-3 text-slate-800 leading-snug">
-                  {summary.peakHour || "N/A"}
-                </h2>
-                <div className="flex items-center gap-2 mt-4 text-amber-500 text-sm font-medium">
-                  <FaArrowUp />
-                  Highest traffic time
-                </div>
-              </div>
-              <div className="w-14 h-14 rounded-2xl bg-yellow-100 flex items-center justify-center">
-                <FaClock className="text-yellow-500 text-2xl" />
-              </div>
-            </div>
+          <div className="flex flex-wrap gap-4">
+            {headerActions.map((action) =>
+              action.enabled ? (
+                <Link
+                  key={action.label}
+                  to={action.to}
+                  className={`rounded-3xl px-7 py-4 text-lg font-extrabold shadow-sm transition hover:opacity-90 ${action.className}`}
+                >
+                  {action.label}
+                </Link>
+              ) : null
+            )}
           </div>
         </div>
 
-        {/* Bottom Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Quick Actions */}
-          <div className="bg-white/90 backdrop-blur-sm p-8 rounded-3xl shadow-[0_10px_30px_rgba(59,130,246,0.08)] border border-blue-100 min-h-[260px]">
-            <h3 className="text-3xl font-bold mb-3 text-slate-800">
-              Quick Actions
-            </h3>
-            <p className="text-slate-500 text-base mb-8">
-              {routeManager
-                ? "Route managers can add new routes from this dashboard."
-                : "Easily manage users and complaints from here."}
-            </p>
+        <div className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-4">
+          {statCards.map((card) => (
+            <div
+              key={card.label}
+              className="rounded-[30px] border border-blue-100 bg-white p-7 shadow-[0_18px_45px_rgba(80,122,191,0.18)]"
+            >
+              <p className="text-[1.05rem] font-bold text-[#5c79a8]">
+                {card.label}
+              </p>
+              <h2 className="mt-5 text-5xl font-extrabold text-[#0b2f67]">
+                {card.value}
+              </h2>
+            </div>
+          ))}
+        </div>
 
-            <div className="flex flex-wrap gap-5">
-              {quickActions.map((action) =>
-                action.enabled ? (
-                  <Link key={action.label} to={action.to}>
-                    <button
-                      className={`${action.className} px-8 py-4 rounded-2xl text-lg font-semibold hover:scale-105 transition`}
-                    >
-                      {action.label}
-                    </button>
-                  </Link>
-                ) : (
-                  <button
-                    key={action.label}
-                    type="button"
-                    disabled
-                    title="Only admins can access this action"
-                    className="px-8 py-4 rounded-2xl text-lg font-semibold bg-slate-200 text-slate-400 cursor-not-allowed shadow-sm"
+        <div className="grid grid-cols-1 gap-8 2xl:grid-cols-[1.45fr_0.95fr]">
+          <div className="space-y-8">
+            <section className="rounded-[34px] border border-blue-100 bg-white p-7 shadow-[0_18px_45px_rgba(80,122,191,0.18)]">
+              <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <h3 className="text-2xl font-extrabold text-[#0b2f67] sm:text-4xl">
+                  How Admin Module Works
+                </h3>
+                <span className="rounded-full bg-[#e8eefb] px-5 py-2 text-lg font-bold text-[#3464d4]">
+                  Professional Flow
+                </span>
+              </div>
+
+              <div className="space-y-4">
+                {moduleSteps.map((step) => (
+                  <div
+                    key={step.title}
+                    className="rounded-[24px] border border-blue-100 bg-[#f7faff] px-5 py-5"
                   >
-                    {action.label}
-                  </button>
-                )
-              )}
-            </div>
+                    <h4 className="text-xl font-extrabold text-[#0b1f45]">
+                      {step.title}
+                    </h4>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="rounded-[34px] border border-blue-100 bg-white p-7 shadow-[0_18px_45px_rgba(80,122,191,0.18)]">
+              <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <h3 className="text-2xl font-extrabold text-[#0b2f67] sm:text-4xl">
+                  Recent Complaints
+                </h3>
+                <Link
+                  to="/admin/complaints"
+                  className="rounded-[20px] bg-[#e8eefb] px-8 py-4 text-xl font-extrabold text-[#0a3772]"
+                >
+                  Manage
+                </Link>
+              </div>
+
+              <div className="space-y-4">
+                {recentComplaints.map((complaint) => (
+                  <div
+                    key={complaint.title}
+                    className="flex flex-col gap-4 rounded-[24px] border border-blue-100 bg-[#f7faff] px-5 py-5 md:flex-row md:items-center md:justify-between"
+                  >
+                    <div>
+                      <h4 className="text-xl font-extrabold text-[#0b1f45]">
+                        {complaint.title}
+                      </h4>
+                      <p className="mt-1 text-base text-[#617ba4]">
+                        {complaint.meta}
+                      </p>
+                    </div>
+                    <span className="inline-flex rounded-full bg-[#ffe1df] px-6 py-2 text-xl font-extrabold text-[#ef534f]">
+                      {complaint.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
           </div>
 
-          {/* Insights */}
-          <div className="bg-white/90 backdrop-blur-sm p-8 rounded-3xl shadow-[0_10px_30px_rgba(59,130,246,0.08)] border border-blue-100">
-            <h3 className="text-3xl font-bold mb-6 text-slate-800">
-              System Insights
-            </h3>
-
-            <div className="space-y-5">
-              <div className="p-4 rounded-2xl bg-blue-50 border border-blue-100">
-                <p className="text-slate-500 text-sm">Peak booking time</p>
-                <h4 className="text-blue-600 font-bold text-xl mt-1">
-                  {summary.peakHour || "N/A"}
-                </h4>
+          <div className="space-y-8">
+            <section className="rounded-[34px] border border-blue-100 bg-white p-7 shadow-[0_18px_45px_rgba(80,122,191,0.18)]">
+              <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <h3 className="text-2xl font-extrabold text-[#0b2f67] sm:text-4xl">
+                  Booking Peak Hour
+                </h3>
+                <span className="rounded-full bg-[#dff7ec] px-5 py-2 text-lg font-bold text-[#049b63]">
+                  Live Insight
+                </span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-sky-50 border border-sky-100">
-                <p className="text-slate-500 text-sm">Total users</p>
-                <h4 className="text-slate-800 font-bold text-2xl mt-1">
-                  {summary.totalUsers}
-                </h4>
+              <div className="grid grid-cols-2 gap-y-8 text-center sm:grid-cols-5">
+                {peakHours.map((slot) => (
+                  <div key={slot.time}>
+                    <p className="text-4xl font-extrabold text-[#0b2f67]">
+                      {slot.count}
+                    </p>
+                    <p className="mt-3 text-xl text-[#617ba4]">{slot.time}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="rounded-[34px] border border-blue-100 bg-white p-7 shadow-[0_18px_45px_rgba(80,122,191,0.18)]">
+              <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <h3 className="text-2xl font-extrabold text-[#0b2f67] sm:text-4xl">
+                  Trip Status Overview
+                </h3>
+                <Link
+                  to={routeManager ? "/routes/new" : "/admin/routes"}
+                  className="rounded-[20px] bg-[#e8eefb] px-8 py-4 text-xl font-extrabold text-[#0a3772]"
+                >
+                  Open Trips
+                </Link>
               </div>
 
-              <div className="p-4 rounded-2xl bg-red-50 border border-red-100">
-                <p className="text-slate-500 text-sm">Complaints</p>
-                <h4 className="text-slate-800 font-bold text-2xl mt-1">
-                  {summary.totalComplaints}
-                </h4>
+              <div className="space-y-4">
+                {tripStatuses.map((trip) => (
+                  <div
+                    key={trip.trip}
+                    className="flex flex-col gap-4 rounded-[24px] border border-blue-100 bg-[#f7faff] px-5 py-5 md:flex-row md:items-center md:justify-between"
+                  >
+                    <div>
+                      <h4 className="text-xl font-extrabold text-[#0b1f45]">
+                        {trip.trip}
+                      </h4>
+                      <p className="mt-1 text-base text-[#617ba4]">
+                        {trip.driver}
+                      </p>
+                    </div>
+                    <span
+                      className={`inline-flex rounded-full px-5 py-2 text-xl font-extrabold ${trip.badgeClass}`}
+                    >
+                      {trip.status}
+                    </span>
+                  </div>
+                ))}
               </div>
-
-              <div className="p-4 rounded-2xl bg-green-50 border border-green-100">
-                <p className="text-slate-500 text-sm">Bookings</p>
-                <h4 className="text-slate-800 font-bold text-2xl mt-1">
-                  {summary.totalBookings}
-                </h4>
-              </div>
-            </div>
+            </section>
           </div>
+        </div>
+
+        <div className="mt-8 rounded-[28px] border border-blue-100 bg-white px-6 py-4 text-base text-slate-500 shadow-[0_18px_45px_rgba(80,122,191,0.12)]">
+          Logged in as{" "}
+          <span className="font-extrabold capitalize text-[#0a3772]">
+            {adminData?.role || "admin"}
+          </span>
         </div>
       </main>
     </div>

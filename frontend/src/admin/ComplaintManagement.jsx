@@ -1,11 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import AdminSidebar from "./AdminSidebar";
 import axios from "../axiosinstance";
 import {
-  FaTachometerAlt,
-  FaUserCog,
-  FaClipboardList,
-  FaSignOutAlt,
   FaSearch,
   FaExclamationCircle,
   FaCheckCircle,
@@ -13,8 +9,6 @@ import {
 } from "react-icons/fa";
 
 function ComplaintManagement() {
-  const navigate = useNavigate();
-
   const [complaints, setComplaints] = useState([]);
   const [replyData, setReplyData] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
@@ -57,12 +51,6 @@ function ComplaintManagement() {
     } catch (error) {
       console.error("Failed to update complaint", error);
     }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("adminData");
-    navigate("/adminlogin");
   };
 
   const filteredComplaints = useMemo(() => {
@@ -110,49 +98,10 @@ function ComplaintManagement() {
   };
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-[#f8fbff] via-[#eef6ff] to-[#f5f9ff]">
-      {/* Sidebar */}
-      <aside className="w-72 bg-[#1e293b] text-white flex flex-col p-8 shadow-xl">
-        <div className="mb-12">
-          <h2 className="text-3xl font-bold">UniRide</h2>
-          <p className="text-gray-400 text-sm mt-1">Admin Panel</p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-[#eff4fb] via-[#f7fbff] to-[#eef3f9] lg:flex">
+      <AdminSidebar />
 
-        <nav className="flex flex-col gap-4 text-base">
-          <Link
-            to="/admin/dashboard"
-            className="flex items-center gap-3 hover:bg-gray-700 px-5 py-3 rounded-xl transition text-lg"
-          >
-            <FaTachometerAlt /> Dashboard
-          </Link>
-
-          <Link
-            to="/admin/users"
-            className="flex items-center gap-3 hover:bg-gray-700 px-5 py-3 rounded-xl transition text-lg"
-          >
-            <FaUserCog /> Manage Users
-          </Link>
-
-          <Link
-            to="/admin/complaints"
-            className="flex items-center gap-3 bg-blue-600 px-5 py-3 rounded-xl font-semibold text-lg"
-          >
-            <FaClipboardList /> Complaints
-          </Link>
-        </nav>
-
-        <div className="mt-auto">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 px-5 py-3 rounded-xl font-semibold text-lg"
-          >
-            <FaSignOutAlt /> Logout
-          </button>
-        </div>
-      </aside>
-
-      {/* Main */}
-      <main className="flex-1 p-10">
+      <main className="flex-1 p-6 lg:p-10">
         {/* Header */}
         <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5 mb-10">
           <div>

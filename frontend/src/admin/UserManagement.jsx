@@ -1,20 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import axios from "../axiosinstance";
-import { Link, useNavigate } from "react-router-dom";
-import {
-  FaTachometerAlt,
-  FaUserCog,
-  FaClipboardList,
-  FaSignOutAlt,
-  FaSearch,
-  FaUsers,
-  FaUserCheck,
-  FaUserTimes,
-} from "react-icons/fa";
+import AdminSidebar from "./AdminSidebar";
+import { FaSearch } from "react-icons/fa";
 
 function UserManagement() {
-  const navigate = useNavigate();
-
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
 
@@ -60,12 +50,6 @@ function UserManagement() {
     setFilteredUsers(data);
   }, [search, roleFilter, statusFilter, users]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("adminData");
-    navigate("/adminlogin");
-  };
-
   const toggleStatus = async (user) => {
     try {
       await axios.put(`/admin/users/${user._id}`, {
@@ -92,134 +76,89 @@ function UserManagement() {
   const activeUsers = users.filter((u) => u.isActive).length;
   const inactiveUsers = users.filter((u) => !u.isActive).length;
 
+  const statCards = [
+    { label: "Total Users", value: totalUsers },
+    { label: "Active Users", value: activeUsers },
+    { label: "Inactive Users", value: inactiveUsers },
+  ];
+
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-[#f8fbff] via-[#eef6ff] to-[#f5f9ff]">
-      {/* Sidebar */}
-      <aside className="w-72 bg-[#1e293b] text-white flex flex-col p-8 shadow-xl">
-        <div className="mb-12">
-          <h2 className="text-3xl font-bold">UniRide</h2>
-          <p className="text-gray-400 text-sm mt-1">Admin Panel</p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-[#eff4fb] via-[#f7fbff] to-[#eef3f9] lg:flex">
+      <AdminSidebar />
 
-        <nav className="flex flex-col gap-4 text-base">
-          <Link
-            to="/admin/dashboard"
-            className="flex items-center gap-3 hover:bg-gray-700 px-5 py-3 rounded-xl transition text-lg"
-          >
-            <FaTachometerAlt /> Dashboard
-          </Link>
-
-          <Link
-            to="/admin/users"
-            className="flex items-center gap-3 bg-blue-600 px-5 py-3 rounded-xl font-semibold text-lg"
-          >
-            <FaUserCog /> Manage Users
-          </Link>
-
-          <Link
-            to="/admin/complaints"
-            className="flex items-center gap-3 hover:bg-gray-700 px-5 py-3 rounded-xl transition text-lg"
-          >
-            <FaClipboardList /> Complaints
-          </Link>
-        </nav>
-
-        <div className="mt-auto">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 px-5 py-3 rounded-xl font-semibold text-lg"
-          >
-            <FaSignOutAlt /> Logout
-          </button>
-        </div>
-      </aside>
-
-      {/* Main */}
-      <main className="flex-1 p-10">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-10 gap-4">
+      <main className="flex-1 p-6 lg:p-10">
+        <div className="mb-10 flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
           <div>
-            <p className="text-blue-600 font-semibold text-lg mb-2">
-              User Overview
-            </p>
-            <h1 className="text-5xl font-bold text-slate-800">
+            <h1 className="text-4xl font-extrabold text-[#0b2f67] sm:text-6xl">
               User Management
             </h1>
-            <p className="text-slate-500 mt-2 text-lg">
-              Manage registered users and control account access.
-            </p>
           </div>
 
-          <div className="bg-white/90 backdrop-blur-sm px-6 py-4 rounded-3xl shadow-[0_10px_30px_rgba(59,130,246,0.08)] border border-blue-100 text-base">
-            <p className="text-slate-500">Total Users</p>
-            <p className="text-4xl font-bold text-blue-600 mt-1">{totalUsers}</p>
-          </div>
-        </div>
-
-        {/* Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white/90 backdrop-blur-sm p-6 rounded-3xl shadow-[0_10px_30px_rgba(59,130,246,0.08)] border border-blue-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-500 text-lg">Total Users</p>
-                <h2 className="text-5xl font-bold text-slate-800 mt-2">{totalUsers}</h2>
-              </div>
-              <div className="w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center">
-                <FaUsers className="text-blue-600 text-2xl" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white/90 backdrop-blur-sm p-6 rounded-3xl shadow-[0_10px_30px_rgba(59,130,246,0.08)] border border-blue-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-500 text-lg">Active</p>
-                <h2 className="text-5xl font-bold text-slate-800 mt-2">{activeUsers}</h2>
-              </div>
-              <div className="w-14 h-14 rounded-2xl bg-green-100 flex items-center justify-center">
-                <FaUserCheck className="text-green-600 text-2xl" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white/90 backdrop-blur-sm p-6 rounded-3xl shadow-[0_10px_30px_rgba(59,130,246,0.08)] border border-blue-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-500 text-lg">Inactive</p>
-                <h2 className="text-5xl font-bold text-slate-800 mt-2">{inactiveUsers}</h2>
-              </div>
-              <div className="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center">
-                <FaUserTimes className="text-red-600 text-2xl" />
-              </div>
-            </div>
+          <div className="flex flex-wrap gap-4">
+            <Link
+              to="/admin/dashboard"
+              className="rounded-3xl bg-[#e8eefb] px-7 py-4 text-lg font-extrabold text-[#0a3772] shadow-sm transition hover:opacity-90"
+            >
+              Dashboard
+            </Link>
+            <Link
+              to="/admin/complaints"
+              className="rounded-3xl bg-[#ffbf00] px-7 py-4 text-lg font-extrabold text-[#111827] shadow-sm transition hover:opacity-90"
+            >
+              Complaints
+            </Link>
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="bg-white/90 backdrop-blur-sm p-6 rounded-3xl shadow-[0_10px_30px_rgba(59,130,246,0.08)] border border-blue-100 mb-8">
-          <div className="flex flex-col lg:flex-row gap-5 lg:items-end">
-            <div className="flex-1">
-              <label className="block text-base font-medium text-slate-700 mb-2">
+        <div className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
+          {statCards.map((card) => (
+            <div
+              key={card.label}
+              className="rounded-[30px] border border-blue-100 bg-white p-7 shadow-[0_18px_45px_rgba(80,122,191,0.18)]"
+            >
+              <p className="text-[1.05rem] font-bold text-[#5c79a8]">
+                {card.label}
+              </p>
+              <h2 className="mt-5 text-5xl font-extrabold text-[#0b2f67]">
+                {card.value}
+              </h2>
+            </div>
+          ))}
+        </div>
+
+        <section className="mb-8 rounded-[34px] border border-blue-100 bg-white p-7 shadow-[0_18px_45px_rgba(80,122,191,0.18)]">
+          <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <h3 className="text-2xl font-extrabold text-[#0b2f67] sm:text-4xl">
+              Filter Users
+            </h3>
+            <span className="rounded-full bg-[#e8eefb] px-5 py-2 text-lg font-bold text-[#3464d4]">
+              Admin Control
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.4fr_0.8fr_0.8fr]">
+            <div>
+              <label className="mb-2 block text-base font-bold text-[#5c79a8]">
                 Search
               </label>
               <div className="relative">
-                <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5c79a8]" />
                 <input
                   type="text"
-                  placeholder="Search name or email..."
-                  className="w-full border border-blue-100 bg-white py-3 pl-11 pr-4 rounded-2xl text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  placeholder="Search name or email"
+                  className="w-full rounded-[20px] border border-blue-100 bg-[#f7faff] py-3 pl-11 pr-4 text-base text-[#0b1f45] outline-none transition focus:border-[#3464d4] focus:ring-2 focus:ring-[#dbe7ff]"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
             </div>
 
-            <div className="w-full lg:w-60">
-              <label className="block text-base font-medium text-slate-700 mb-2">
+            <div>
+              <label className="mb-2 block text-base font-bold text-[#5c79a8]">
                 Role
               </label>
               <select
-                className="w-full border border-blue-100 bg-white p-3 rounded-2xl text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full rounded-[20px] border border-blue-100 bg-[#f7faff] p-3 text-base text-[#0b1f45] outline-none transition focus:border-[#3464d4] focus:ring-2 focus:ring-[#dbe7ff]"
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
               >
@@ -233,12 +172,12 @@ function UserManagement() {
               </select>
             </div>
 
-            <div className="w-full lg:w-60">
-              <label className="block text-base font-medium text-slate-700 mb-2">
+            <div>
+              <label className="mb-2 block text-base font-bold text-[#5c79a8]">
                 Status
               </label>
               <select
-                className="w-full border border-blue-100 bg-white p-3 rounded-2xl text-base focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full rounded-[20px] border border-blue-100 bg-[#f7faff] p-3 text-base text-[#0b1f45] outline-none transition focus:border-[#3464d4] focus:ring-2 focus:ring-[#dbe7ff]"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
               >
@@ -248,77 +187,96 @@ function UserManagement() {
               </select>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Table */}
-        <div className="bg-white/90 backdrop-blur-sm p-6 rounded-3xl shadow-[0_10px_30px_rgba(59,130,246,0.08)] border border-blue-100 overflow-x-auto">
-          <table className="w-full text-base">
-            <thead>
-              <tr className="bg-[#edf4ff] text-center text-slate-700">
-                <th className="p-4 rounded-l-2xl">Name</th>
-                <th className="p-4">Email</th>
-                <th className="p-4">Role</th>
-                <th className="p-4">Phone</th>
-                <th className="p-4">Status</th>
-                <th className="p-4 rounded-r-2xl">Actions</th>
-              </tr>
-            </thead>
+        <section className="rounded-[34px] border border-blue-100 bg-white p-7 shadow-[0_18px_45px_rgba(80,122,191,0.18)]">
+          <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <h3 className="text-2xl font-extrabold text-[#0b2f67] sm:text-4xl">
+              User Records
+            </h3>
+            <span className="rounded-full bg-[#e8eefb] px-5 py-2 text-lg font-bold text-[#3464d4]">
+              {filteredUsers.length} Results
+            </span>
+          </div>
 
-            <tbody>
-              {filteredUsers.map((user) => (
-                <tr
-                  key={user._id}
-                  className="border-t border-blue-50 text-center hover:bg-[#f8fbff] transition"
-                >
-                  <td className="p-4 font-semibold text-slate-800">{user.name}</td>
-                  <td className="p-4 text-slate-600">{user.email}</td>
-                  <td className="p-4 capitalize text-slate-700">{user.role}</td>
-                  <td className="p-4 text-slate-600">{user.phoneNumber || "-"}</td>
-                  <td className="p-4">
-                    <span
-                      className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                        user.isActive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {user.isActive ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex justify-center gap-3 flex-wrap">
-                      <button
-                        onClick={() => toggleStatus(user)}
-                        className={`text-white px-4 py-2 rounded-xl text-sm font-medium transition ${
+          <div className="overflow-x-auto rounded-[24px] border border-blue-100 bg-[#f7faff]">
+            <table className="w-full min-w-[860px] text-left">
+              <thead>
+                <tr className="text-[#5c79a8]">
+                  <th className="px-6 py-5 text-base font-extrabold">Name</th>
+                  <th className="px-6 py-5 text-base font-extrabold">Email</th>
+                  <th className="px-6 py-5 text-base font-extrabold">Role</th>
+                  <th className="px-6 py-5 text-base font-extrabold">Phone</th>
+                  <th className="px-6 py-5 text-base font-extrabold">Status</th>
+                  <th className="px-6 py-5 text-base font-extrabold">Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredUsers.map((user) => (
+                  <tr
+                    key={user._id}
+                    className="border-t border-blue-100 bg-white/60 text-[#0b1f45]"
+                  >
+                    <td className="px-6 py-5 text-base font-extrabold">
+                      {user.name}
+                    </td>
+                    <td className="px-6 py-5 text-base">{user.email}</td>
+                    <td className="px-6 py-5 text-base capitalize">
+                      {user.role}
+                    </td>
+                    <td className="px-6 py-5 text-base">
+                      {user.phoneNumber || "-"}
+                    </td>
+                    <td className="px-6 py-5">
+                      <span
+                        className={`inline-flex rounded-full px-4 py-2 text-sm font-extrabold ${
                           user.isActive
-                            ? "bg-yellow-500 hover:bg-yellow-600"
-                            : "bg-blue-500 hover:bg-blue-600"
+                            ? "bg-[#dff7ec] text-[#049b63]"
+                            : "bg-[#ffe3e1] text-[#ef534f]"
                         }`}
                       >
-                        {user.isActive ? "Deactivate" : "Activate"}
-                      </button>
+                        {user.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          onClick={() => toggleStatus(user)}
+                          className={`rounded-[18px] px-5 py-2.5 text-sm font-extrabold transition hover:opacity-90 ${
+                            user.isActive
+                              ? "bg-[#ffbf00] text-[#111827]"
+                              : "bg-[#143d7a] text-white"
+                          }`}
+                        >
+                          {user.isActive ? "Deactivate" : "Activate"}
+                        </button>
 
-                      <button
-                        onClick={() => handleDelete(user._id)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                        <button
+                          onClick={() => handleDelete(user._id)}
+                          className="rounded-[18px] bg-[#ffe1df] px-5 py-2.5 text-sm font-extrabold text-[#ef534f] transition hover:opacity-90"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
 
-              {filteredUsers.length === 0 && (
-                <tr>
-                  <td colSpan="6" className="text-center py-10 text-slate-500 text-lg">
-                    No users found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                {filteredUsers.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan="6"
+                      className="px-6 py-12 text-center text-lg font-bold text-[#5c79a8]"
+                    >
+                      No users found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
       </main>
     </div>
   );
