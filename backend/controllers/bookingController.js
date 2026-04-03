@@ -120,3 +120,91 @@ exports.cancelBooking = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+// UPDATE PAYMENT / VERIFICATION FIELDS
+exports.updateBookingPayment = async (req, res) => {
+  try {
+    const {
+      paymentStatus,
+      paymentReference,
+      verificationStatus,
+      receiptUrl,
+    } = req.body;
+
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+
+    if (paymentStatus !== undefined) booking.paymentStatus = paymentStatus;
+    if (paymentReference !== undefined) {
+      booking.paymentReference = paymentReference;
+    }
+    if (verificationStatus !== undefined) {
+      booking.verificationStatus = verificationStatus;
+    }
+    if (receiptUrl !== undefined) booking.receiptUrl = receiptUrl;
+
+    await booking.save();
+
+    const populated = await booking.populate([
+      { path: "route", select: "routeName startLocation endLocation startTime" },
+      { path: "boardingStop", select: "stopName order" },
+    ]);
+
+    res.json(populated);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// VERIFY PAYMENT AND CONFIRM BOOKING
+exports.verifyBookingPayment = async (req, res) => {
+  try {
+    const { paymentReference = "" } = req.body;
+
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+
+    booking.paymentStatus = "paid";
+    booking.verificationStatus = "verified";
+    booking.status = "confirmed";
+    if (paymentReference.trim()) {
+      booking.paymentReference = paymentReference.trim();
+    }
+
+    await booking.save();
+
+    const populated = await booking.populate([
+      { path: "route", select: "routeName startLocation endLocation startTime" },
+      { path: "boardingStop", select: "stopName order" },
+    ]);
+
+    res.json(populated);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// REFUND BOOKING PAYMENT
+exports.refundBookingPayment = async (req, res) => {
+  try {
+    const { refundReason = "" } = req.body;
+
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+
+    booking.paymentStatus = "refunded";
+    booking.refundReason = refundReason.trim();
+    booking.refundedAt = new Date();
+
+    await booking.save();
+
+    const populated = await booking.populate([
+      { path: "route", select: "routeName startLocation endLocation startTime" },
+      { path: "boardingStop", select: "stopName order" },
+    ]);
+
+    res.json(populated);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

@@ -9,6 +9,7 @@ function AdminDashboard() {
   const routeManager = isRouteManager(adminData?.role);
 
   const [recentComplaints, setRecentComplaints] = useState([]);
+  const [tripStatuses, setTripStatuses] = useState([]);
   const [summary, setSummary] = useState({
     totalUsers: 0,
     totalComplaints: 0,
@@ -19,6 +20,7 @@ function AdminDashboard() {
   useEffect(() => {
     fetchSummary();
     fetchRecentComplaints();
+    fetchTripStatuses();
   }, []);
 
   const fetchSummary = async () => {
@@ -36,6 +38,15 @@ function AdminDashboard() {
       setRecentComplaints(res.data.slice(0, 3));
     } catch (error) {
       console.error("Failed to fetch recent complaints", error);
+    }
+  };
+
+  const fetchTripStatuses = async () => {
+    try {
+      const res = await axios.get("/trips");
+      setTripStatuses(res.data.slice(0, 4));
+    } catch (error) {
+      console.error("Failed to fetch trip statuses", error);
     }
   };
 
@@ -101,40 +112,20 @@ function AdminDashboard() {
     },
   ];
 
-  const peakHours = [
-    { count: 90, time: "6 AM" },
-    { count: 160, time: "7 AM" },
-    { count: 190, time: "8 AM" },
-    { count: 145, time: "9 AM" },
-    { count: 66, time: "10 AM" },
-  ];
+  const formatTripStatus = (status) => {
+    if (status === "Scheduled") return "Scheduled";
+    if (status === "Ongoing") return "Ongoing";
+    if (status === "Completed") return "Completed";
+    if (status === "Delayed") return "Delayed";
+    return status || "Unknown";
+  };
 
-  const tripStatuses = [
-    {
-      trip: "TRP-2204 - R-04 Malabe",
-      driver: "Driver: Nuwan Silva",
-      status: "Pending",
-      badgeClass: "bg-[#fff3dc] text-[#d08a00]",
-    },
-    {
-      trip: "TRP-2207 - R-07 Kadawatha",
-      driver: "Driver: Ramesh Fernando",
-      status: "Delayed",
-      badgeClass: "bg-[#ffe3e1] text-[#ef534f]",
-    },
-    {
-      trip: "TRP-2212 - R-01 Kottawa",
-      driver: "Driver: Kasun Perera",
-      status: "Completed",
-      badgeClass: "bg-[#dff7ec] text-[#049b63]",
-    },
-    {
-      trip: "TRP-2218 - R-10 Maharagama",
-      driver: "Driver: Tharindu Jay",
-      status: "Pending",
-      badgeClass: "bg-[#fff3dc] text-[#d08a00]",
-    },
-  ];
+  const getTripBadgeClass = (status) => {
+    if (status === "Completed") return "bg-[#dff7ec] text-[#049b63]";
+    if (status === "Delayed") return "bg-[#ffe3e1] text-[#ef534f]";
+    if (status === "Ongoing") return "bg-[#e8eefb] text-[#0a3772]";
+    return "bg-[#fff3dc] text-[#d08a00]";
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#eff4fb] via-[#f7fbff] to-[#eef3f9] lg:flex">
@@ -238,15 +229,13 @@ function AdminDashboard() {
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-y-8 text-center sm:grid-cols-5">
-                {peakHours.map((slot) => (
-                  <div key={slot.time}>
-                    <p className="text-4xl font-extrabold text-[#0b2f67]">
-                      {slot.count}
-                    </p>
-                    <p className="mt-3 text-xl text-[#617ba4]">{slot.time}</p>
-                  </div>
-                ))}
+              <div className="rounded-[24px] border border-blue-100 bg-[#f7faff] px-6 py-10 text-center">
+                <p className="text-base font-bold uppercase tracking-[0.2em] text-[#5c79a8]">
+                  Peak Booking Window
+                </p>
+                <p className="mt-5 text-4xl font-extrabold text-[#0b2f67] sm:text-5xl">
+                  {summary.peakHour || "N/A"}
+                </p>
               </div>
             </section>
 
@@ -256,7 +245,7 @@ function AdminDashboard() {
                   Trip Status Overview
                 </h3>
                 <Link
-                  to={routeManager ? "/routes/new" : "/admin/routes"}
+                  to={routeManager ? "/routes/new" : "/admin/trips"}
                   className="rounded-[20px] bg-[#e8eefb] px-8 py-4 text-xl font-extrabold text-[#0a3772]"
                 >
                   Open Trips
@@ -264,26 +253,34 @@ function AdminDashboard() {
               </div>
 
               <div className="space-y-4">
-                {tripStatuses.map((trip) => (
-                  <div
-                    key={trip.trip}
-                    className="flex flex-col gap-4 rounded-[24px] border border-blue-100 bg-[#f7faff] px-5 py-5 md:flex-row md:items-center md:justify-between"
-                  >
-                    <div>
-                      <h4 className="text-xl font-extrabold text-[#0b1f45]">
-                        {trip.trip}
-                      </h4>
-                      <p className="mt-1 text-base text-[#617ba4]">
-                        {trip.driver}
-                      </p>
-                    </div>
-                    <span
-                      className={`inline-flex rounded-full px-5 py-2 text-xl font-extrabold ${trip.badgeClass}`}
-                    >
-                      {trip.status}
-                    </span>
+                {tripStatuses.length === 0 ? (
+                  <div className="rounded-[24px] border border-blue-100 bg-[#f7faff] px-5 py-8 text-center text-base font-bold text-[#5c79a8]">
+                    No trips found
                   </div>
-                ))}
+                ) : (
+                  tripStatuses.map((trip) => (
+                    <div
+                      key={trip._id}
+                      className="flex flex-col gap-4 rounded-[24px] border border-blue-100 bg-[#f7faff] px-5 py-5 md:flex-row md:items-center md:justify-between"
+                    >
+                      <div>
+                        <h4 className="text-xl font-extrabold text-[#0b1f45]">
+                          {trip.route}
+                        </h4>
+                        <p className="mt-1 text-base text-[#617ba4]">
+                          Driver: {trip.driver?.name || "Unassigned"}
+                        </p>
+                      </div>
+                      <span
+                        className={`inline-flex rounded-full px-5 py-2 text-xl font-extrabold ${getTripBadgeClass(
+                          trip.status
+                        )}`}
+                      >
+                        {formatTripStatus(trip.status)}
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
             </section>
           </div>

@@ -13,8 +13,8 @@ function ManageRoutes() {
           allowRouteEditing={false}
           allowStopManagement={false}
           allowStatusToggle
-          title="Manage Routes"
-          description="View, search, edit, and maintain all shuttle routes from the admin panel."
+          title="Route Oversight"
+          description="Monitor shuttle routes with the same admin-style search, filters, stats, and action workflows used in the other management pages."
         />
       </main>
     </div>
