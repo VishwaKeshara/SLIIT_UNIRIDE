@@ -45,11 +45,15 @@ function AdminSidebar() {
     },
     {
       label: "Trip Monitoring",
-      enabled: false,
+      to: "/admin/trips",
+      enabled: !routeManager,
+      active: location.pathname === "/admin/trips",
     },
     {
       label: "Analytics & Reports",
-      enabled: false,
+      to: "/admin/reports",
+      enabled: !routeManager,
+      active: location.pathname === "/admin/reports",
     },
     {
       label: "System Settings",
