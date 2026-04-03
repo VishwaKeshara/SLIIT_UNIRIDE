@@ -47,6 +47,7 @@ function Login() {
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("userData", JSON.stringify(res.data.user));
+      window.dispatchEvent(new Event("userChanged"));
 
       navigate("/home");
     } catch (err) {
@@ -70,7 +71,6 @@ function Login() {
 
       <div className="relative z-10 min-h-[calc(100vh-140px)] flex items-center justify-center px-4 py-6 md:py-8">
         <div className="w-full max-w-6xl grid lg:grid-cols-2 rounded-[24px] overflow-hidden border border-white/10 shadow-2xl backdrop-blur-xl bg-white/5">
-          
           <div className="hidden lg:flex flex-col justify-between p-8 xl:p-10 bg-gradient-to-br from-slate-950/70 via-slate-900/50 to-blue-950/30 border-r border-white/10">
             <div>
               <span className="inline-flex items-center rounded-full border border-blue-400/30 bg-blue-400/10 px-4 py-1.5 text-sm font-medium text-blue-300">
