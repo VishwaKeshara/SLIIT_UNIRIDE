@@ -8,6 +8,7 @@ function AdminDashboard() {
   const adminData = getStoredAdminData();
   const routeManager = isRouteManager(adminData?.role);
 
+  const [recentComplaints, setRecentComplaints] = useState([]);
   const [summary, setSummary] = useState({
     totalUsers: 0,
     totalComplaints: 0,
@@ -17,6 +18,7 @@ function AdminDashboard() {
 
   useEffect(() => {
     fetchSummary();
+    fetchRecentComplaints();
   }, []);
 
   const fetchSummary = async () => {
@@ -26,6 +28,37 @@ function AdminDashboard() {
     } catch (error) {
       console.error("Failed to fetch summary", error);
     }
+  };
+
+  const fetchRecentComplaints = async () => {
+    try {
+      const res = await axios.get("/complaints");
+      setRecentComplaints(res.data.slice(0, 3));
+    } catch (error) {
+      console.error("Failed to fetch recent complaints", error);
+    }
+  };
+
+  const formatComplaintType = (type) => {
+    if (type === "booking") return "Booking Issue";
+    if (type === "driver") return "Driver Issue";
+    if (type === "schedule") return "Schedule Issue";
+    if (type === "payment") return "Payment Issue";
+    return "Other";
+  };
+
+  const formatComplaintStatus = (status) => {
+    if (status === "in progress") return "In Progress";
+    if (status === "resolved") return "Resolved";
+    if (status === "rejected") return "Rejected";
+    return "Pending";
+  };
+
+  const getComplaintBadgeClass = (status) => {
+    if (status === "resolved") return "bg-[#dff7ec] text-[#049b63]";
+    if (status === "in progress") return "bg-[#fff3dc] text-[#d08a00]";
+    if (status === "rejected") return "bg-slate-200 text-slate-600";
+    return "bg-[#ffe1df] text-[#ef534f]";
   };
 
   const headerActions = [
@@ -68,29 +101,6 @@ function AdminDashboard() {
     },
   ];
 
-  const moduleSteps = [
-    {
-      title: "1. Dashboard loads first",
-      description:
-        "Admin immediately sees users, complaints, routes, and trip health.",
-    },
-    {
-      title: "2. Problem areas are identified",
-      description:
-        "Admin checks overdue complaints, inactive routes, or delayed trips.",
-    },
-    {
-      title: "3. Action is taken on related page",
-      description:
-        "Admin can add users, deactivate access, resolve complaints, or update routes.",
-    },
-    {
-      title: "4. System records updates",
-      description:
-        "Counts, statuses, lists, and dashboard values refresh after each action.",
-    },
-  ];
-
   const peakHours = [
     { count: 90, time: "6 AM" },
     { count: 160, time: "7 AM" },
@@ -99,45 +109,27 @@ function AdminDashboard() {
     { count: 66, time: "10 AM" },
   ];
 
-  const recentComplaints = [
-    {
-      title: "Bus arrived late for Route R-07",
-      meta: "Delay · High Priority",
-      status: "Open",
-    },
-    {
-      title: "Morning shuttle overcrowded",
-      meta: "Capacity · Medium Priority",
-      status: "Open",
-    },
-    {
-      title: "Driver missed pickup point",
-      meta: "Route Issue · High Priority",
-      status: "Open",
-    },
-  ];
-
   const tripStatuses = [
     {
-      trip: "TRP-2204 · R-04 Malabe",
+      trip: "TRP-2204 - R-04 Malabe",
       driver: "Driver: Nuwan Silva",
       status: "Pending",
       badgeClass: "bg-[#fff3dc] text-[#d08a00]",
     },
     {
-      trip: "TRP-2207 · R-07 Kadawatha",
+      trip: "TRP-2207 - R-07 Kadawatha",
       driver: "Driver: Ramesh Fernando",
       status: "Delayed",
       badgeClass: "bg-[#ffe3e1] text-[#ef534f]",
     },
     {
-      trip: "TRP-2212 · R-01 Kottawa",
+      trip: "TRP-2212 - R-01 Kottawa",
       driver: "Driver: Kasun Perera",
       status: "Completed",
       badgeClass: "bg-[#dff7ec] text-[#049b63]",
     },
     {
-      trip: "TRP-2218 · R-10 Maharagama",
+      trip: "TRP-2218 - R-10 Maharagama",
       driver: "Driver: Tharindu Jay",
       status: "Pending",
       badgeClass: "bg-[#fff3dc] text-[#d08a00]",
@@ -192,30 +184,6 @@ function AdminDashboard() {
             <section className="rounded-[34px] border border-blue-100 bg-white p-7 shadow-[0_18px_45px_rgba(80,122,191,0.18)]">
               <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <h3 className="text-2xl font-extrabold text-[#0b2f67] sm:text-4xl">
-                  How Admin Module Works
-                </h3>
-                <span className="rounded-full bg-[#e8eefb] px-5 py-2 text-lg font-bold text-[#3464d4]">
-                  Professional Flow
-                </span>
-              </div>
-
-              <div className="space-y-4">
-                {moduleSteps.map((step) => (
-                  <div
-                    key={step.title}
-                    className="rounded-[24px] border border-blue-100 bg-[#f7faff] px-5 py-5"
-                  >
-                    <h4 className="text-xl font-extrabold text-[#0b1f45]">
-                      {step.title}
-                    </h4>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="rounded-[34px] border border-blue-100 bg-white p-7 shadow-[0_18px_45px_rgba(80,122,191,0.18)]">
-              <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <h3 className="text-2xl font-extrabold text-[#0b2f67] sm:text-4xl">
                   Recent Complaints
                 </h3>
                 <Link
@@ -227,24 +195,34 @@ function AdminDashboard() {
               </div>
 
               <div className="space-y-4">
-                {recentComplaints.map((complaint) => (
-                  <div
-                    key={complaint.title}
-                    className="flex flex-col gap-4 rounded-[24px] border border-blue-100 bg-[#f7faff] px-5 py-5 md:flex-row md:items-center md:justify-between"
-                  >
-                    <div>
-                      <h4 className="text-xl font-extrabold text-[#0b1f45]">
-                        {complaint.title}
-                      </h4>
-                      <p className="mt-1 text-base text-[#617ba4]">
-                        {complaint.meta}
-                      </p>
-                    </div>
-                    <span className="inline-flex rounded-full bg-[#ffe1df] px-6 py-2 text-xl font-extrabold text-[#ef534f]">
-                      {complaint.status}
-                    </span>
+                {recentComplaints.length === 0 ? (
+                  <div className="rounded-[24px] border border-blue-100 bg-[#f7faff] px-5 py-8 text-center text-base font-bold text-[#5c79a8]">
+                    No complaints found
                   </div>
-                ))}
+                ) : (
+                  recentComplaints.map((complaint) => (
+                    <div
+                      key={complaint._id}
+                      className="flex flex-col gap-4 rounded-[24px] border border-blue-100 bg-[#f7faff] px-5 py-5 md:flex-row md:items-center md:justify-between"
+                    >
+                      <div>
+                        <h4 className="text-xl font-extrabold text-[#0b1f45]">
+                          {complaint.title}
+                        </h4>
+                        <p className="mt-1 text-base text-[#617ba4]">
+                          {formatComplaintType(complaint.type)}
+                        </p>
+                      </div>
+                      <span
+                        className={`inline-flex rounded-full px-6 py-2 text-xl font-extrabold ${getComplaintBadgeClass(
+                          complaint.status
+                        )}`}
+                      >
+                        {formatComplaintStatus(complaint.status)}
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
             </section>
           </div>

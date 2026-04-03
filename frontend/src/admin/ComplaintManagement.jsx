@@ -1,12 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import AdminSidebar from "./AdminSidebar";
 import axios from "../axiosinstance";
-import {
-  FaSearch,
-  FaExclamationCircle,
-  FaCheckCircle,
-  FaSpinner,
-} from "react-icons/fa";
+import { FaSearch } from "react-icons/fa";
 
 function ComplaintManagement() {
   const [complaints, setComplaints] = useState([]);
@@ -72,14 +68,22 @@ function ComplaintManagement() {
   }, [complaints, searchTerm, statusFilter]);
 
   const pendingCount = complaints.filter((c) => c.status === "pending").length;
-  const inProgressCount = complaints.filter((c) => c.status === "in progress").length;
+  const inProgressCount = complaints.filter(
+    (c) => c.status === "in progress"
+  ).length;
   const resolvedCount = complaints.filter((c) => c.status === "resolved").length;
 
+  const statCards = [
+    { label: "Pending Complaints", value: pendingCount },
+    { label: "In Progress", value: inProgressCount },
+    { label: "Resolved", value: resolvedCount },
+  ];
+
   const getStatusBadge = (status) => {
-    if (status === "pending") return "bg-red-100 text-red-700";
-    if (status === "in progress") return "bg-yellow-100 text-yellow-700";
-    if (status === "rejected") return "bg-gray-200 text-gray-700";
-    return "bg-green-100 text-green-700";
+    if (status === "pending") return "bg-[#ffe3e1] text-[#ef534f]";
+    if (status === "in progress") return "bg-[#fff3dc] text-[#d08a00]";
+    if (status === "rejected") return "bg-slate-200 text-slate-600";
+    return "bg-[#dff7ec] text-[#049b63]";
   };
 
   const formatStatus = (status) => {
@@ -102,92 +106,80 @@ function ComplaintManagement() {
       <AdminSidebar />
 
       <main className="flex-1 p-6 lg:p-10">
-        {/* Header */}
-        <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5 mb-10">
+        <div className="mb-10 flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
           <div>
-            <p className="text-blue-600 font-semibold text-lg mb-2">
-              Complaint Overview
-            </p>
-            <h1 className="text-5xl font-bold text-slate-800">
+            <h1 className="text-4xl font-extrabold text-[#0b2f67] sm:text-6xl">
               Complaint Management
             </h1>
-            <p className="text-slate-500 mt-2 text-lg">
-              Review, track, and resolve user complaints.
-            </p>
           </div>
 
-          <div className="bg-white/90 backdrop-blur-sm px-6 py-4 rounded-3xl shadow-[0_10px_30px_rgba(59,130,246,0.08)] border border-blue-100 text-base">
-            <p className="text-slate-500">Total Complaints</p>
-            <p className="text-4xl font-bold text-blue-600 mt-1">{complaints.length}</p>
-          </div>
-        </div>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white/90 backdrop-blur-sm p-6 rounded-3xl shadow-[0_10px_30px_rgba(59,130,246,0.08)] border border-blue-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-500 text-lg">Pending</p>
-                <h2 className="text-5xl font-bold text-slate-800 mt-2">{pendingCount}</h2>
-              </div>
-              <div className="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center">
-                <FaExclamationCircle className="text-red-500 text-2xl" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white/90 backdrop-blur-sm p-6 rounded-3xl shadow-[0_10px_30px_rgba(59,130,246,0.08)] border border-blue-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-500 text-lg">In Progress</p>
-                <h2 className="text-5xl font-bold text-slate-800 mt-2">{inProgressCount}</h2>
-              </div>
-              <div className="w-14 h-14 rounded-2xl bg-yellow-100 flex items-center justify-center">
-                <FaSpinner className="text-yellow-500 text-2xl" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white/90 backdrop-blur-sm p-6 rounded-3xl shadow-[0_10px_30px_rgba(59,130,246,0.08)] border border-blue-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-500 text-lg">Resolved</p>
-                <h2 className="text-5xl font-bold text-slate-800 mt-2">{resolvedCount}</h2>
-              </div>
-              <div className="w-14 h-14 rounded-2xl bg-green-100 flex items-center justify-center">
-                <FaCheckCircle className="text-green-500 text-2xl" />
-              </div>
-            </div>
+          <div className="flex flex-wrap gap-4">
+            <Link
+              to="/admin/dashboard"
+              className="rounded-3xl bg-[#e8eefb] px-7 py-4 text-lg font-extrabold text-[#0a3772] shadow-sm transition hover:opacity-90"
+            >
+              Dashboard
+            </Link>
+            <Link
+              to="/admin/users"
+              className="rounded-3xl bg-[#ffbf00] px-7 py-4 text-lg font-extrabold text-[#111827] shadow-sm transition hover:opacity-90"
+            >
+              Manage Users
+            </Link>
           </div>
         </div>
 
-        {/* Filter Bar */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-[0_10px_30px_rgba(59,130,246,0.08)] border border-blue-100 p-6 mb-8">
-          <div className="flex flex-col lg:flex-row gap-5 lg:items-end">
-            <div className="flex-1">
-              <label className="block text-base font-medium text-slate-700 mb-2">
+        <div className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
+          {statCards.map((card) => (
+            <div
+              key={card.label}
+              className="rounded-[30px] border border-blue-100 bg-white p-7 shadow-[0_18px_45px_rgba(80,122,191,0.18)]"
+            >
+              <p className="text-[1.05rem] font-bold text-[#5c79a8]">
+                {card.label}
+              </p>
+              <h2 className="mt-5 text-5xl font-extrabold text-[#0b2f67]">
+                {card.value}
+              </h2>
+            </div>
+          ))}
+        </div>
+
+        <section className="mb-8 rounded-[34px] border border-blue-100 bg-white p-7 shadow-[0_18px_45px_rgba(80,122,191,0.18)]">
+          <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <h3 className="text-2xl font-extrabold text-[#0b2f67] sm:text-4xl">
+              Filter Complaints
+            </h3>
+            <span className="rounded-full bg-[#e8eefb] px-5 py-2 text-lg font-bold text-[#3464d4]">
+              Admin Control
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.4fr_0.8fr]">
+            <div>
+              <label className="mb-2 block text-base font-bold text-[#5c79a8]">
                 Search
               </label>
               <div className="relative">
-                <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5c79a8]" />
                 <input
                   type="text"
                   placeholder="Search by user, email, title, type, or message"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full border border-blue-100 rounded-2xl py-3 pl-11 pr-4 text-base bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className="w-full rounded-[20px] border border-blue-100 bg-[#f7faff] py-3 pl-11 pr-4 text-base text-[#0b1f45] outline-none transition focus:border-[#3464d4] focus:ring-2 focus:ring-[#dbe7ff]"
                 />
               </div>
             </div>
 
-            <div className="w-full lg:w-72">
-              <label className="block text-base font-medium text-slate-700 mb-2">
-                Status Filter
+            <div>
+              <label className="mb-2 block text-base font-bold text-[#5c79a8]">
+                Status
               </label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full border border-blue-100 rounded-2xl p-3 text-base bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full rounded-[20px] border border-blue-100 bg-[#f7faff] p-3 text-base text-[#0b1f45] outline-none transition focus:border-[#3464d4] focus:ring-2 focus:ring-[#dbe7ff]"
               >
                 <option value="all">All</option>
                 <option value="pending">Pending</option>
@@ -197,29 +189,40 @@ function ComplaintManagement() {
               </select>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Table */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-[0_10px_30px_rgba(59,130,246,0.08)] border border-blue-100 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-base">
-              <thead className="bg-[#edf4ff]">
-                <tr className="text-left text-slate-700">
-                  <th className="px-6 py-5">S.No</th>
-                  <th className="px-6 py-5">User</th>
-                  <th className="px-6 py-5">Title</th>
-                  <th className="px-6 py-5">Type</th>
-                  <th className="px-6 py-5">Message</th>
-                  <th className="px-6 py-5">Status</th>
-                  <th className="px-6 py-5">Action</th>
+        <section className="rounded-[34px] border border-blue-100 bg-white p-7 shadow-[0_18px_45px_rgba(80,122,191,0.18)]">
+          <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <h3 className="text-2xl font-extrabold text-[#0b2f67] sm:text-4xl">
+              Complaint Records
+            </h3>
+            <span className="rounded-full bg-[#e8eefb] px-5 py-2 text-lg font-bold text-[#3464d4]">
+              {filteredComplaints.length} Results
+            </span>
+          </div>
+
+          <div className="overflow-x-auto rounded-[24px] border border-blue-100 bg-[#f7faff]">
+            <table className="w-full min-w-[980px] text-left">
+              <thead>
+                <tr className="text-[#5c79a8]">
+                  <th className="px-6 py-5 text-base font-extrabold">#</th>
+                  <th className="px-6 py-5 text-base font-extrabold">User</th>
+                  <th className="px-6 py-5 text-base font-extrabold">Title</th>
+                  <th className="px-6 py-5 text-base font-extrabold">Type</th>
+                  <th className="px-6 py-5 text-base font-extrabold">Message</th>
+                  <th className="px-6 py-5 text-base font-extrabold">Status</th>
+                  <th className="px-6 py-5 text-base font-extrabold">Actions</th>
                 </tr>
               </thead>
 
               <tbody>
                 {filteredComplaints.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="px-6 py-10 text-center text-slate-500 text-lg">
-                      No complaints found.
+                    <td
+                      colSpan="7"
+                      className="px-6 py-12 text-center text-lg font-bold text-[#5c79a8]"
+                    >
+                      No complaints found
                     </td>
                   </tr>
                 ) : (
@@ -229,24 +232,30 @@ function ComplaintManagement() {
 
                     return (
                       <React.Fragment key={complaint._id}>
-                        <tr className="border-t border-blue-50 hover:bg-[#f8fbff] transition">
-                          <td className="px-6 py-5">{index + 1}</td>
+                        <tr className="border-t border-blue-100 bg-white/60 text-[#0b1f45]">
+                          <td className="px-6 py-5 text-base font-bold">
+                            {index + 1}
+                          </td>
                           <td className="px-6 py-5">
-                            <div className="font-semibold text-slate-800">
+                            <div className="text-base font-extrabold">
                               {complaint.userName || "Unknown"}
                             </div>
-                            <div className="text-sm text-slate-500 mt-1">
+                            <div className="mt-1 text-sm text-[#617ba4]">
                               {complaint.userEmail || "-"}
                             </div>
                           </td>
-                          <td className="px-6 py-5 text-slate-700">{complaint.title}</td>
-                          <td className="px-6 py-5 text-slate-700">{formatType(complaint.type)}</td>
-                          <td className="px-6 py-5 max-w-xs truncate text-slate-600">
+                          <td className="px-6 py-5 text-base font-extrabold">
+                            {complaint.title}
+                          </td>
+                          <td className="px-6 py-5 text-base">
+                            {formatType(complaint.type)}
+                          </td>
+                          <td className="max-w-xs truncate px-6 py-5 text-base">
                             {complaint.message}
                           </td>
                           <td className="px-6 py-5">
                             <span
-                              className={`px-4 py-2 rounded-full text-sm font-semibold ${getStatusBadge(
+                              className={`inline-flex rounded-full px-4 py-2 text-sm font-extrabold ${getStatusBadge(
                                 complaint.status
                               )}`}
                             >
@@ -258,7 +267,7 @@ function ComplaintManagement() {
                               onClick={() =>
                                 setExpandedId(isExpanded ? null : complaint._id)
                               }
-                              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-base transition"
+                              className="rounded-[18px] bg-[#143d7a] px-5 py-2.5 text-sm font-extrabold text-white transition hover:opacity-90"
                             >
                               {isExpanded ? "Close" : "View"}
                             </button>
@@ -266,50 +275,62 @@ function ComplaintManagement() {
                         </tr>
 
                         {isExpanded && (
-                          <tr className="bg-[#f8fbff] border-t border-blue-100">
+                          <tr className="border-t border-blue-100 bg-[#f2f7ff]">
                             <td colSpan="7" className="px-6 py-8">
-                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                <div className="bg-white border border-blue-100 rounded-3xl p-6 shadow-sm">
-                                  <h3 className="text-2xl font-semibold text-slate-800 mb-5">
+                              <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                                <div className="rounded-[24px] border border-blue-100 bg-white p-6">
+                                  <h4 className="text-2xl font-extrabold text-[#0b2f67]">
                                     Complaint Details
-                                  </h3>
+                                  </h4>
 
-                                  <div className="space-y-4 text-base text-slate-700">
+                                  <div className="mt-5 space-y-4 text-base text-[#0b1f45]">
                                     <p>
-                                      <span className="font-semibold">User Name:</span>{" "}
+                                      <span className="font-extrabold">
+                                        User Name:
+                                      </span>{" "}
                                       {complaint.userName || "Unknown"}
                                     </p>
                                     <p>
-                                      <span className="font-semibold">Email Address:</span>{" "}
+                                      <span className="font-extrabold">
+                                        Email:
+                                      </span>{" "}
                                       {complaint.userEmail || "-"}
                                     </p>
                                     <p>
-                                      <span className="font-semibold">Title:</span>{" "}
+                                      <span className="font-extrabold">
+                                        Title:
+                                      </span>{" "}
                                       {complaint.title}
                                     </p>
                                     <p>
-                                      <span className="font-semibold">Complaint Type:</span>{" "}
+                                      <span className="font-extrabold">
+                                        Type:
+                                      </span>{" "}
                                       {formatType(complaint.type)}
                                     </p>
                                     <p>
-                                      <span className="font-semibold">Message:</span>{" "}
+                                      <span className="font-extrabold">
+                                        Message:
+                                      </span>{" "}
                                       {complaint.message}
                                     </p>
                                     <p>
-                                      <span className="font-semibold">Current Response:</span>{" "}
+                                      <span className="font-extrabold">
+                                        Current Response:
+                                      </span>{" "}
                                       {complaint.adminResponse || "No response yet"}
                                     </p>
                                   </div>
                                 </div>
 
-                                <div className="bg-white border border-blue-100 rounded-3xl p-6 shadow-sm">
-                                  <h3 className="text-2xl font-semibold text-slate-800 mb-5">
+                                <div className="rounded-[24px] border border-blue-100 bg-white p-6">
+                                  <h4 className="text-2xl font-extrabold text-[#0b2f67]">
                                     Update Complaint
-                                  </h3>
+                                  </h4>
 
-                                  <div className="space-y-5">
+                                  <div className="mt-5 space-y-5">
                                     <div>
-                                      <label className="block text-base font-medium text-slate-700 mb-2">
+                                      <label className="mb-2 block text-base font-bold text-[#5c79a8]">
                                         Status
                                       </label>
                                       <select
@@ -325,10 +346,10 @@ function ComplaintManagement() {
                                           )
                                         }
                                         disabled={isResolved}
-                                        className={`w-full border border-blue-100 rounded-2xl p-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+                                        className={`w-full rounded-[20px] border border-blue-100 p-3 text-base outline-none transition focus:border-[#3464d4] focus:ring-2 focus:ring-[#dbe7ff] ${
                                           isResolved
-                                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                            : "bg-white"
+                                            ? "cursor-not-allowed bg-slate-100 text-slate-400"
+                                            : "bg-[#f7faff] text-[#0b1f45]"
                                         }`}
                                       >
                                         <option value="pending">Pending</option>
@@ -339,14 +360,15 @@ function ComplaintManagement() {
                                     </div>
 
                                     <div>
-                                      <label className="block text-base font-medium text-slate-700 mb-2">
+                                      <label className="mb-2 block text-base font-bold text-[#5c79a8]">
                                         Admin Response
                                       </label>
                                       <textarea
                                         rows="5"
                                         placeholder="Enter admin response"
                                         value={
-                                          replyData[complaint._id]?.adminResponse ||
+                                          replyData[complaint._id]
+                                            ?.adminResponse ||
                                           complaint.adminResponse ||
                                           ""
                                         }
@@ -358,29 +380,25 @@ function ComplaintManagement() {
                                           )
                                         }
                                         disabled={isResolved}
-                                        className={`w-full border border-blue-100 rounded-2xl p-3 text-base resize-none focus:outline-none focus:ring-2 focus:ring-blue-400 ${
+                                        className={`w-full rounded-[20px] border border-blue-100 p-3 text-base outline-none transition focus:border-[#3464d4] focus:ring-2 focus:ring-[#dbe7ff] ${
                                           isResolved
-                                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                            : "bg-white"
+                                            ? "cursor-not-allowed bg-slate-100 text-slate-400"
+                                            : "bg-[#f7faff] text-[#0b1f45]"
                                         }`}
                                       />
                                     </div>
 
-                                    <div className="flex items-center justify-between gap-4 flex-wrap">
-                                      <p className="text-base text-slate-500">
-                                        {isResolved
-                                          ? "This complaint is resolved and locked."
-                                          : "Save the latest complaint update."}
-                                      </p>
-
+                                    <div className="flex flex-wrap gap-3">
                                       {isResolved ? (
-                                        <span className="bg-green-100 text-green-700 px-5 py-2.5 rounded-xl text-base font-semibold">
+                                        <span className="inline-flex rounded-[18px] bg-[#dff7ec] px-5 py-2.5 text-sm font-extrabold text-[#049b63]">
                                           Complaint Closed
                                         </span>
                                       ) : (
                                         <button
-                                          onClick={() => handleUpdate(complaint._id)}
-                                          className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-xl text-base font-medium transition"
+                                          onClick={() =>
+                                            handleUpdate(complaint._id)
+                                          }
+                                          className="rounded-[18px] bg-[#143d7a] px-5 py-2.5 text-sm font-extrabold text-white transition hover:opacity-90"
                                         >
                                           Save Update
                                         </button>
@@ -399,7 +417,7 @@ function ComplaintManagement() {
               </tbody>
             </table>
           </div>
-        </div>
+        </section>
       </main>
     </div>
   );
