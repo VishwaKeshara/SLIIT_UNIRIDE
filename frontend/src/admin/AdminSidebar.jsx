@@ -57,7 +57,9 @@ function AdminSidebar() {
     },
     {
       label: "System Settings",
-      enabled: false,
+      to: "/admin/settings",
+      enabled: !routeManager,
+      active: location.pathname === "/admin/settings",
     },
   ];
 
@@ -108,17 +110,11 @@ function AdminSidebar() {
           )}
         </nav>
 
-        <div className="mt-8 rounded-[24px] border border-white/12 bg-[#1b477f] p-6">
-          <h3 className="text-2xl font-extrabold">Admin Flow</h3>
-          <p className="mt-3 text-base leading-7 text-blue-50">
-            Monitor operations, manage people, resolve problems, and improve
-            transport decisions from one professional control center.
-          </p>
-
+        <div className="mt-auto pt-8">
           <button
             type="button"
             onClick={handleLogout}
-            className="mt-6 w-full rounded-[18px] bg-[#ffbf00] px-5 py-3.5 text-xl font-extrabold text-[#111827] transition hover:bg-[#ffc933]"
+            className="w-full rounded-[18px] bg-[#ffbf00] px-5 py-3.5 text-xl font-extrabold text-[#111827] transition hover:bg-[#ffc933]"
           >
             Logout
           </button>

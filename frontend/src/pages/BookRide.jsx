@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import { jsPDF } from "jspdf";
+import { loadSystemSettings } from "../admin/systemSettingsConfig";
 
 const API = "http://localhost:5000/api";
 
@@ -16,6 +17,7 @@ function getLoggedInUserId() {
 
 function BookRide() {
   const location = useLocation();
+  const systemSettings = loadSystemSettings();
   const [routes, setRoutes] = useState([]);
   const [stops, setStops] = useState([]);
   const [loggedInUser, setLoggedInUser] = useState(null);
@@ -37,7 +39,7 @@ function BookRide() {
   });
 
   const [payment, setPayment] = useState({
-    method: "", // "card" | "cash"
+    method: systemSettings.payment.defaultPaymentMethod || "", // "card" | "cash"
     cardNumber: "",
     cardName: "",
     cardExpiry: "",
@@ -98,6 +100,46 @@ function BookRide() {
   }, [form.selectedRoute]);
 
   const selectedRouteObj = routes.find((r) => r._id === form.selectedRoute);
+  const bookingSettings = systemSettings.booking;
+  const paymentSettings = systemSettings.payment;
+  const maintenanceModeEnabled = systemSettings.general.maintenanceMode;
+  const guestBookingBlocked = !loggedInUser && !bookingSettings.allowGuestBookings;
+  const availablePaymentMethods = [
+    paymentSettings.enableCardPayments ? "card" : null,
+    paymentSettings.enableCashPayments ? "cash" : null,
+  ].filter(Boolean);
+
+  const currentTime = new Date().toTimeString().slice(0, 5);
+  const bookingWindowClosed =
+    currentTime < bookingSettings.bookingWindowOpen ||
+    currentTime > bookingSettings.bookingWindowClose;
+  const latestAllowedStartDate = new Date();
+  latestAllowedStartDate.setDate(
+    latestAllowedStartDate.getDate() + Number(bookingSettings.maxBookingDays || 0)
+  );
+  const maxStartDate = latestAllowedStartDate.toISOString().slice(0, 10);
+  const bookingBlocked =
+    maintenanceModeEnabled ||
+    guestBookingBlocked ||
+    bookingWindowClosed ||
+    availablePaymentMethods.length === 0;
+
+  useEffect(() => {
+    const fallbackMethod = availablePaymentMethods[0] || "";
+
+    if (
+      (payment.method && availablePaymentMethods.includes(payment.method)) ||
+      (payment.method === fallbackMethod && payment.cardProcessed === false)
+    ) {
+      return;
+    }
+
+    setPayment((prev) => ({
+      ...prev,
+      method: fallbackMethod,
+      cardProcessed: false,
+    }));
+  }, [payment.cardProcessed, payment.method, availablePaymentMethods]);
 
   const handlePaymentMethodChange = (method) => {
     setPayment({
@@ -156,6 +198,35 @@ function BookRide() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (bookingBlocked) {
+      setError(
+        maintenanceModeEnabled
+          ? "Bookings are temporarily disabled because maintenance mode is active."
+          : guestBookingBlocked
+            ? "Guest bookings are disabled. Please log in to continue."
+            : bookingWindowClosed
+              ? `Bookings are allowed only between ${bookingSettings.bookingWindowOpen} and ${bookingSettings.bookingWindowClose}.`
+              : "No payment methods are currently enabled."
+      );
+      return;
+    }
+
+    if (
+      bookingSettings.allowAdvanceBooking === false &&
+      form.travelStartDate &&
+      form.travelStartDate !== today
+    ) {
+      setError("Advance booking is disabled. Please choose today's date.");
+      return;
+    }
+
+    if (form.travelStartDate && form.travelStartDate > maxStartDate) {
+      setError(
+        `Bookings can only be made up to ${bookingSettings.maxBookingDays} days in advance.`
+      );
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
     try {
@@ -170,7 +241,10 @@ function BookRide() {
         ...(form.email ? { email: form.email.trim() } : {}),
         ...(form.studentId ? { studentId: form.studentId.trim() } : {}),
         paymentMethod: payment.method,
-        paymentStatus: payment.method === "cash" ? "pending" : "paid",
+        paymentStatus:
+          payment.method === "cash" || paymentSettings.verificationRequired
+            ? "pending"
+            : "paid",
         ...(payment.method !== "cash"
           ? {
               paymentReference: `MOCK-${Date.now().toString(36).toUpperCase()}`,
@@ -192,7 +266,10 @@ function BookRide() {
     setSuccess(null);
     setError(null);
     setPayment({
-      method: "",
+      method:
+        availablePaymentMethods.includes(paymentSettings.defaultPaymentMethod)
+          ? paymentSettings.defaultPaymentMethod
+          : availablePaymentMethods[0] || "",
       cardNumber: "",
       cardName: "",
       cardExpiry: "",
@@ -367,7 +444,7 @@ function BookRide() {
     doc.save(`UniRide_Booking_${refId}.pdf`);
   };
 
-  // ── Success screen ──────────────────────────────────────────────────────────
+  // ── Success screen
   if (success) {
     const { booking, routeObj } = success;
     const refId = booking._id?.slice(-8).toUpperCase();
@@ -516,7 +593,7 @@ function BookRide() {
     payment.cardCvv.length >= 3;
 
   const paymentComplete =
-    payment.method === "cash" ||
+    (payment.method === "cash" && paymentSettings.enableCashPayments) ||
     (payment.method === "card" && payment.cardProcessed);
 
   // ── Booking form ────────────────────────────────────────────────────────────
@@ -540,6 +617,28 @@ function BookRide() {
             <p className="text-slate-300 mb-8">
               Reserve your seat on an upcoming SLIIT-UniRide shuttle.
             </p>
+
+            {maintenanceModeEnabled && (
+              <div className="mb-5 rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-3 text-red-300 text-sm">
+                Maintenance mode is active. New bookings are temporarily unavailable.
+              </div>
+            )}
+
+            {!maintenanceModeEnabled && bookingWindowClosed && (
+              <div className="mb-5 rounded-xl bg-yellow-500/10 border border-yellow-500/30 px-4 py-3 text-yellow-200 text-sm">
+                Bookings are available only between {bookingSettings.bookingWindowOpen} and {bookingSettings.bookingWindowClose}.
+              </div>
+            )}
+
+            {!maintenanceModeEnabled && guestBookingBlocked && (
+              <div className="mb-5 rounded-xl bg-orange-500/10 border border-orange-500/30 px-4 py-3 text-orange-200 text-sm">
+                Guest bookings are disabled by the admin. Please{" "}
+                <Link to="/login" className="font-bold underline">
+                  log in
+                </Link>{" "}
+                to continue.
+              </div>
+            )}
 
             {error && (
               <div className="mb-5 rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-3 text-red-400 text-sm">
@@ -654,6 +753,12 @@ function BookRide() {
                         onChange={handleChange}
                         required
                         min={today}
+                        max={
+                          bookingSettings.allowAdvanceBooking === false
+                            ? today
+                            : maxStartDate
+                        }
+                        disabled={maintenanceModeEnabled || guestBookingBlocked}
                         className="w-full rounded-xl border border-white/20 bg-[#0A2233] text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                       />
                     </div>
@@ -668,7 +773,11 @@ function BookRide() {
                         onChange={handleChange}
                         required
                         min={form.travelStartDate || today}
-                        disabled={!form.travelStartDate}
+                        disabled={
+                          !form.travelStartDate ||
+                          maintenanceModeEnabled ||
+                          guestBookingBlocked
+                        }
                         className="w-full rounded-xl border border-white/20 bg-[#0A2233] text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-40 disabled:cursor-not-allowed"
                       />
                     </div>
@@ -902,8 +1011,13 @@ function BookRide() {
                       <button
                         key={key}
                         type="button"
-                        onClick={() => handlePaymentMethodChange(key)}
-                        className={`flex flex-col items-center gap-1.5 rounded-2xl border p-4 text-center transition-all ${
+                        onClick={() =>
+                          availablePaymentMethods.includes(key)
+                            ? handlePaymentMethodChange(key)
+                            : null
+                        }
+                        disabled={!availablePaymentMethods.includes(key)}
+                        className={`flex flex-col items-center gap-1.5 rounded-2xl border p-4 text-center transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
                           payment.method === key
                             ? "border-orange-500 bg-orange-500/10 text-white ring-2 ring-orange-500/40"
                             : "border-white/20 bg-white/5 text-slate-300 hover:border-orange-400/50 hover:bg-white/10"
@@ -917,6 +1031,12 @@ function BookRide() {
                   </div>
 
                   {/* ── Card Payment Form (mock) ── */}
+                  {availablePaymentMethods.length === 0 && (
+                    <div className="mb-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm font-semibold text-red-200">
+                      No payment methods are currently enabled by the admin.
+                    </div>
+                  )}
+
                   {payment.method === "card" && (
                     <div className="rounded-2xl bg-black/20 border border-white/10 p-5 space-y-4">
                       <div className="flex items-center gap-2">
