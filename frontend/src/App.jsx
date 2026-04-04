@@ -46,6 +46,7 @@ import ComplaintManagement from "./admin/ComplaintManagement";
 import ManageRoutes from "./admin/ManageRoutes";
 import TripMonitoring from "./admin/TripMonitoring";
 import AnalyticsReports from "./admin/AnalyticsReports";
+import SystemSettings from "./admin/SystemSettings";
 import ProtectedAdminRoute from "./admin/ProtectedAdminRoute";
 
 function AppLayout() {
@@ -174,6 +175,15 @@ function AppLayout() {
             element={
               <ProtectedAdminRoute allowedRoles={["admin"]}>
                 <AnalyticsReports />
+              </ProtectedAdminRoute>
+            }
+          />
+
+          <Route
+            path="/admin/settings"
+            element={
+              <ProtectedAdminRoute allowedRoles={["admin"]}>
+                <SystemSettings />
               </ProtectedAdminRoute>
             }
           />
