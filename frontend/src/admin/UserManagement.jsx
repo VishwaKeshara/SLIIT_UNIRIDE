@@ -228,6 +228,7 @@ function UserManagement() {
                 <option value="lecturer">Lecturer</option>
                 <option value="instructor">Instructor</option>
                 <option value="admin">Admin</option>
+                <option value="routemanager">Route Manager</option>
                 <option value="driver">Driver</option>
               </select>
             </div>

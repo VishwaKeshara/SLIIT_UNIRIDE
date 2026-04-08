@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "../axiosinstance";
+import { getStoredAdminData, isRouteManager } from "./adminAccess";
 import {
   FaUsers,
   FaExclamationCircle,
   FaBus,
+  FaRoute,
   FaClock,
   FaTachometerAlt,
   FaUserCog,
@@ -15,6 +17,8 @@ import {
 
 function AdminDashboard() {
   const navigate = useNavigate();
+  const adminData = getStoredAdminData();
+  const routeManager = isRouteManager(adminData?.role);
 
   const [summary, setSummary] = useState({
     totalUsers: 0,
@@ -42,6 +46,64 @@ function AdminDashboard() {
     navigate("/adminlogin");
   };
 
+  const navigationItems = [
+    {
+      label: "Dashboard",
+      to: "/admin/dashboard",
+      icon: <FaTachometerAlt />,
+      enabled: true,
+      active: true,
+    },
+    {
+      label: "Manage Users",
+      to: "/admin/users",
+      icon: <FaUserCog />,
+      enabled: !routeManager,
+    },
+    {
+      label: "Complaints",
+      to: "/admin/complaints",
+      icon: <FaClipboardList />,
+      enabled: !routeManager,
+    },
+    {
+      label: "Add Route",
+      to: "/routes/new",
+      icon: <FaRoute />,
+      enabled: true,
+    },
+    {
+      label: "Manage Routes",
+      to: "/admin/routes",
+      icon: <FaRoute />,
+      enabled: !routeManager,
+    },
+  ];
+
+  const quickActions = [
+    {
+      label: "View Route List",
+      to: "/RouteList",
+      enabled: !routeManager,
+      className:
+        "bg-gradient-to-r from-amber-500 to-orange-400 text-white shadow-md",
+    },
+    {
+      label: "Manage Users",
+      to: "/admin/users",
+      enabled: !routeManager,
+      className:
+        "bg-gradient-to-r from-blue-500 to-sky-400 text-white shadow-md",
+    },
+    {
+      label: "Manage Complaints",
+      to: "/admin/complaints",
+      enabled: !routeManager,
+      className:
+        "bg-white border border-blue-200 text-blue-600 shadow-sm",
+    },
+  ];
+
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-[#f8fbff] via-[#eef6ff] to-[#f5f9ff]">
       {/* Sidebar */}
@@ -52,26 +114,31 @@ function AdminDashboard() {
         </div>
 
         <nav className="flex flex-col gap-4 text-base">
-          <Link
-            to="/admin/dashboard"
-            className="flex items-center gap-3 bg-blue-600 px-5 py-3 rounded-xl font-semibold text-lg"
-          >
-            <FaTachometerAlt /> Dashboard
-          </Link>
-
-          <Link
-            to="/admin/users"
-            className="flex items-center gap-3 hover:bg-gray-700 px-5 py-3 rounded-xl transition text-lg"
-          >
-            <FaUserCog /> Manage Users
-          </Link>
-
-          <Link
-            to="/admin/complaints"
-            className="flex items-center gap-3 hover:bg-gray-700 px-5 py-3 rounded-xl transition text-lg"
-          >
-            <FaClipboardList /> Complaints
-          </Link>
+          {navigationItems.map((item) =>
+            item.enabled ? (
+              <Link
+                key={item.label}
+                to={item.to}
+                className={`flex items-center gap-3 px-5 py-3 rounded-xl text-lg transition ${
+                  item.active
+                    ? "bg-blue-600 font-semibold"
+                    : "hover:bg-gray-700"
+                }`}
+              >
+                {item.icon} {item.label}
+              </Link>
+            ) : (
+              <button
+                key={item.label}
+                type="button"
+                disabled
+                title="Only admins can access this section"
+                className="flex items-center gap-3 px-5 py-3 rounded-xl text-lg text-gray-400 bg-slate-800/70 cursor-not-allowed"
+              >
+                {item.icon} {item.label}
+              </button>
+            )
+          )}
         </nav>
 
         <div className="mt-auto">
@@ -102,7 +169,9 @@ function AdminDashboard() {
 
           <div className="bg-white px-6 py-4 rounded-2xl shadow-md border border-blue-100 text-base">
             <p className="text-slate-500 text-sm">Logged in as</p>
-            <span className="font-bold text-blue-600 text-xl">Admin</span>
+            <span className="font-bold text-blue-600 text-xl capitalize">
+              {adminData?.role || "admin"}
+            </span>
           </div>
         </div>
 
@@ -193,21 +262,33 @@ function AdminDashboard() {
               Quick Actions
             </h3>
             <p className="text-slate-500 text-base mb-8">
-              Easily manage users and complaints from here.
+              {routeManager
+                ? "Route managers can add new routes from this dashboard."
+                : "Easily manage users and complaints from here."}
             </p>
 
             <div className="flex flex-wrap gap-5">
-              <Link to="/admin/users">
-                <button className="bg-gradient-to-r from-blue-500 to-sky-400 text-white px-8 py-4 rounded-2xl text-lg font-semibold hover:scale-105 transition shadow-md">
-                  Manage Users
-                </button>
-              </Link>
-
-              <Link to="/admin/complaints">
-                <button className="bg-white border border-blue-200 text-blue-600 px-8 py-4 rounded-2xl text-lg font-semibold hover:bg-blue-50 transition shadow-sm">
-                  Manage Complaints
-                </button>
-              </Link>
+              {quickActions.map((action) =>
+                action.enabled ? (
+                  <Link key={action.label} to={action.to}>
+                    <button
+                      className={`${action.className} px-8 py-4 rounded-2xl text-lg font-semibold hover:scale-105 transition`}
+                    >
+                      {action.label}
+                    </button>
+                  </Link>
+                ) : (
+                  <button
+                    key={action.label}
+                    type="button"
+                    disabled
+                    title="Only admins can access this action"
+                    className="px-8 py-4 rounded-2xl text-lg font-semibold bg-slate-200 text-slate-400 cursor-not-allowed shadow-sm"
+                  >
+                    {action.label}
+                  </button>
+                )
+              )}
             </div>
           </div>
 
