@@ -24,6 +24,8 @@ function BookRide() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
+  const [bookingBasis, setBookingBasis] = useState("daily"); // "daily" | "monthly"
+  const [selectedMonth, setSelectedMonth] = useState(""); // "YYYY-MM"
 
   const [form, setForm] = useState({
     selectedRoute: "",
@@ -123,6 +125,47 @@ function BookRide() {
     setPayment((prev) => ({ ...prev, cardExpiry: formatted }));
   };
 
+  // ── Booking basis helpers ────────────────────────────────────────────────────
+  const handleBookingBasisChange = (basis) => {
+    setBookingBasis(basis);
+    setSelectedMonth("");
+    setForm((prev) => ({ ...prev, travelStartDate: "", travelEndDate: "" }));
+  };
+
+  const handleMonthChange = (e) => {
+    const val = e.target.value; // "YYYY-MM"
+    setSelectedMonth(val);
+    if (val) {
+      const [year, month] = val.split("-").map(Number);
+      const first = new Date(year, month - 1, 1);
+      const last = new Date(year, month, 0);
+      const fmt = (d) => d.toISOString().split("T")[0];
+      setForm((prev) => ({
+        ...prev,
+        travelStartDate: fmt(first),
+        travelEndDate: fmt(last),
+      }));
+    } else {
+      setForm((prev) => ({ ...prev, travelStartDate: "", travelEndDate: "" }));
+    }
+  };
+
+  // Build month options: next month → +12 months from today
+  const monthOptions = (() => {
+    const opts = [];
+    const now = new Date();
+    for (let i = 1; i <= 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = d.toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      });
+      opts.push({ value, label });
+    }
+    return opts;
+  })();
+
   // Compute date range stats (derived from form)
   const totalDays =
     form.travelStartDate && form.travelEndDate
@@ -166,16 +209,13 @@ function BookRide() {
         route: form.selectedRoute,
         travelStartDate: form.travelStartDate,
         travelEndDate: form.travelEndDate,
+        bookingBasis,
         ...(form.boardingStop ? { boardingStop: form.boardingStop } : {}),
         ...(form.email ? { email: form.email.trim() } : {}),
         ...(form.studentId ? { studentId: form.studentId.trim() } : {}),
         paymentMethod: payment.method,
-        paymentStatus: payment.method === "cash" ? "pending" : "paid",
-        ...(payment.method !== "cash"
-          ? {
-              paymentReference: `MOCK-${Date.now().toString(36).toUpperCase()}`,
-            }
-          : {}),
+        paymentStatus: "paid",
+        paymentReference: `MOCK-${Date.now().toString(36).toUpperCase()}`,
       };
       const res = await axios.post(`${API}/bookings`, payload);
       setSuccess({ booking: res.data, routeObj: selectedRouteObj });
@@ -199,6 +239,8 @@ function BookRide() {
       cardCvv: "",
       cardProcessed: false,
     });
+    setBookingBasis("daily");
+    setSelectedMonth("");
     setForm({
       selectedRoute: "",
       boardingStop: "",
@@ -409,6 +451,14 @@ function BookRide() {
               </span>
             </p>
             <p>
+              <span className="font-semibold text-orange-400">
+                Booking Basis:
+              </span>{" "}
+              <span className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold border bg-blue-400/10 text-blue-300 border-blue-400/30">
+                {booking.bookingBasis === "monthly" ? "🗓️ Monthly" : "📅 Daily"}
+              </span>
+            </p>
+            <p>
               <span className="font-semibold text-orange-400">Days:</span>{" "}
               <span className="text-slate-300">
                 {booking.totalDays} day{booking.totalDays > 1 ? "s" : ""}
@@ -444,13 +494,7 @@ function BookRide() {
             </p>
             <p>
               <span className="font-semibold text-orange-400">Payment:</span>{" "}
-              <span className="text-slate-300 capitalize">
-                {booking.paymentMethod === "card"
-                  ? "Card (Mock)"
-                  : booking.paymentMethod === "wallet"
-                    ? "Digital Wallet (Mock)"
-                    : "Cash on Board"}
-              </span>
+              <span className="text-slate-300">Card (Mock)</span>
               {booking.paymentStatus && (
                 <span
                   className={`ml-2 inline-block px-2 py-0.5 rounded-full text-xs font-semibold border ${
@@ -515,9 +559,7 @@ function BookRide() {
     /^\d{2}\/\d{2}$/.test(payment.cardExpiry) &&
     payment.cardCvv.length >= 3;
 
-  const paymentComplete =
-    payment.method === "cash" ||
-    (payment.method === "card" && payment.cardProcessed);
+  const paymentComplete = payment.method === "card" && payment.cardProcessed;
 
   // ── Booking form ────────────────────────────────────────────────────────────
   return (
@@ -618,6 +660,44 @@ function BookRide() {
                     Trip Details
                   </h2>
 
+                  {/* ── Booking basis toggle ───────────────────────────────── */}
+                  <div className="mb-5">
+                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                      Booking Basis
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        {
+                          key: "daily",
+                          icon: "📅",
+                          label: "Daily",
+                          desc: "Pick a start & end date",
+                        },
+                        {
+                          key: "monthly",
+                          icon: "🗓️",
+                          label: "Monthly",
+                          desc: "Book a full month",
+                        },
+                      ].map(({ key, icon, label, desc }) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => handleBookingBasisChange(key)}
+                          className={`flex flex-col items-center gap-1 rounded-2xl border p-3 text-center transition-all ${
+                            bookingBasis === key
+                              ? "border-orange-500 bg-orange-500/10 text-white ring-2 ring-orange-500/40"
+                              : "border-white/20 bg-white/5 text-slate-300 hover:border-orange-400/50 hover:bg-white/10"
+                          }`}
+                        >
+                          <span className="text-xl">{icon}</span>
+                          <span className="text-sm font-semibold">{label}</span>
+                          <span className="text-xs text-slate-400">{desc}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   {stops.length > 0 && (
                     <div className="mb-4">
                       <label className="block text-sm font-medium text-slate-300 mb-1">
@@ -642,42 +722,108 @@ function BookRide() {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-1">
-                        Start Date <span className="text-red-400">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        name="travelStartDate"
-                        value={form.travelStartDate}
-                        onChange={handleChange}
-                        required
-                        min={today}
-                        className="w-full rounded-xl border border-white/20 bg-[#0A2233] text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-1">
-                        End Date <span className="text-red-400">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        name="travelEndDate"
-                        value={form.travelEndDate}
-                        onChange={handleChange}
-                        required
-                        min={form.travelStartDate || today}
-                        disabled={!form.travelStartDate}
-                        className="w-full rounded-xl border border-white/20 bg-[#0A2233] text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-40 disabled:cursor-not-allowed"
-                      />
-                    </div>
-                  </div>
+                  {/* ── Daily: start + end date pickers ───────────────────── */}
+                  {bookingBasis === "daily" && (
+                    <>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-slate-300 mb-1">
+                            Start Date <span className="text-red-400">*</span>
+                          </label>
+                          <input
+                            type="date"
+                            name="travelStartDate"
+                            value={form.travelStartDate}
+                            onChange={handleChange}
+                            required
+                            min={today}
+                            className="w-full rounded-xl border border-white/20 bg-[#0A2233] text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-slate-300 mb-1">
+                            End Date <span className="text-red-400">*</span>
+                          </label>
+                          <input
+                            type="date"
+                            name="travelEndDate"
+                            value={form.travelEndDate}
+                            onChange={handleChange}
+                            required
+                            min={form.travelStartDate || today}
+                            disabled={!form.travelStartDate}
+                            className="w-full rounded-xl border border-white/20 bg-[#0A2233] text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-40 disabled:cursor-not-allowed"
+                          />
+                        </div>
+                      </div>
+                      {totalDays > 0 && (
+                        <p className="mt-2 text-xs text-orange-300 font-medium">
+                          📅 {totalDays} day{totalDays > 1 ? "s" : ""} selected
+                        </p>
+                      )}
+                    </>
+                  )}
 
-                  {totalDays > 0 && (
-                    <p className="mt-2 text-xs text-orange-300 font-medium">
-                      📅 {totalDays} day{totalDays > 1 ? "s" : ""} selected
-                    </p>
+                  {/* ── Monthly: month dropdown ────────────────────────────── */}
+                  {bookingBasis === "monthly" && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-1">
+                          Select Month <span className="text-red-400">*</span>
+                        </label>
+                        <select
+                          value={selectedMonth}
+                          onChange={handleMonthChange}
+                          className="w-full rounded-xl border border-white/20 px-3 py-2 text-sm bg-[#0A2233] text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        >
+                          <option value="">-- Select a month --</option>
+                          {monthOptions.map(({ value, label }) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {selectedMonth &&
+                        form.travelStartDate &&
+                        form.travelEndDate && (
+                          <div className="mt-3 rounded-2xl bg-black/20 border border-white/10 px-4 py-3 text-sm space-y-1.5">
+                            <div className="flex justify-between text-slate-300">
+                              <span>Start Date</span>
+                              <span className="font-medium text-white">
+                                {new Date(
+                                  form.travelStartDate + "T00:00:00",
+                                ).toLocaleDateString("en-US", {
+                                  weekday: "short",
+                                  day: "numeric",
+                                  month: "long",
+                                  year: "numeric",
+                                })}
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-slate-300">
+                              <span>End Date</span>
+                              <span className="font-medium text-white">
+                                {new Date(
+                                  form.travelEndDate + "T00:00:00",
+                                ).toLocaleDateString("en-US", {
+                                  weekday: "short",
+                                  day: "numeric",
+                                  month: "long",
+                                  year: "numeric",
+                                })}
+                              </span>
+                            </div>
+                            <div className="flex justify-between border-t border-white/10 pt-2">
+                              <span className="text-slate-300">Total Days</span>
+                              <span className="font-bold text-orange-400">
+                                📅 {totalDays} days
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                    </>
                   )}
                 </div>
               )}
@@ -884,36 +1030,24 @@ function BookRide() {
                   </h2>
 
                   {/* Method selector */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
-                    {[
-                      {
-                        key: "card",
-                        icon: "💳",
-                        label: "Card Payment",
-                        desc: "Visa / Mastercard",
-                      },
-                      {
-                        key: "cash",
-                        icon: "💵",
-                        label: "Cash on Board",
-                        desc: "Pay the driver",
-                      },
-                    ].map(({ key, icon, label, desc }) => (
-                      <button
-                        key={key}
-                        type="button"
-                        onClick={() => handlePaymentMethodChange(key)}
-                        className={`flex flex-col items-center gap-1.5 rounded-2xl border p-4 text-center transition-all ${
-                          payment.method === key
-                            ? "border-orange-500 bg-orange-500/10 text-white ring-2 ring-orange-500/40"
-                            : "border-white/20 bg-white/5 text-slate-300 hover:border-orange-400/50 hover:bg-white/10"
-                        }`}
-                      >
-                        <span className="text-2xl">{icon}</span>
-                        <span className="text-sm font-semibold">{label}</span>
-                        <span className="text-xs text-slate-400">{desc}</span>
-                      </button>
-                    ))}
+                  <div className="mb-5">
+                    <button
+                      type="button"
+                      onClick={() => handlePaymentMethodChange("card")}
+                      className={`w-full flex flex-col items-center gap-1.5 rounded-2xl border p-4 text-center transition-all ${
+                        payment.method === "card"
+                          ? "border-orange-500 bg-orange-500/10 text-white ring-2 ring-orange-500/40"
+                          : "border-white/20 bg-white/5 text-slate-300 hover:border-orange-400/50 hover:bg-white/10"
+                      }`}
+                    >
+                      <span className="text-2xl">💳</span>
+                      <span className="text-sm font-semibold">
+                        Card Payment
+                      </span>
+                      <span className="text-xs text-slate-400">
+                        Visa / Mastercard
+                      </span>
+                    </button>
                   </div>
 
                   {/* ── Card Payment Form (mock) ── */}
@@ -1096,13 +1230,7 @@ function BookRide() {
                   disabled={submitting}
                   className="w-full py-3.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-bold rounded-xl transition-colors text-sm shadow-lg shadow-orange-500/20 active:scale-95"
                 >
-                  {submitting
-                    ? payment.method === "card"
-                      ? "Processing Payment…"
-                      : "Confirming Booking…"
-                    : payment.method === "cash"
-                      ? "Confirm & Reserve Seat"
-                      : "Confirm & Pay"}
+                  {submitting ? "Processing Payment…" : "Confirm & Pay"}
                 </button>
               )}
             </form>
