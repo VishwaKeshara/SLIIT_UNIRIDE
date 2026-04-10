@@ -2,7 +2,8 @@ import React, { useEffect, useState, useCallback } from "react";
 import {
   FaPhoneAlt, FaRoute, FaIdBadge, FaPlus, FaEdit, FaTrash,
   FaBus, FaPlay, FaStop, FaExclamationTriangle, FaTimes,
-  FaMagic, FaSync, FaCalendarAlt, FaClock, FaUser, FaClipboardList
+  FaMagic, FaSync, FaCalendarAlt, FaClock, FaUser, FaClipboardList,
+  FaChartPie
 } from "react-icons/fa";
 import { getDrivers, addDriver, updateDriver, deleteDriver } from "../api/driverApi";
 import { getTrips, addTrip, updateTrip, updateTripStatus, deleteTrip } from "../api/tripApi";
@@ -125,12 +126,12 @@ export default function Drivers() {
 
   useEffect(() => {
     loadDrivers();
-    if (activeTab === "trips") loadTrips();
+    if (activeTab === "trips" || activeTab === "analysis") loadTrips();
   }, [activeTab, loadDrivers, loadTrips]);
 
   const refreshAction = () => {
     if (activeTab === "drivers") loadDrivers();
-    if (activeTab === "trips") { loadDrivers(); loadTrips(); }
+    if (activeTab === "trips" || activeTab === "analysis") { loadDrivers(); loadTrips(); }
   };
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -311,6 +312,46 @@ export default function Drivers() {
     } finally { setDelaySaving(false); }
   };
 
+  const tripStatusCounts = trips.reduce((acc, t) => {
+    acc[t.status] = (acc[t.status] ?? 0) + 1;
+    return acc;
+  }, { Scheduled: 0, Ongoing: 0, Completed: 0, Delayed: 0 });
+
+  const tripStatusItems = [
+    { label: "Scheduled", value: tripStatusCounts.Scheduled, color: "from-blue-400 to-blue-600" },
+    { label: "Ongoing", value: tripStatusCounts.Ongoing, color: "from-orange-400 to-orange-600" },
+    { label: "Completed", value: tripStatusCounts.Completed, color: "from-emerald-400 to-emerald-600" },
+    { label: "Delayed", value: tripStatusCounts.Delayed, color: "from-red-400 to-red-600" },
+  ];
+
+  const maxTripCount = Math.max(...Object.values(tripStatusCounts), 1);
+
+  const shiftCounts = drivers.reduce((acc, d) => {
+    if (d.shift === "Morning Shift") acc.Morning++;
+    else if (d.shift === "Day Shift") acc.Day++;
+    else if (d.shift === "Evening Shift") acc.Evening++;
+    return acc;
+  }, { Morning: 0, Day: 0, Evening: 0 });
+
+  const shiftTotal = Math.max(drivers.length, 1);
+  const donutRadius = 48;
+  const donutCircumference = 2 * Math.PI * donutRadius;
+  let shiftOffset = 0;
+  const shiftSeries = [
+    { label: "Morning", value: shiftCounts.Morning, color: "#F97316" },
+    { label: "Day", value: shiftCounts.Day, color: "#38BDF8" },
+    { label: "Evening", value: shiftCounts.Evening, color: "#A78BFA" },
+  ].map((segment) => {
+    const segmentLength = (segment.value / shiftTotal) * donutCircumference;
+    const data = { ...segment, segmentLength, offset: shiftOffset };
+    shiftOffset -= segmentLength;
+    return data;
+  });
+
+  const totalDrivers = drivers.length;
+  const activeTrips = trips.filter((t) => t.status !== "Completed").length;
+  const availableFleet = drivers.filter((d) => d.status === "Available").length;
+
   // ══════════════════════════════════════════════════════════════════════════
   // RENDER
   // ══════════════════════════════════════════════════════════════════════════
@@ -336,6 +377,10 @@ export default function Drivers() {
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition ${activeTab === "trips" ? "bg-orange-500 text-white shadow-lg" : "text-slate-300 hover:text-white"}`}>
                 <FaRoute /> Trips
               </button>
+              <button onClick={() => setActiveTab("analysis")}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition ${activeTab === "analysis" ? "bg-orange-500 text-white shadow-lg" : "text-slate-300 hover:text-white"}`}>
+                <FaChartPie /> Analytics
+              </button>
             </div>
           </div>
         </div>
@@ -353,7 +398,7 @@ export default function Drivers() {
               </button>
             )}
             <button onClick={refreshAction} className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10 transition shadow-sm backdrop-blur-sm">
-              <FaSync className={(activeTab === "drivers" ? driversLoading : tripsLoading) ? "animate-spin" : ""} /> Refresh
+              <FaSync className={(activeTab === "drivers" ? driversLoading : (activeTab === "analysis" ? driversLoading || tripsLoading : tripsLoading)) ? "animate-spin" : ""} /> Refresh
             </button>
           </div>
 
@@ -494,6 +539,106 @@ export default function Drivers() {
              )}
            </div>
          )}
+ 
+        {/* ══════════════════════════════════════════════════════════════════════════
+            TAB 3: ANALYTICS OVERVIEW
+        ═══════════════════════════════════════════════════════════════════════════ */}
+        {activeTab === "analysis" && (
+          <div className="mt-8 animate-in fade-in duration-300 space-y-6">
+            <div className="grid gap-6 lg:grid-cols-3">
+              <div className="rounded-[2rem] bg-white/10 border border-white/10 p-6 shadow-2xl backdrop-blur-xl">
+                <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Total Drivers</p>
+                <h3 className="mt-4 text-4xl font-black text-white">{totalDrivers}</h3>
+                <p className="mt-2 text-sm text-slate-400">Current roster across all routes and shifts.</p>
+              </div>
+              <div className="rounded-[2rem] bg-white/10 border border-white/10 p-6 shadow-2xl backdrop-blur-xl">
+                <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Active Trips</p>
+                <h3 className="mt-4 text-4xl font-black text-white">{activeTrips}</h3>
+                <p className="mt-2 text-sm text-slate-400">Scheduled, ongoing and delayed trips in progress.</p>
+              </div>
+              <div className="rounded-[2rem] bg-white/10 border border-white/10 p-6 shadow-2xl backdrop-blur-xl">
+                <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Available Fleet</p>
+                <h3 className="mt-4 text-4xl font-black text-white">{availableFleet}</h3>
+                <p className="mt-2 text-sm text-slate-400">Drivers marked available and ready for assignment.</p>
+              </div>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div className="rounded-[2rem] bg-white/10 border border-white/10 p-6 shadow-2xl backdrop-blur-xl">
+                <div className="flex items-center justify-between gap-3 mb-6">
+                  <div>
+                    <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Trip Status Breakdown</p>
+                    <h2 className="mt-2 text-2xl font-bold text-white">Status performance</h2>
+                  </div>
+                  <span className="rounded-2xl bg-slate-900/70 px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">Total {trips.length}</span>
+                </div>
+                <div className="space-y-4">
+                  {tripStatusItems.map((item) => (
+                    <div key={item.label} className="space-y-2">
+                      <div className="flex items-center justify-between text-sm text-slate-300 font-medium">
+                        <span>{item.label}</span>
+                        <span>{item.value}</span>
+                      </div>
+                      <div className="h-3 rounded-full bg-slate-900/80 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full bg-gradient-to-r ${item.color}`}
+                          style={{ width: `${(item.value / maxTripCount) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-[2rem] bg-white/10 border border-white/10 p-6 shadow-2xl backdrop-blur-xl">
+                <div className="flex items-center justify-between gap-3 mb-6">
+                  <div>
+                    <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Driver Shift Distribution</p>
+                    <h2 className="mt-2 text-2xl font-bold text-white">Shift coverage</h2>
+                  </div>
+                  <span className="rounded-2xl bg-slate-900/70 px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">{drivers.length} Drivers</span>
+                </div>
+                <div className="flex flex-col items-center justify-center gap-6 lg:flex-row lg:items-start">
+                  <div className="relative h-56 w-56">
+                    <svg viewBox="0 0 120 120" className="h-full w-full">
+                      <circle cx="60" cy="60" r="48" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="18" />
+                      {shiftSeries.map((segment) => (
+                        <circle
+                          key={segment.label}
+                          cx="60"
+                          cy="60"
+                          r={donutRadius}
+                          fill="none"
+                          stroke={segment.color}
+                          strokeWidth="18"
+                          strokeDasharray={`${segment.segmentLength} ${donutCircumference}`}
+                          strokeDashoffset={segment.offset}
+                          strokeLinecap="round"
+                          transform="rotate(-90 60 60)"
+                        />
+                      ))}
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-sm uppercase tracking-[0.22em] text-slate-400">Shift</span>
+                      <span className="mt-2 text-3xl font-black text-white">{drivers.length}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    {shiftSeries.map((segment) => (
+                      <div key={segment.label} className="flex items-center gap-3">
+                        <span className="h-3.5 w-3.5 rounded-full" style={{ backgroundColor: segment.color }} />
+                        <div>
+                          <p className="text-sm font-semibold text-white">{segment.label}</p>
+                          <p className="text-xs text-slate-400">{segment.value} ({Math.round((segment.value / shiftTotal) * 100)}%)</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
  
        </div>
  
