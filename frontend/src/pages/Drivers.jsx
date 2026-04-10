@@ -15,7 +15,8 @@ import {
 import {
   FaPhoneAlt, FaRoute, FaIdBadge, FaPlus, FaEdit, FaTrash,
   FaBus, FaPlay, FaStop, FaExclamationTriangle, FaTimes,
-  FaMagic, FaSync, FaCalendarAlt, FaClock, FaUser, FaClipboardList
+  FaMagic, FaSync, FaCalendarAlt, FaClock, FaUser, FaClipboardList,
+  FaChartPie
 } from "react-icons/fa";
 import { getDrivers, addDriver, updateDriver, deleteDriver } from "../api/driverApi";
 import { getTrips, addTrip, updateTrip, updateTripStatus, deleteTrip } from "../api/tripApi";
@@ -325,77 +326,45 @@ export default function Drivers() {
   };
 
   // ── Analytics Data (computed from existing frontend state) ──────────────
-  const driverShiftCounts = drivers.reduce(
-    (acc, driver) => {
-      const shift = driver?.shift;
-      if (shift === "Morning Shift") acc.Morning += 1;
-      else if (shift === "Day Shift") acc.Day += 1;
-      else if (shift === "Evening Shift") acc.Evening += 1;
-      return acc;
-    },
-    { Morning: 0, Day: 0, Evening: 0 }
-  );
+  const tripStatusCounts = trips.reduce((acc, t) => {
+    acc[t.status] = (acc[t.status] ?? 0) + 1;
+    return acc;
+  }, { Scheduled: 0, Ongoing: 0, Completed: 0, Delayed: 0 });
 
-  const driverData = [
-    { name: "Morning", value: driverShiftCounts.Morning },
-    { name: "Day", value: driverShiftCounts.Day },
-    { name: "Evening", value: driverShiftCounts.Evening },
+  const tripStatusItems = [
+    { label: "Scheduled", value: tripStatusCounts.Scheduled, color: "from-blue-400 to-blue-600" },
+    { label: "Ongoing", value: tripStatusCounts.Ongoing, color: "from-orange-400 to-orange-600" },
+    { label: "Completed", value: tripStatusCounts.Completed, color: "from-emerald-400 to-emerald-600" },
+    { label: "Delayed", value: tripStatusCounts.Delayed, color: "from-red-400 to-red-600" },
   ];
 
-  const tripStatusCounts = trips.reduce(
-    (acc, trip) => {
-      const status = trip?.status;
-      if (status === "Completed") acc.Completed += 1;
-      else if (status === "Ongoing") acc.Ongoing += 1;
-      else if (status === "Delayed") acc.Delayed += 1;
-      return acc;
-    },
-    { Completed: 0, Ongoing: 0, Delayed: 0 }
-  );
+  const maxTripCount = Math.max(...Object.values(tripStatusCounts), 1);
 
-  const tripData = [
-    { status: "Completed", count: tripStatusCounts.Completed },
-    { status: "Ongoing", count: tripStatusCounts.Ongoing },
-    { status: "Delayed", count: tripStatusCounts.Delayed },
-  ];
+  const shiftCounts = drivers.reduce((acc, d) => {
+    if (d.shift === "Morning Shift") acc.Morning++;
+    else if (d.shift === "Day Shift") acc.Day++;
+    else if (d.shift === "Evening Shift") acc.Evening++;
+    return acc;
+  }, { Morning: 0, Day: 0, Evening: 0 });
+
+  const shiftTotal = Math.max(drivers.length, 1);
+  const donutRadius = 48;
+  const donutCircumference = 2 * Math.PI * donutRadius;
+  let shiftOffset = 0;
+  const shiftSeries = [
+    { label: "Morning", value: shiftCounts.Morning, color: "#F97316" },
+    { label: "Day", value: shiftCounts.Day, color: "#38BDF8" },
+    { label: "Evening", value: shiftCounts.Evening, color: "#A78BFA" },
+  ].map((segment) => {
+    const segmentLength = (segment.value / shiftTotal) * donutCircumference;
+    const data = { ...segment, segmentLength, offset: shiftOffset };
+    shiftOffset -= segmentLength;
+    return data;
+  });
 
   const totalDrivers = drivers.length;
-  const totalTrips = trips.length;
-
-  // Driver state breakdown for the analytics cards
-  const driverStatusCounts = drivers.reduce(
-    (acc, driver) => {
-      const status = driver?.status;
-      if (status === "Available") acc.Available += 1;
-      else if (status === "On Trip") acc.OnTrip += 1;
-      return acc;
-    },
-    { Available: 0, OnTrip: 0 }
-  );
-
-  // Most frequent routes based on existing trips state
-  const routeCounts = trips.reduce((acc, trip) => {
-    const route = trip?.route;
-    if (!route) return acc;
-    acc[route] = (acc[route] || 0) + 1;
-    return acc;
-  }, {});
-
-  const topRoutes = Object.entries(routeCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 4);
-
-  const ANALYTICS_PIE_COLORS = {
-    Morning: "#f97316", // orange-500
-    Day: "#fbbf24", // yellow-400
-    Evening: "#10b981", // emerald-400
-  };
-
-  const ANALYTICS_BAR_COLORS = {
-    Completed: "#10b981", // emerald-400
-    Ongoing: "#f97316", // orange-500
-    Delayed: "#ef4444", // red-500
-  };
+  const activeTrips = trips.filter((t) => t.status !== "Completed").length;
+  const availableFleet = drivers.filter((d) => d.status === "Available").length;
 
   // ══════════════════════════════════════════════════════════════════════════
   // RENDER
@@ -424,7 +393,7 @@ export default function Drivers() {
               </button>
               <button onClick={() => setActiveTab("analytics")}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition ${activeTab === "analytics" ? "bg-orange-500 text-white shadow-lg" : "text-slate-300 hover:text-white"}`}>
-                <FaClipboardList /> Analytics
+                <FaChartPie /> Analytics
               </button>
             </div>
           </div>
@@ -443,7 +412,7 @@ export default function Drivers() {
               </button>
             )}
             <button onClick={refreshAction} className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10 transition shadow-sm backdrop-blur-sm">
-              <FaSync className={(activeTab === "drivers" ? driversLoading : tripsLoading) ? "animate-spin" : ""} /> Refresh
+              <FaSync className={(activeTab === "drivers" ? driversLoading : (activeTab === "analysis" ? driversLoading || tripsLoading : tripsLoading)) ? "animate-spin" : ""} /> Refresh
             </button>
           </div>
 
@@ -585,193 +554,105 @@ export default function Drivers() {
            </div>
          )}
  
-        {/* ═══════════════════════════════════════════════════════════════════
-            TAB 3: ANALYTICS
-        ═══════════════════════════════════════════════════════════════════ */}
-        {activeTab === "analytics" && (
+        {/* ══════════════════════════════════════════════════════════════════════════
+            TAB 3: ANALYTICS OVERVIEW
+        ═══════════════════════════════════════════════════════════════════════════ */}
+        {activeTab === "analysis" && (
           <div className="mt-8 animate-in fade-in duration-300 space-y-6">
-            {(driversLoading || tripsLoading) ? (
-              <div className="flex justify-center py-12">
-                <div className="h-10 w-10 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" />
+            <div className="grid gap-6 lg:grid-cols-3">
+              <div className="rounded-[2rem] bg-white/10 border border-white/10 p-6 shadow-2xl backdrop-blur-xl">
+                <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Total Drivers</p>
+                <h3 className="mt-4 text-4xl font-black text-white">{totalDrivers}</h3>
+                <p className="mt-2 text-sm text-slate-400">Current roster across all routes and shifts.</p>
               </div>
-            ) : (
-              <div className="grid gap-6 lg:grid-cols-2">
-                {/* Driver Analytics */}
-                <div className="rounded-3xl bg-white/10 p-6 shadow-2xl border border-white/10 backdrop-blur-md">
-                  <h2 className="text-xl font-bold text-white mb-4">Driver Analytics</h2>
+              <div className="rounded-[2rem] bg-white/10 border border-white/10 p-6 shadow-2xl backdrop-blur-xl">
+                <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Active Trips</p>
+                <h3 className="mt-4 text-4xl font-black text-white">{activeTrips}</h3>
+                <p className="mt-2 text-sm text-slate-400">Scheduled, ongoing and delayed trips in progress.</p>
+              </div>
+              <div className="rounded-[2rem] bg-white/10 border border-white/10 p-6 shadow-2xl backdrop-blur-xl">
+                <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Available Fleet</p>
+                <h3 className="mt-4 text-4xl font-black text-white">{availableFleet}</h3>
+                <p className="mt-2 text-sm text-slate-400">Drivers marked available and ready for assignment.</p>
+              </div>
+            </div>
 
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="rounded-2xl bg-black/20 border border-white/10 p-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-300 font-bold">Total Drivers</p>
-                      <p className="mt-2 text-3xl font-extrabold text-white">{totalDrivers}</p>
-                    </div>
-                    <div className="rounded-2xl bg-black/20 border border-white/10 p-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-300 font-bold">Available</p>
-                      <p className="mt-2 text-3xl font-extrabold text-emerald-400">{driverStatusCounts.Available}</p>
-                    </div>
-                    <div className="rounded-2xl bg-black/20 border border-white/10 p-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-300 font-bold">On Trip</p>
-                      <p className="mt-2 text-3xl font-extrabold text-orange-400">{driverStatusCounts.OnTrip}</p>
-                    </div>
-                    <div className="rounded-2xl bg-black/20 border border-white/10 p-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-300 font-bold mb-2">Shift Distribution</p>
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-slate-200 flex items-center gap-2">
-                            <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: ANALYTICS_PIE_COLORS.Morning }} />
-                            Morning
-                          </span>
-                          <span className="font-bold text-slate-100">{driverShiftCounts.Morning}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-slate-200 flex items-center gap-2">
-                            <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: ANALYTICS_PIE_COLORS.Day }} />
-                            Day
-                          </span>
-                          <span className="font-bold text-slate-100">{driverShiftCounts.Day}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-slate-200 flex items-center gap-2">
-                            <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: ANALYTICS_PIE_COLORS.Evening }} />
-                            Evening
-                          </span>
-                          <span className="font-bold text-slate-100">{driverShiftCounts.Evening}</span>
-                        </div>
-                      </div>
-                    </div>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div className="rounded-[2rem] bg-white/10 border border-white/10 p-6 shadow-2xl backdrop-blur-xl">
+                <div className="flex items-center justify-between gap-3 mb-6">
+                  <div>
+                    <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Trip Status Breakdown</p>
+                    <h2 className="mt-2 text-2xl font-bold text-white">Status performance</h2>
                   </div>
-
-                  <div className="grid gap-6 lg:grid-cols-2 items-center">
-                    <div className="h-[260px] w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={driverData}
-                            dataKey="value"
-                            nameKey="name"
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={95}
-                            label
-                          >
-                            {driverData.map((entry) => (
-                              <Cell key={entry.name} fill={ANALYTICS_PIE_COLORS[entry.name]} />
-                            ))}
-                          </Pie>
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: "rgba(15, 23, 42, 0.95)",
-                              border: "1px solid rgba(255,255,255,0.12)",
-                              borderRadius: 12,
-                              color: "#fff",
-                            }}
-                          />
-                          <Legend wrapperStyle={{ color: "#e5e7eb" }} />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-
-                    <div className="rounded-3xl bg-black/20 border border-white/10 p-5">
-                      <p className="text-sm font-bold text-slate-100">Shift Breakdown</p>
-                      <div className="mt-4 space-y-3">
-                        {driverData.map((entry) => (
-                          <div key={entry.name} className="flex items-center justify-between gap-4">
-                            <span className="text-xs uppercase tracking-[0.2em] text-slate-300 font-bold flex items-center gap-2">
-                              <span
-                                className="inline-block w-2 h-2 rounded-full"
-                                style={{ backgroundColor: ANALYTICS_PIE_COLORS[entry.name] }}
-                              />
-                              {entry.name}
-                            </span>
-                            <span className="text-base font-extrabold text-white">
-                              {entry.value}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                  <span className="rounded-2xl bg-slate-900/70 px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">Total {trips.length}</span>
                 </div>
-
-                {/* Trip Analytics */}
-                <div className="rounded-3xl bg-white/10 p-6 shadow-2xl border border-white/10 backdrop-blur-md">
-                  <h2 className="text-xl font-bold text-white mb-4">Trip Analytics</h2>
-
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="rounded-2xl bg-black/20 border border-white/10 p-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-300 font-bold">Total Trips</p>
-                      <p className="mt-2 text-3xl font-extrabold text-white">{totalTrips}</p>
-                    </div>
-                    <div className="rounded-2xl bg-black/20 border border-white/10 p-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-300 font-bold">Completed</p>
-                      <p className="mt-2 text-3xl font-extrabold text-emerald-400">{tripStatusCounts.Completed}</p>
-                    </div>
-                    <div className="rounded-2xl bg-black/20 border border-white/10 p-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-300 font-bold">Ongoing</p>
-                      <p className="mt-2 text-3xl font-extrabold text-orange-400">{tripStatusCounts.Ongoing}</p>
-                    </div>
-                    <div className="rounded-2xl bg-black/20 border border-white/10 p-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-300 font-bold">Delayed</p>
-                      <p className="mt-2 text-3xl font-extrabold text-red-400">{tripStatusCounts.Delayed}</p>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-6">
-                    <div className="h-[260px] w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={tripData} margin={{ top: 20, right: 10, left: 10, bottom: 5 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.12)" />
-                          <XAxis
-                            dataKey="status"
-                            tick={{ fill: "#e5e7eb", fontSize: 12 }}
-                            axisLine={{ stroke: "rgba(255,255,255,0.2)" }}
-                            tickLine={false}
-                          />
-                          <YAxis
-                            tick={{ fill: "#e5e7eb", fontSize: 12 }}
-                            axisLine={{ stroke: "rgba(255,255,255,0.2)" }}
-                            tickLine={false}
-                          />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: "rgba(15, 23, 42, 0.95)",
-                              border: "1px solid rgba(255,255,255,0.12)",
-                              borderRadius: 12,
-                              color: "#fff",
-                            }}
-                          />
-                          <Legend wrapperStyle={{ color: "#e5e7eb" }} />
-                          <Bar dataKey="count">
-                            {tripData.map((entry) => (
-                              <Cell key={entry.status} fill={ANALYTICS_BAR_COLORS[entry.status]} />
-                            ))}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-
-                    <div className="rounded-3xl bg-black/20 border border-white/10 p-5">
-                      <p className="text-sm font-bold text-slate-100">Most Frequent Routes</p>
-                      <div className="mt-4 space-y-3 max-h-[170px] overflow-auto pr-1">
-                        {topRoutes.length ? (
-                          topRoutes.map(([route, count]) => (
-                            <div key={route} className="flex items-center justify-between gap-4">
-                              <p className="text-xs text-slate-300 truncate">{route}</p>
-                              <p className="text-xs font-extrabold text-orange-400">{count}</p>
-                            </div>
-                          ))
-                        ) : (
-                          <p className="text-xs text-slate-500">—</p>
-                        )}
+                <div className="space-y-4">
+                  {tripStatusItems.map((item) => (
+                    <div key={item.label} className="space-y-2">
+                      <div className="flex items-center justify-between text-sm text-slate-300 font-medium">
+                        <span>{item.label}</span>
+                        <span>{item.value}</span>
+                      </div>
+                      <div className="h-3 rounded-full bg-slate-900/80 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full bg-gradient-to-r ${item.color}`}
+                          style={{ width: `${(item.value / maxTripCount) * 100}%` }}
+                        />
                       </div>
                     </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-[2rem] bg-white/10 border border-white/10 p-6 shadow-2xl backdrop-blur-xl">
+                <div className="flex items-center justify-between gap-3 mb-6">
+                  <div>
+                    <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Driver Shift Distribution</p>
+                    <h2 className="mt-2 text-2xl font-bold text-white">Shift coverage</h2>
+                  </div>
+                  <span className="rounded-2xl bg-slate-900/70 px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">{drivers.length} Drivers</span>
+                </div>
+                <div className="flex flex-col items-center justify-center gap-6 lg:flex-row lg:items-start">
+                  <div className="relative h-56 w-56">
+                    <svg viewBox="0 0 120 120" className="h-full w-full">
+                      <circle cx="60" cy="60" r="48" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="18" />
+                      {shiftSeries.map((segment) => (
+                        <circle
+                          key={segment.label}
+                          cx="60"
+                          cy="60"
+                          r={donutRadius}
+                          fill="none"
+                          stroke={segment.color}
+                          strokeWidth="18"
+                          strokeDasharray={`${segment.segmentLength} ${donutCircumference}`}
+                          strokeDashoffset={segment.offset}
+                          strokeLinecap="round"
+                          transform="rotate(-90 60 60)"
+                        />
+                      ))}
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-sm uppercase tracking-[0.22em] text-slate-400">Shift</span>
+                      <span className="mt-2 text-3xl font-black text-white">{drivers.length}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    {shiftSeries.map((segment) => (
+                      <div key={segment.label} className="flex items-center gap-3">
+                        <span className="h-3.5 w-3.5 rounded-full" style={{ backgroundColor: segment.color }} />
+                        <div>
+                          <p className="text-sm font-semibold text-white">{segment.label}</p>
+                          <p className="text-xs text-slate-400">{segment.value} ({Math.round((segment.value / shiftTotal) * 100)}%)</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         )}
-
        </div>
  
        {/* Add / Edit Driver Modal */}
