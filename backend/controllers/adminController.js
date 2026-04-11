@@ -2,7 +2,20 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Complaint = require("../models/Complaint");
-const Booking = require("../models/Booking");
+const Booking = require("../models/BookingModel");
+
+const formatHourLabel = (hour) => {
+  const startHour = hour % 24;
+  const endHour = (hour + 1) % 24;
+
+  const toLabel = (value) => {
+    const suffix = value >= 12 ? "PM" : "AM";
+    const normalized = value % 12 === 0 ? 12 : value % 12;
+    return `${normalized} ${suffix}`;
+  };
+
+  return `${toLabel(startHour)} - ${toLabel(endHour)}`;
+};
 
 const adminLogin = async (req, res) => {
   try {
@@ -58,12 +71,31 @@ const getAdminSummary = async (req, res) => {
     const totalUsers = await User.countDocuments();
     const totalComplaints = await Complaint.countDocuments();
     const totalBookings = await Booking.countDocuments();
+    const bookings = await Booking.find({ status: { $ne: "cancelled" } }).select(
+      "createdAt"
+    );
+
+    const bookingsByHour = Array.from({ length: 24 }, () => 0);
+
+    bookings.forEach((booking) => {
+      const bookingHour = new Date(booking.createdAt).getHours();
+      bookingsByHour[bookingHour] += 1;
+    });
+
+    const peakHourIndex = bookingsByHour.findIndex(
+      (count) => count === Math.max(...bookingsByHour)
+    );
+
+    const peakHour =
+      peakHourIndex >= 0 && bookingsByHour[peakHourIndex] > 0
+        ? formatHourLabel(peakHourIndex)
+        : "N/A";
 
     res.status(200).json({
       totalUsers,
       totalComplaints,
       totalBookings,
-      peakHour: "8 AM - 9 AM",
+      peakHour,
     });
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch summary", error: error.message });

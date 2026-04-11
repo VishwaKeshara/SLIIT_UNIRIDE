@@ -3,20 +3,50 @@ const Complaint = require("../models/Complaint");
 const createComplaint = async (req, res) => {
   try {
     const { userId, userName, userEmail, title, type, message, status } = req.body;
+    const normalizedTitle = title?.trim();
+    const normalizedMessage = message?.trim();
+    const normalizedUserName = userName?.trim();
+    const normalizedEmail = userEmail?.trim().toLowerCase();
+    const allowedTypes = ["booking", "driver", "schedule", "payment", "other"];
 
-    if (!userId || !userName || !userEmail || !title || !type || !message) {
+    if (
+      !userId ||
+      !normalizedUserName ||
+      !normalizedEmail ||
+      !normalizedTitle ||
+      !type ||
+      !normalizedMessage
+    ) {
       return res.status(400).json({
-        message: "Title, type, and message are required.",
+        message: "User details, subject, category, and description are required.",
+      });
+    }
+
+    if (!allowedTypes.includes(type)) {
+      return res.status(400).json({
+        message: "Please select a valid complaint category.",
+      });
+    }
+
+    if (normalizedTitle.length < 8 || normalizedTitle.length > 100) {
+      return res.status(400).json({
+        message: "Complaint subject must be between 8 and 100 characters.",
+      });
+    }
+
+    if (normalizedMessage.length < 30 || normalizedMessage.length > 1000) {
+      return res.status(400).json({
+        message: "Complaint description must be between 30 and 1000 characters.",
       });
     }
 
     const complaint = new Complaint({
       userId,
-      userName,
-      userEmail,
-      title,
+      userName: normalizedUserName,
+      userEmail: normalizedEmail,
+      title: normalizedTitle,
       type,
-      message,
+      message: normalizedMessage,
       status: status || "pending",
     });
 

@@ -44,10 +44,18 @@ const bookingSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ["pending", "paid"],
+      enum: ["pending", "paid", "failed", "refunded"],
       default: "pending",
     },
     paymentReference: { type: String },
+    verificationStatus: {
+      type: String,
+      enum: ["unverified", "verified", "rejected"],
+      default: "unverified",
+    },
+    receiptUrl: { type: String, default: "" },
+    refundReason: { type: String, default: "" },
+    refundedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

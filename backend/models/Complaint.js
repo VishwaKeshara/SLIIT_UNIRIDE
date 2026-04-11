@@ -10,14 +10,20 @@ const complaintSchema = new mongoose.Schema(
     userName: {
       type: String,
       required: true,
+      trim: true,
     },
     userEmail: {
       type: String,
       required: true,
+      trim: true,
+      lowercase: true,
     },
     title: {
       type: String,
       required: true,
+      trim: true,
+      minlength: 8,
+      maxlength: 100,
     },
     type: {
       type: String,
@@ -27,6 +33,9 @@ const complaintSchema = new mongoose.Schema(
     message: {
       type: String,
       required: true,
+      trim: true,
+      minlength: 30,
+      maxlength: 1000,
     },
     status: {
       type: String,
