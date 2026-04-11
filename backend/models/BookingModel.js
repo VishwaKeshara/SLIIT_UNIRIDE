@@ -25,6 +25,11 @@ const bookingSchema = new mongoose.Schema(
     totalDays:       { type: Number, required: true, min: 1 },
     pricePerDay:     { type: Number, default: 0 },
     totalAmount:     { type: Number, default: 0 },
+    bookingBasis: {
+      type: String,
+      enum: ["daily", "monthly"],
+      default: "daily",
+    },
 
     status: {
       type: String,
