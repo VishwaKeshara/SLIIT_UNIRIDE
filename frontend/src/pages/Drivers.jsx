@@ -15,8 +15,7 @@ import {
 import {
   FaPhoneAlt, FaRoute, FaIdBadge, FaPlus, FaEdit, FaTrash,
   FaBus, FaPlay, FaStop, FaExclamationTriangle, FaTimes,
-  FaMagic, FaSync, FaCalendarAlt, FaClock, FaUser, FaClipboardList,
-  FaChartPie
+  FaMagic, FaSync, FaCalendarAlt, FaClock, FaUser, FaClipboardList
 } from "react-icons/fa";
 import { getDrivers, addDriver, updateDriver, deleteDriver } from "../api/driverApi";
 import { getTrips, addTrip, updateTrip, updateTripStatus, deleteTrip } from "../api/tripApi";
@@ -139,12 +138,12 @@ export default function Drivers() {
 
   useEffect(() => {
     loadDrivers();
-    if (activeTab === "trips" || activeTab === "analytics") loadTrips();
+    if (activeTab === "trips" || activeTab === "analysis") loadTrips();
   }, [activeTab, loadDrivers, loadTrips]);
 
   const refreshAction = () => {
     if (activeTab === "drivers") loadDrivers();
-    if (activeTab === "trips" || activeTab === "analytics") { loadDrivers(); loadTrips(); }
+    if (activeTab === "trips" || activeTab === "analysis") { loadDrivers(); loadTrips(); }
   };
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -331,40 +330,6 @@ export default function Drivers() {
     return acc;
   }, { Scheduled: 0, Ongoing: 0, Completed: 0, Delayed: 0 });
 
-  const tripStatusItems = [
-    { label: "Scheduled", value: tripStatusCounts.Scheduled, color: "from-blue-400 to-blue-600" },
-    { label: "Ongoing", value: tripStatusCounts.Ongoing, color: "from-orange-400 to-orange-600" },
-    { label: "Completed", value: tripStatusCounts.Completed, color: "from-emerald-400 to-emerald-600" },
-    { label: "Delayed", value: tripStatusCounts.Delayed, color: "from-red-400 to-red-600" },
-  ];
-
-  const maxTripCount = Math.max(...Object.values(tripStatusCounts), 1);
-
-  const shiftCounts = drivers.reduce((acc, d) => {
-    if (d.shift === "Morning Shift") acc.Morning++;
-    else if (d.shift === "Day Shift") acc.Day++;
-    else if (d.shift === "Evening Shift") acc.Evening++;
-    return acc;
-  }, { Morning: 0, Day: 0, Evening: 0 });
-
-  const shiftTotal = Math.max(drivers.length, 1);
-  const donutRadius = 48;
-  const donutCircumference = 2 * Math.PI * donutRadius;
-  let shiftOffset = 0;
-  const shiftSeries = [
-    { label: "Morning", value: shiftCounts.Morning, color: "#F97316" },
-    { label: "Day", value: shiftCounts.Day, color: "#38BDF8" },
-    { label: "Evening", value: shiftCounts.Evening, color: "#A78BFA" },
-  ].map((segment) => {
-    const segmentLength = (segment.value / shiftTotal) * donutCircumference;
-    const data = { ...segment, segmentLength, offset: shiftOffset };
-    shiftOffset -= segmentLength;
-    return data;
-  });
-
-  const totalDrivers = drivers.length;
-  const activeTrips = trips.filter((t) => t.status !== "Completed").length;
-  const availableFleet = drivers.filter((d) => d.status === "Available").length;
 
   // ══════════════════════════════════════════════════════════════════════════
   // RENDER
@@ -391,8 +356,8 @@ export default function Drivers() {
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition ${activeTab === "trips" ? "bg-orange-500 text-white shadow-lg" : "text-slate-300 hover:text-white"}`}>
                 <FaRoute /> Trips
               </button>
-              <button onClick={() => setActiveTab("analytics")}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition ${activeTab === "analytics" ? "bg-orange-500 text-white shadow-lg" : "text-slate-300 hover:text-white"}`}>
+              <button onClick={() => setActiveTab("analysis")}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition ${activeTab === "analysis" ? "bg-orange-500 text-white shadow-lg" : "text-slate-300 hover:text-white"}`}>
                 <FaChartPie /> Analytics
               </button>
             </div>
@@ -554,28 +519,6 @@ export default function Drivers() {
            </div>
          )}
  
-        {/* ══════════════════════════════════════════════════════════════════════════
-            TAB 3: ANALYTICS OVERVIEW
-        ═══════════════════════════════════════════════════════════════════════════ */}
-        {activeTab === "analysis" && (
-          <div className="mt-8 animate-in fade-in duration-300 space-y-6">
-            <div className="grid gap-6 lg:grid-cols-3">
-              <div className="rounded-[2rem] bg-white/10 border border-white/10 p-6 shadow-2xl backdrop-blur-xl">
-                <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Total Drivers</p>
-                <h3 className="mt-4 text-4xl font-black text-white">{totalDrivers}</h3>
-                <p className="mt-2 text-sm text-slate-400">Current roster across all routes and shifts.</p>
-              </div>
-              <div className="rounded-[2rem] bg-white/10 border border-white/10 p-6 shadow-2xl backdrop-blur-xl">
-                <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Active Trips</p>
-                <h3 className="mt-4 text-4xl font-black text-white">{activeTrips}</h3>
-                <p className="mt-2 text-sm text-slate-400">Scheduled, ongoing and delayed trips in progress.</p>
-              </div>
-              <div className="rounded-[2rem] bg-white/10 border border-white/10 p-6 shadow-2xl backdrop-blur-xl">
-                <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Available Fleet</p>
-                <h3 className="mt-4 text-4xl font-black text-white">{availableFleet}</h3>
-                <p className="mt-2 text-sm text-slate-400">Drivers marked available and ready for assignment.</p>
-              </div>
-            </div>
 
             <div className="grid gap-6 lg:grid-cols-2">
               <div className="rounded-[2rem] bg-white/10 border border-white/10 p-6 shadow-2xl backdrop-blur-xl">

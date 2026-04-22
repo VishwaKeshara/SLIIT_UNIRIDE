@@ -14,6 +14,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import Complaint from "./pages/Complaint";
+import Notifications from "./pages/Notifications";
 import Schedules from "./pages/Schedules";
 import BookRide from "./pages/BookRide";
 import MyRides from "./pages/MyRides";
@@ -46,6 +47,7 @@ import ComplaintManagement from "./admin/ComplaintManagement";
 import ManageRoutes from "./admin/ManageRoutes";
 import TripMonitoring from "./admin/TripMonitoring";
 import AnalyticsReports from "./admin/AnalyticsReports";
+import DriversAnalytics from "./admin/DriversAnalytics";
 import SystemSettings from "./admin/SystemSettings";
 import ProtectedAdminRoute from "./admin/ProtectedAdminRoute";
 
@@ -80,6 +82,7 @@ function AppLayout() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/complaint" element={<Complaint />} />
+          <Route path="/notifications" element={<Notifications />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/routes" element={<RouteList />} />
           <Route path="/RouteList" element={<RouteList />} />
@@ -166,6 +169,15 @@ function AppLayout() {
             element={
               <ProtectedAdminRoute allowedRoles={["admin"]}>
                 <TripMonitoring />
+              </ProtectedAdminRoute>
+            }
+          />
+
+          <Route
+            path="/admin/drivers-analytics"
+            element={
+              <ProtectedAdminRoute allowedRoles={["admin"]}>
+                <DriversAnalytics />
               </ProtectedAdminRoute>
             }
           />

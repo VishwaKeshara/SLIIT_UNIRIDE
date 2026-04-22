@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "../axiosinstance";
 import {
   FaBus,
   FaCalendarAlt,
@@ -13,6 +14,7 @@ import {
   FaBars,
   FaTimes,
   FaExclamationCircle,
+  FaBell,
 } from "react-icons/fa";
 
 function Navbar() {
@@ -25,6 +27,7 @@ function Navbar() {
       return null;
     }
   });
+  const [hasAlert, setHasAlert] = useState(false);
   const navigate = useNavigate();
 
   // Check user login status
@@ -47,9 +50,22 @@ function Navbar() {
     window.addEventListener("storage", checkUser);
     window.addEventListener("userChanged", checkUser);
 
+    const checkAlerts = async () => {
+      try {
+        const res = await axios.get("/trips");
+        const hasDelay = res.data.some((t) => t.status === "Delayed");
+        setHasAlert(hasDelay);
+      } catch (err) {
+        console.error("Failed to fetch alerts", err);
+      }
+    };
+    checkAlerts();
+    const interval = setInterval(checkAlerts, 60000); // Check every minute
+
     return () => {
       window.removeEventListener("storage", checkUser);
       window.removeEventListener("userChanged", checkUser);
+      clearInterval(interval);
     };
   }, []);
 
@@ -70,6 +86,7 @@ function Navbar() {
     { to: "/drivers", label: "Drivers", icon: <FaUsers /> },
     { to: "/about", label: "About Us", icon: <FaInfoCircle /> },
     { to: "/contact", label: "Contact", icon: <FaPhoneAlt /> },
+    { to: "/notifications", label: "Notifications", icon: <FaBell /> },
   ];
 
   // Links visible only to logged-in users
@@ -97,9 +114,15 @@ function Navbar() {
             <Link
               key={item.to}
               to={item.to}
-              className="flex items-center gap-2 whitespace-nowrap transition hover:text-orange-300"
+              className="relative flex items-center gap-2 whitespace-nowrap transition hover:text-orange-300"
             >
               {item.icon} {item.label}
+              {item.label === "Notifications" && hasAlert && (
+                <span className="absolute -right-2 -top-1 flex h-3 w-3">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500"></span>
+                </span>
+              )}
             </Link>
           ))}
 
@@ -166,9 +189,15 @@ function Navbar() {
                 key={item.to}
                 to={item.to}
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 rounded-md px-3 py-2.5 transition hover:bg-white/10 hover:text-orange-300"
+                className="relative flex w-fit items-center gap-3 rounded-md px-3 py-2.5 transition hover:bg-white/10 hover:text-orange-300"
               >
                 {item.icon} {item.label}
+                {item.label === "Notifications" && hasAlert && (
+                  <span className="absolute right-0 top-2.5 flex h-2.5 w-2.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500"></span>
+                  </span>
+                )}
               </Link>
             ))}
 
