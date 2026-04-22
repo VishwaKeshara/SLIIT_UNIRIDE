@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import AdminSidebar from "../../admin/AdminSidebar";
 import { getStoredAdminRole, isRouteManager } from "../../admin/adminAccess";
 import {
   ArrowLeft,
@@ -178,156 +179,159 @@ function RouteFormAdmin() {
     }`;
 
   return (
-    <section className="min-h-screen bg-gradient-to-br from-[#f8fbff] via-[#eef6ff] to-[#f5f9ff]">
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <div className="mb-5 flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() => navigate("/admin/dashboard")}
-                className="inline-flex items-center gap-2 rounded-2xl border border-blue-100 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-blue-50"
-              >
-                <ArrowLeft size={16} />
-                Back to Dashboard
-              </button>
+    <div className="min-h-screen bg-gradient-to-br from-[#eff4fb] via-[#f7fbff] to-[#eef3f9] lg:flex">
+      <AdminSidebar />
 
-              <button
-                type="button"
-                onClick={() => navigate("/RouteList")}
-                className="inline-flex items-center gap-2 rounded-2xl border border-blue-100 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-blue-50"
-              >
-                <ArrowLeft size={16} />
-                View Route List
-              </button>
-            </div>
+      <section className="min-w-0 flex-1 bg-gradient-to-br from-[#f8fbff] via-[#eef6ff] to-[#f5f9ff]">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <div className="mb-5 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => navigate("/admin/dashboard")}
+                  className="inline-flex items-center gap-2 rounded-2xl border border-blue-100 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-blue-50"
+                >
+                  <ArrowLeft size={16} />
+                  Back to Dashboard
+                </button>
 
-            <p className="mb-2 text-lg font-semibold text-blue-600">
-              Route Administration
-            </p>
-            <h1 className="text-4xl font-bold text-slate-800 sm:text-5xl">
-              Add Shuttle Route
-            </h1>
-            <p className="mt-3 max-w-2xl text-base text-slate-500">
-              Create new shuttle routes with location details, start times,
-              recurrence, and seat capacity using the same admin dashboard
-              visual style.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-blue-100 bg-white px-6 py-4 shadow-md text-base">
-            <p className="text-slate-500 text-sm">Workspace</p>
-            <span className="text-xl font-bold text-blue-600">
-              Route Control
-            </span>
-          </div>
-        </div>
-
-        <div className="mb-10 grid grid-cols-1 gap-8 xl:grid-cols-4">
-          <div className="rounded-3xl border border-blue-100 bg-white/90 p-6 shadow-[0_10px_30px_rgba(59,130,246,0.08)] backdrop-blur-sm">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-base text-slate-500">Route Name</p>
-                <h2 className="mt-3 text-2xl font-bold text-slate-800">
-                  {form.routeName || "New Route"}
-                </h2>
-              </div>
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100">
-                <Route className="text-blue-600" size={24} />
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-3xl border border-blue-100 bg-white/90 p-6 shadow-[0_10px_30px_rgba(59,130,246,0.08)] backdrop-blur-sm">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-base text-slate-500">Capacity</p>
-                <h2 className="mt-3 text-2xl font-bold text-slate-800">
-                  {form.seatCapacity || "--"}
-                </h2>
-              </div>
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-100">
-                <Users className="text-sky-600" size={24} />
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-3xl border border-blue-100 bg-white/90 p-6 shadow-[0_10px_30px_rgba(59,130,246,0.08)] backdrop-blur-sm">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-base text-slate-500">Departure</p>
-                <h2 className="mt-3 text-2xl font-bold text-slate-800">
-                  {form.startTime || "--:--"}
-                </h2>
-              </div>
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-yellow-100">
-                <Clock className="text-yellow-600" size={24} />
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-3xl border border-blue-100 bg-white/90 p-6 shadow-[0_10px_30px_rgba(59,130,246,0.08)] backdrop-blur-sm">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-base text-slate-500">Recurrence</p>
-                <h2 className="mt-3 text-2xl font-bold capitalize text-slate-800">
-                  {form.recurrence}
-                </h2>
-              </div>
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100">
-                <Repeat className="text-indigo-600" size={24} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.15fr_0.85fr]">
-          <div className="rounded-3xl border border-blue-100 bg-white/90 p-8 shadow-[0_10px_30px_rgba(59,130,246,0.08)] backdrop-blur-sm">
-            <div className="mb-8">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
-                <BusFront size={16} />
-                Shuttle Administration
+                <button
+                  type="button"
+                  onClick={() => navigate("/RouteList")}
+                  className="inline-flex items-center gap-2 rounded-2xl border border-blue-100 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-blue-50"
+                >
+                  <ArrowLeft size={16} />
+                  View Route List
+                </button>
               </div>
 
-              <h2 className="text-3xl font-bold text-slate-800">
-                Route Information
-              </h2>
-              <p className="mt-2 text-sm text-slate-500">
-                Fill in the route information below to create a new shuttle
-                schedule.
+              <p className="mb-2 text-lg font-semibold text-blue-600">
+                Route Administration
+              </p>
+              <h1 className="text-4xl font-bold text-slate-800 sm:text-5xl">
+                Add Shuttle Route
+              </h1>
+              <p className="mt-3 max-w-2xl text-base text-slate-500">
+                Create new shuttle routes with location details, start times,
+                recurrence, and seat capacity using the same admin dashboard
+                visual style.
               </p>
             </div>
 
-            {submitError && (
-              <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-                {submitError}
-              </div>
-            )}
+            <div className="rounded-2xl border border-blue-100 bg-white px-6 py-4 shadow-md text-base">
+              <p className="text-slate-500 text-sm">Workspace</p>
+              <span className="text-xl font-bold text-blue-600">
+                {routeManager ? "Route Manager Control" : "Route Control"}
+              </span>
+            </div>
+          </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <label className="text-sm font-semibold text-slate-700">
-                  Route Name
-                </label>
-                <div className={inputWrapperClass("routeName")}>
-                  <Route className="mr-3 text-blue-600" size={18} />
-                  <input
-                    type="text"
-                    value={form.routeName}
-                    onChange={(e) =>
-                      setForm({ ...form, routeName: e.target.value })
-                    }
-                    onBlur={() => capitalizeFieldOnBlur("routeName")}
-                    className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
-                    placeholder="Ex: Malabe - Colombo"
-                  />
+          <div className="mb-10 grid grid-cols-1 gap-8 xl:grid-cols-4">
+            <div className="rounded-3xl border border-blue-100 bg-white/90 p-6 shadow-[0_10px_30px_rgba(59,130,246,0.08)] backdrop-blur-sm">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-base text-slate-500">Route Name</p>
+                  <h2 className="mt-3 text-2xl font-bold text-slate-800">
+                    {form.routeName || "New Route"}
+                  </h2>
                 </div>
-                {errors.routeName && (
-                  <p className="mt-2 text-sm text-red-500">
-                    {errors.routeName}
-                  </p>
-                )}
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100">
+                  <Route className="text-blue-600" size={24} />
+                </div>
               </div>
+            </div>
+
+            <div className="rounded-3xl border border-blue-100 bg-white/90 p-6 shadow-[0_10px_30px_rgba(59,130,246,0.08)] backdrop-blur-sm">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-base text-slate-500">Capacity</p>
+                  <h2 className="mt-3 text-2xl font-bold text-slate-800">
+                    {form.seatCapacity || "--"}
+                  </h2>
+                </div>
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-sky-100">
+                  <Users className="text-sky-600" size={24} />
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-blue-100 bg-white/90 p-6 shadow-[0_10px_30px_rgba(59,130,246,0.08)] backdrop-blur-sm">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-base text-slate-500">Departure</p>
+                  <h2 className="mt-3 text-2xl font-bold text-slate-800">
+                    {form.startTime || "--:--"}
+                  </h2>
+                </div>
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-yellow-100">
+                  <Clock className="text-yellow-600" size={24} />
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-blue-100 bg-white/90 p-6 shadow-[0_10px_30px_rgba(59,130,246,0.08)] backdrop-blur-sm">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-base text-slate-500">Recurrence</p>
+                  <h2 className="mt-3 text-2xl font-bold capitalize text-slate-800">
+                    {form.recurrence}
+                  </h2>
+                </div>
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100">
+                  <Repeat className="text-indigo-600" size={24} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+            <div className="rounded-3xl border border-blue-100 bg-white/90 p-8 shadow-[0_10px_30px_rgba(59,130,246,0.08)] backdrop-blur-sm">
+              <div className="mb-8">
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700">
+                  <BusFront size={16} />
+                  Shuttle Administration
+                </div>
+
+                <h2 className="text-3xl font-bold text-slate-800">
+                  Route Information
+                </h2>
+                <p className="mt-2 text-sm text-slate-500">
+                  Fill in the route information below to create a new shuttle
+                  schedule.
+                </p>
+              </div>
+
+              {submitError && (
+                <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                  {submitError}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div>
+                  <label className="text-sm font-semibold text-slate-700">
+                    Route Name
+                  </label>
+                  <div className={inputWrapperClass("routeName")}>
+                    <Route className="mr-3 text-blue-600" size={18} />
+                    <input
+                      type="text"
+                      value={form.routeName}
+                      onChange={(e) =>
+                        setForm({ ...form, routeName: e.target.value })
+                      }
+                      onBlur={() => capitalizeFieldOnBlur("routeName")}
+                      className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                      placeholder="Ex: Malabe - Colombo"
+                    />
+                  </div>
+                  {errors.routeName && (
+                    <p className="mt-2 text-sm text-red-500">
+                      {errors.routeName}
+                    </p>
+                  )}
+                </div>
 
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <div>
@@ -525,85 +529,86 @@ function RouteFormAdmin() {
                   View Route List
                 </button>
               </div>
-            </form>
-          </div>
-
-          <div className="space-y-8">
-            <div className="rounded-3xl border border-blue-100 bg-white/90 p-8 shadow-[0_10px_30px_rgba(59,130,246,0.08)] backdrop-blur-sm">
-              <h3 className="mb-3 text-3xl font-bold text-slate-800">
-                Route Preview
-              </h3>
-              <p className="mb-6 text-base text-slate-500">
-                Review the route configuration before saving it into the system.
-              </p>
-
-              <div className="space-y-4">
-                <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
-                  <p className="text-sm text-slate-500">Route</p>
-                  <h4 className="mt-1 text-xl font-bold text-blue-600">
-                    {form.routeName || "Not set yet"}
-                  </h4>
-                </div>
-
-                <div className="rounded-2xl border border-sky-100 bg-sky-50 p-4">
-                  <p className="text-sm text-slate-500">Journey</p>
-                  <h4 className="mt-1 text-xl font-bold text-slate-800">
-                    {form.startLocation || "Start"} to{" "}
-                    {form.endLocation || "End"}
-                  </h4>
-                </div>
-
-                <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
-                  <p className="text-sm text-slate-500">Schedule</p>
-                  <h4 className="mt-1 text-xl font-bold capitalize text-slate-800">
-                    {form.recurrence}
-                    {form.recurrence === "weekly" && form.days.length > 0
-                      ? ` (${form.days.join(", ")})`
-                      : ""}
-                  </h4>
-                </div>
-
-                <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-                  <p className="text-sm text-slate-500">Capacity</p>
-                  <h4 className="mt-1 text-xl font-bold text-slate-800">
-                    {form.seatCapacity || "--"} seats
-                  </h4>
-                </div>
-
-                <div className="rounded-2xl border border-yellow-100 bg-yellow-50 p-4">
-                  <p className="text-sm text-slate-500">Price per Day</p>
-                  <h4 className="mt-1 text-xl font-bold text-slate-800">
-                    {form.pricePerDay !== ""
-                      ? `LKR ${Number(form.pricePerDay).toFixed(2)}`
-                      : "Not set"}
-                  </h4>
-                </div>
-              </div>
+              </form>
             </div>
 
-            <div className="rounded-3xl border border-blue-100 bg-white/90 p-8 shadow-[0_10px_30px_rgba(59,130,246,0.08)] backdrop-blur-sm">
-              <h3 className="mb-4 text-2xl font-bold text-slate-800">
-                Admin Notes
-              </h3>
-              <div className="space-y-4 text-sm text-slate-500">
-                <p>
-                  Keep route names clear and consistent so students can find
-                  schedules easily.
+            <div className="space-y-8">
+              <div className="rounded-3xl border border-blue-100 bg-white/90 p-8 shadow-[0_10px_30px_rgba(59,130,246,0.08)] backdrop-blur-sm">
+                <h3 className="mb-3 text-3xl font-bold text-slate-800">
+                  Route Preview
+                </h3>
+                <p className="mb-6 text-base text-slate-500">
+                  Review the route configuration before saving it into the system.
                 </p>
-                <p>
-                  Weekly schedules should only include the actual running days
-                  for that shuttle.
-                </p>
-                <p>
-                  Seat capacity should reflect the assigned vehicle to avoid
-                  overbooking issues later.
-                </p>
+
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4">
+                    <p className="text-sm text-slate-500">Route</p>
+                    <h4 className="mt-1 text-xl font-bold text-blue-600">
+                      {form.routeName || "Not set yet"}
+                    </h4>
+                  </div>
+
+                  <div className="rounded-2xl border border-sky-100 bg-sky-50 p-4">
+                    <p className="text-sm text-slate-500">Journey</p>
+                    <h4 className="mt-1 text-xl font-bold text-slate-800">
+                      {form.startLocation || "Start"} to{" "}
+                      {form.endLocation || "End"}
+                    </h4>
+                  </div>
+
+                  <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
+                    <p className="text-sm text-slate-500">Schedule</p>
+                    <h4 className="mt-1 text-xl font-bold capitalize text-slate-800">
+                      {form.recurrence}
+                      {form.recurrence === "weekly" && form.days.length > 0
+                        ? ` (${form.days.join(", ")})`
+                        : ""}
+                    </h4>
+                  </div>
+
+                  <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+                    <p className="text-sm text-slate-500">Capacity</p>
+                    <h4 className="mt-1 text-xl font-bold text-slate-800">
+                      {form.seatCapacity || "--"} seats
+                    </h4>
+                  </div>
+
+                  <div className="rounded-2xl border border-yellow-100 bg-yellow-50 p-4">
+                    <p className="text-sm text-slate-500">Price per Day</p>
+                    <h4 className="mt-1 text-xl font-bold text-slate-800">
+                      {form.pricePerDay !== ""
+                        ? `LKR ${Number(form.pricePerDay).toFixed(2)}`
+                        : "Not set"}
+                    </h4>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-blue-100 bg-white/90 p-8 shadow-[0_10px_30px_rgba(59,130,246,0.08)] backdrop-blur-sm">
+                <h3 className="mb-4 text-2xl font-bold text-slate-800">
+                  Admin Notes
+                </h3>
+                <div className="space-y-4 text-sm text-slate-500">
+                  <p>
+                    Keep route names clear and consistent so students can find
+                    schedules easily.
+                  </p>
+                  <p>
+                    Weekly schedules should only include the actual running days
+                    for that shuttle.
+                  </p>
+                  <p>
+                    Seat capacity should reflect the assigned vehicle to avoid
+                    overbooking issues later.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
   );
 }
 
