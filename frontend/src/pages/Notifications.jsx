@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import axios from "../axiosinstance";
 import {
   FaBell, FaCheckCircle, FaClock, FaExclamationTriangle,
-  FaReply, FaBus, FaRoute, FaCalendarAlt, FaArrowLeft,
+  FaReply, FaBus, FaRoute, FaCalendarAlt, FaArrowLeft, FaPlay,
 } from "react-icons/fa";
 
 export default function Notifications() {
@@ -70,17 +70,49 @@ export default function Notifications() {
     });
   });
 
+  // Trip ongoing notifications
+  trips.filter((t) => t.status === "Ongoing").forEach((t) => {
+    notifications.push({
+      id: `trip-ongoing-${t._id}`,
+      type: "trip_ongoing",
+      icon: <FaPlay className="text-orange-400" />,
+      title: `Trip Ongoing: ${t.route}`,
+      message: `Trip in progress from ${t.startTime} to ${t.endTime} with ${t.passengers} passengers.`,
+      status: "Ongoing",
+      time: t.updatedAt || t.date,
+      badge: "Ongoing",
+      badgeColor: "bg-orange-500/15 text-orange-400 border-orange-500/30",
+    });
+  });
+
+  // Trip scheduled notifications
+  trips.filter((t) => t.status === "Scheduled").forEach((t) => {
+    notifications.push({
+      id: `trip-scheduled-${t._id}`,
+      type: "trip_scheduled",
+      icon: <FaClock className="text-blue-400" />,
+      title: `Trip Scheduled: ${t.route}`,
+      message: `Trip scheduled on ${t.date} from ${t.startTime} to ${t.endTime}.`,
+      status: "Scheduled",
+      time: t.updatedAt || t.date,
+      badge: "Scheduled",
+      badgeColor: "bg-blue-500/15 text-blue-400 border-blue-500/30",
+    });
+  });
+
   // Sort newest first
   notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
 
-  // Filter
+  // Filter by status
   const filtered = activeFilter === "all"
     ? notifications
-    : notifications.filter((n) => n.type.startsWith(activeFilter));
+    : notifications.filter((n) => n.status === activeFilter);
 
   const filterTabs = [
     { key: "all", label: "All", count: notifications.length },
-    { key: "trip", label: "Trips", count: notifications.filter(n => n.type.startsWith("trip")).length },
+    { key: "Completed", label: "Completed", count: notifications.filter(n => n.status === "Completed").length },
+    { key: "Delayed", label: "Delayed", count: notifications.filter(n => n.status === "Delayed").length },
+    { key: "Ongoing", label: "Ongoing", count: notifications.filter(n => n.status === "Ongoing").length },
   ];
 
   const formatTime = (t) => {
@@ -139,15 +171,6 @@ export default function Notifications() {
             <div className="flex justify-center py-16">
               <div className="h-10 w-10 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" />
             </div>
-          ) : !sessionUser ? (
-            <div className="rounded-3xl bg-white/10 backdrop-blur-md p-10 text-center border border-white/10 shadow-2xl">
-              <FaBell className="mx-auto text-5xl text-orange-400 mb-4" />
-              <h2 className="text-2xl font-bold text-white mb-2">Sign in to view notifications</h2>
-              <p className="text-slate-300 mb-6">Log in to your UniRide account or Admin dashboard to see notifications.</p>
-              <Link to="/login" className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 text-sm font-semibold text-white shadow-lg hover:bg-orange-600 transition">
-                Sign In
-              </Link>
-            </div>
           ) : filtered.length === 0 ? (
             <div className="rounded-3xl bg-white/10 backdrop-blur-md p-10 text-center border border-white/10 shadow-2xl">
               <FaBell className="mx-auto text-5xl text-slate-500 mb-4" />
@@ -181,15 +204,23 @@ export default function Notifications() {
         </div>
 
         {/* Summary Stats */}
-        {!loading && sessionUser && notifications.length > 0 && (
-          <div className="mt-10 grid gap-4 sm:grid-cols-2">
+        {!loading && notifications.length > 0 && (
+          <div className="mt-10 grid gap-4 sm:grid-cols-4">
             <div className="rounded-2xl bg-white/10 backdrop-blur-md p-5 border border-white/10 text-center">
               <p className="text-3xl font-black text-emerald-400">{trips.filter(t => t.status === "Completed").length}</p>
-              <p className="mt-1 text-sm text-slate-400 font-medium">Completed Trips</p>
+              <p className="mt-1 text-sm text-slate-400 font-medium">Completed</p>
             </div>
             <div className="rounded-2xl bg-white/10 backdrop-blur-md p-5 border border-white/10 text-center">
               <p className="text-3xl font-black text-red-400">{trips.filter(t => t.status === "Delayed").length}</p>
-              <p className="mt-1 text-sm text-slate-400 font-medium">Trip Delays</p>
+              <p className="mt-1 text-sm text-slate-400 font-medium">Delayed</p>
+            </div>
+            <div className="rounded-2xl bg-white/10 backdrop-blur-md p-5 border border-white/10 text-center">
+              <p className="text-3xl font-black text-orange-400">{trips.filter(t => t.status === "Ongoing").length}</p>
+              <p className="mt-1 text-sm text-slate-400 font-medium">Ongoing</p>
+            </div>
+            <div className="rounded-2xl bg-white/10 backdrop-blur-md p-5 border border-white/10 text-center">
+              <p className="text-3xl font-black text-blue-400">{trips.filter(t => t.status === "Scheduled").length}</p>
+              <p className="mt-1 text-sm text-slate-400 font-medium">Scheduled</p>
             </div>
           </div>
         )}

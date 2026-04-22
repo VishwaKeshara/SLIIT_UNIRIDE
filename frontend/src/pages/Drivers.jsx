@@ -15,7 +15,7 @@ import {
 import {
   FaPhoneAlt, FaRoute, FaIdBadge, FaPlus, FaEdit, FaTrash,
   FaBus, FaPlay, FaStop, FaExclamationTriangle, FaTimes,
-  FaMagic, FaSync, FaCalendarAlt, FaClock, FaUser, FaClipboardList
+  FaMagic, FaSync, FaCalendarAlt, FaClock, FaUser, FaClipboardList, FaChartPie
 } from "react-icons/fa";
 import { getDrivers, addDriver, updateDriver, deleteDriver } from "../api/driverApi";
 import { getTrips, addTrip, updateTrip, updateTripStatus, deleteTrip } from "../api/tripApi";
@@ -108,6 +108,23 @@ export default function Drivers() {
   // ── Trips State ──────────────────────────────────────────────────────────
   const [trips, setTrips] = useState([]);
   const [tripsLoading, setTripsLoading] = useState(false);
+
+  // Determine whether the current session is admin or user
+  const adminData = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("adminData") || "null");
+    } catch {
+      return null;
+    }
+  })();
+  const isAdmin = Boolean(adminData);
+
+  // Force normal users back to the drivers tab if they somehow select analytics
+  useEffect(() => {
+    if (!isAdmin && activeTab === "analysis") {
+      setActiveTab("drivers");
+    }
+  }, [activeTab, isAdmin]);
 
   // Trip modal
   const [tripModal, setTripModal] = useState(false);
@@ -356,10 +373,12 @@ export default function Drivers() {
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition ${activeTab === "trips" ? "bg-orange-500 text-white shadow-lg" : "text-slate-300 hover:text-white"}`}>
                 <FaRoute /> Trips
               </button>
-              <button onClick={() => setActiveTab("analysis")}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition ${activeTab === "analysis" ? "bg-orange-500 text-white shadow-lg" : "text-slate-300 hover:text-white"}`}>
-                <FaChartPie /> Analytics
-              </button>
+              {isAdmin && (
+                <button onClick={() => setActiveTab("analysis")}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition ${activeTab === "analysis" ? "bg-orange-500 text-white shadow-lg" : "text-slate-300 hover:text-white"}`}>
+                  <FaChartPie /> Analytics
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -518,8 +537,11 @@ export default function Drivers() {
              )}
            </div>
          )}
- 
-
+         {/* ══════════════════════════════════════════════════════════════════════════
+            TAB 3: ANALYTICS OVERVIEW
+        ═══════════════════════════════════════════════════════════════════════════ */}
+        {activeTab === "analysis" && (
+          <div className="mt-8 animate-in fade-in duration-300 space-y-6">
             <div className="grid gap-6 lg:grid-cols-2">
               <div className="rounded-[2rem] bg-white/10 border border-white/10 p-6 shadow-2xl backdrop-blur-xl">
                 <div className="flex items-center justify-between gap-3 mb-6">
