@@ -15,7 +15,7 @@ exports.createBooking = async (req, res) => {
 
     // Validate mobile format (7–15 digits/+/spaces/dashes)
     if (!/^[0-9+\-\s]{7,15}$/.test(mobileNumber)) {
-      return res.status(400).json({ message: "Invalid mobile number format" });
+      return res.status(400).json({ message: "Invalid mobile number format!" });
     }
 
     const start = new Date(travelStartDate);
