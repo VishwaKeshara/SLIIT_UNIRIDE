@@ -1,5 +1,18 @@
 import React, { useEffect, useState, useCallback } from "react";
 import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from "recharts";
+import {
   FaPhoneAlt, FaRoute, FaIdBadge, FaPlus, FaEdit, FaTrash,
   FaBus, FaPlay, FaStop, FaExclamationTriangle, FaTimes,
   FaMagic, FaSync, FaCalendarAlt, FaClock, FaUser, FaClipboardList,
@@ -96,6 +109,23 @@ export default function Drivers() {
   // ── Trips State ──────────────────────────────────────────────────────────
   const [trips, setTrips] = useState([]);
   const [tripsLoading, setTripsLoading] = useState(false);
+
+  // Determine whether the current session is admin or user
+  const adminData = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("adminData") || "null");
+    } catch {
+      return null;
+    }
+  })();
+  const isAdmin = Boolean(adminData);
+
+  // Force normal users back to the drivers tab if they somehow select analytics
+  useEffect(() => {
+    if (!isAdmin && activeTab === "analysis") {
+      setActiveTab("drivers");
+    }
+  }, [activeTab, isAdmin]);
 
   // Trip modal
   const [tripModal, setTripModal] = useState(false);
