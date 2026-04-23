@@ -82,7 +82,7 @@ exports.getBookingById = async (req, res) => {
     const booking = await Booking.findById(req.params.id)
       .populate("route")
       .populate("boardingStop");
-    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    if (!booking) return res.status(404).json({ message: "Booking not found!" });
     res.json(booking);
   } catch (err) {
     res.status(500).json({ message: err.message });
