@@ -31,7 +31,7 @@ exports.createBooking = async (req, res) => {
 
     // Verify route exists, is active, and has available seats
     const routeDoc = await Route.findById(route);
-    if (!routeDoc)              return res.status(404).json({ message: "Route not found" });
+    if (!routeDoc)              return res.status(404).json({ message: "Route not found!" });
     if (!routeDoc.active)       return res.status(400).json({ message: "Selected route is not currently active" });
     if (routeDoc.seatCapacity <= 0) return res.status(400).json({ message: "No seats available on this route" });
 
