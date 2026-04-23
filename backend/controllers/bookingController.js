@@ -106,7 +106,7 @@ exports.getBookingsByMobile = async (req, res) => {
 exports.cancelBooking = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id);
-    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    if (!booking) return res.status(404).json({ message: "Booking not found!" });
     if (booking.status === "cancelled") return res.status(400).json({ message: "Booking is already cancelled" });
 
     // Restore seat and cancel booking atomically
