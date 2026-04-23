@@ -11,7 +11,7 @@ const registerUser = async (req, res) => {
       });
     }
 
-    const allowedRoles = ["student", "instructor", "lecturer"];
+    const allowedRoles = ["student", "lecturer", "driver"];
 
     if (!allowedRoles.includes(role)) {
       return res.status(400).json({
