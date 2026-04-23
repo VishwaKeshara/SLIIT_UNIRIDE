@@ -21,7 +21,7 @@ exports.createBooking = async (req, res) => {
     const start = new Date(travelStartDate);
     const end   = new Date(travelEndDate);
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      return res.status(400).json({ message: "Invalid travel dates" });
+      return res.status(400).json({ message: "Invalid travel dates!" });
     }
     if (end < start) {
       return res.status(400).json({ message: "End date cannot be before start date" });
