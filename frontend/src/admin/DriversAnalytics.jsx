@@ -9,18 +9,18 @@ import {
 } from "react-icons/fa";
 import { getDrivers, addDriver, updateDriver, deleteDriver } from "../api/driverApi";
 import { getTrips, addTrip, updateTrip, updateTripStatus, deleteTrip } from "../api/tripApi";
+import { getRoutes } from "../api/routeApi";
 
 // ─── Constants ───
 const SHIFTS = ["Morning Shift", "Day Shift", "Evening Shift"];
-const ROUTES = [
-  "Malabe - Kaduwela", "Malabe - Battaramulla", "Malabe - Nugegoda",
-  "Malabe - Maharagama", "Malabe - Colombo", "Malabe - Kandy",
-];
 const DEMO_DRIVERS = [
   { name: "Ruwan Dissanayake", licenseNumber: "B1234567", contactNumber: "0771234567", assignedBus: "UR-23", route: "Malabe - Colombo", shift: "Morning Shift" },
   { name: "Kasun Perera", licenseNumber: "C7654321", contactNumber: "0712345678", assignedBus: "UR-07", route: "Malabe - Kaduwela", shift: "Day Shift" },
 ];
 let demoDriverIdx = 0;
+
+const getRouteLabel = (route) =>
+  route?.routeName?.trim() || `${route?.startLocation || ""} - ${route?.endLocation || ""}`.trim();
 
 // ─── Validators ───
 function validateDriver(f) {
@@ -77,6 +77,7 @@ export default function DriversAnalytics() {
   // ── Drivers State ───
   const [drivers, setDrivers] = useState([]);
   const [driversLoading, setDriversLoading] = useState(true);
+  const [routeOptions, setRouteOptions] = useState([]);
   const [driverModal, setDriverModal] = useState(false);
   const [editingDriver, setEditingDriver] = useState(null);
   const [driverForm, setDriverForm] = useState({ name: "", licenseNumber: "", contactNumber: "", assignedBus: "", route: "", shift: "" });
@@ -116,14 +117,24 @@ export default function DriversAnalytics() {
     finally { setTripsLoading(false); }
   }, []);
 
+  const loadRoutes = useCallback(async () => {
+    try {
+      const res = await getRoutes();
+      setRouteOptions(res.data.map((route) => getRouteLabel(route)).filter(Boolean));
+    } catch {
+      flash("error", "Failed to load routes.");
+    }
+  }, []);
+
   useEffect(() => {
     loadDrivers();
+    loadRoutes();
     if (activeTab === "trips" || activeTab === "analysis") loadTrips();
-  }, [activeTab, loadDrivers, loadTrips]);
+  }, [activeTab, loadDrivers, loadRoutes, loadTrips]);
 
   const refreshAction = () => {
-    if (activeTab === "drivers") loadDrivers();
-    if (activeTab === "trips" || activeTab === "analysis") { loadDrivers(); loadTrips(); }
+    if (activeTab === "drivers") { loadDrivers(); loadRoutes(); }
+    if (activeTab === "trips" || activeTab === "analysis") { loadDrivers(); loadRoutes(); loadTrips(); }
   };
 
   // ── DRIVER CRUD ───
@@ -206,7 +217,7 @@ export default function DriversAnalytics() {
   const preFillTrip = () => {
     const today = new Date().toISOString().split("T")[0];
     const avail = drivers.find(d => d.status === "Available");
-    const t = { driver: avail ? avail._id : "", route: avail?.route || "Malabe - Colombo", date: today, startTime: "07:30", endTime: "09:00", passengers: "28" };
+    const t = { driver: avail ? avail._id : "", route: avail?.route || routeOptions[0] || "", date: today, startTime: "07:30", endTime: "09:00", passengers: "28" };
     setTripForm(t); setTripErrors(validateTrip(t)); setTripSrvErr("");
   };
   const submitTrip = async (e) => {
@@ -647,7 +658,7 @@ export default function DriversAnalytics() {
                 <p className="mt-2 text-base text-[#5c79a8]">Number of drivers assigned per route</p>
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {ROUTES.map(route => {
+                {routeOptions.map(route => {
                   const count = drivers.filter(d => d.route === route).length;
                   return (
                     <div key={route} className="flex items-center justify-between rounded-[18px] border border-blue-100 bg-[#f7faff] px-5 py-4">
@@ -710,7 +721,7 @@ export default function DriversAnalytics() {
               <AdminField label="Route" required error={driverErrors.route}>
                 <select name="route" value={driverForm.route} onChange={handleDriverFormChange} className={adminInputCls(driverErrors.route)}>
                   <option value="">Select route</option>
-                  {ROUTES.map(r => <option key={r}>{r}</option>)}
+                  {routeOptions.map((route) => <option key={route}>{route}</option>)}
                 </select>
               </AdminField>
               <div className="mt-8 flex gap-3">
@@ -751,7 +762,7 @@ export default function DriversAnalytics() {
               <AdminField label="Route" required error={tripErrors.route}>
                 <select name="route" value={tripForm.route} onChange={handleTripFormChange} className={adminInputCls(tripErrors.route)}>
                   <option value="">Select route</option>
-                  {ROUTES.map(r => <option key={r}>{r}</option>)}
+                  {routeOptions.map((route) => <option key={route}>{route}</option>)}
                 </select>
               </AdminField>
               <AdminField label="Date" required error={tripErrors.date}>

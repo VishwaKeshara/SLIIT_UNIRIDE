@@ -20,18 +20,18 @@ import {
 } from "react-icons/fa";
 import { getDrivers, addDriver, updateDriver, deleteDriver } from "../api/driverApi";
 import { getTrips, addTrip, updateTrip, updateTripStatus, deleteTrip } from "../api/tripApi";
+import { getRoutes } from "../api/routeApi";
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 const SHIFTS = ["Morning Shift", "Day Shift", "Evening Shift"];
-const ROUTES = [
-  "Malabe - Kaduwela", "Malabe - Battaramulla", "Malabe - Nugegoda",
-  "Malabe - Maharagama", "Malabe - Colombo", "Malabe - Kandy",
-];
 const DEMO_DRIVERS = [
   { name: "Ruwan Dissanayake", licenseNumber: "B1234567", contactNumber: "0771234567", assignedBus: "UR-23", route: "Malabe - Colombo", shift: "Morning Shift" },
   { name: "Kasun Perera",       licenseNumber: "C7654321", contactNumber: "0712345678", assignedBus: "UR-07", route: "Malabe - Kaduwela", shift: "Day Shift" },
 ];
 let demoDriverIdx = 0;
+
+const getRouteLabel = (route) =>
+  route?.routeName?.trim() || `${route?.startLocation || ""} - ${route?.endLocation || ""}`.trim();
 
 // ─── Validators ────────────────────────────────────────────────────────────
 function validateDriver(f) {
@@ -97,6 +97,7 @@ export default function Drivers() {
   // ── Drivers State ────────────────────────────────────────────────────────
   const [drivers, setDrivers] = useState([]);
   const [driversLoading, setDriversLoading] = useState(true);
+  const [routeOptions, setRouteOptions] = useState([]);
 
   // Driver modal
   const [driverModal, setDriverModal] = useState(false);
@@ -154,14 +155,24 @@ export default function Drivers() {
     finally { setTripsLoading(false); }
   }, []);
 
+  const loadRoutes = useCallback(async () => {
+    try {
+      const res = await getRoutes();
+      setRouteOptions(res.data.map((route) => getRouteLabel(route)).filter(Boolean));
+    } catch {
+      flash("error", "Failed to load routes.");
+    }
+  }, []);
+
   useEffect(() => {
     loadDrivers();
+    loadRoutes();
     if (activeTab === "trips" || activeTab === "analysis") loadTrips();
-  }, [activeTab, loadDrivers, loadTrips]);
+  }, [activeTab, loadDrivers, loadRoutes, loadTrips]);
 
   const refreshAction = () => {
-    if (activeTab === "drivers") loadDrivers();
-    if (activeTab === "trips" || activeTab === "analysis") { loadDrivers(); loadTrips(); }
+    if (activeTab === "drivers") { loadDrivers(); loadRoutes(); }
+    if (activeTab === "trips" || activeTab === "analysis") { loadDrivers(); loadRoutes(); loadTrips(); }
   };
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -267,7 +278,7 @@ export default function Drivers() {
   const preFillTrip = () => {
     const today = new Date().toISOString().split("T")[0];
     const avail = drivers.find(d => d.status === "Available");
-    const dRoute = avail?.route || "Malabe - Colombo";
+    const dRoute = avail?.route || routeOptions[0] || "";
     const t = { 
       driver: avail ? avail._id : "", 
       route: dRoute, 
@@ -713,7 +724,7 @@ export default function Drivers() {
               <Field label="Route" required error={driverErrors.route}>
                 <select name="route" value={driverForm.route} onChange={handleDriverFormChange} className={inputCls(driverErrors.route) + " bg-[#0A2233]"}>
                   <option value="">Select route</option>
-                  {ROUTES.map(r => <option key={r}>{r}</option>)}
+                  {routeOptions.map((route) => <option key={route}>{route}</option>)}
                 </select>
               </Field>
               <div className="mt-8 flex gap-3">
@@ -752,7 +763,7 @@ export default function Drivers() {
               <Field label="Route" required error={tripErrors.route}>
                 <select name="route" value={tripForm.route} onChange={handleTripFormChange} className={inputCls(tripErrors.route) + " bg-[#0A2233]"}>
                   <option value="">Select route</option>
-                  {ROUTES.map(r => <option key={r} className="bg-[#0A2233]">{r}</option>)}
+                  {routeOptions.map((route) => <option key={route} className="bg-[#0A2233]">{route}</option>)}
                 </select>
               </Field>
               <Field label="Date" required error={tripErrors.date}>
