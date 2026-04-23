@@ -24,7 +24,7 @@ exports.createBooking = async (req, res) => {
       return res.status(400).json({ message: "Invalid travel dates!" });
     }
     if (end < start) {
-      return res.status(400).json({ message: "End date cannot be before start date" });
+      return res.status(400).json({ message: "End date cannot be before start date!" });
     }
 
     const totalDays = Math.round((end - start) / 86400000) + 1;
