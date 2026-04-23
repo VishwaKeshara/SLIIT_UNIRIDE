@@ -11,7 +11,7 @@ exports.createBooking = async (req, res) => {
     if (!mobileNumber)     return res.status(400).json({ message: "Mobile number is required!" });
     if (!route)            return res.status(400).json({ message: "Route is required!" });
     if (!travelStartDate)  return res.status(400).json({ message: "Travel start date is required!" });
-    if (!travelEndDate)    return res.status(400).json({ message: "Travel end date is required" });
+    if (!travelEndDate)    return res.status(400).json({ message: "Travel end date is required!" });
 
     // Validate mobile format (7–15 digits/+/spaces/dashes)
     if (!/^[0-9+\-\s]{7,15}$/.test(mobileNumber)) {
