@@ -148,7 +148,7 @@ function Complaint() {
       setTouched(initialTouched);
 
       setTimeout(() => {
-        navigate("/");
+        navigate("/profile");
       }, 1600);
     } catch (err) {
       setError(

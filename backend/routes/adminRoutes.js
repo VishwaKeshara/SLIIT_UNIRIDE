@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { allowAdminRoles, requireAdminAuth } = require("../middleware/adminAuth");
 
 const {
   adminLogin,
@@ -11,11 +12,21 @@ const {
 } = require("../controllers/adminController");
 
 router.post("/login", adminLogin);
-router.get("/summary", getAdminSummary);
+router.get(
+  "/summary",
+  requireAdminAuth,
+  allowAdminRoles("admin", "routemanager"),
+  getAdminSummary
+);
 
-router.get("/users", getAllUsers);
-router.post("/users", createUser);
-router.put("/users/:id", updateUser);
-router.delete("/users/:id", deleteUser);
+router.get("/users", requireAdminAuth, allowAdminRoles("admin"), getAllUsers);
+router.post("/users", requireAdminAuth, allowAdminRoles("admin"), createUser);
+router.put("/users/:id", requireAdminAuth, allowAdminRoles("admin"), updateUser);
+router.delete(
+  "/users/:id",
+  requireAdminAuth,
+  allowAdminRoles("admin"),
+  deleteUser
+);
 
 module.exports = router;

@@ -77,6 +77,21 @@ const getAllComplaints = async (req, res) => {
   }
 };
 
+const getComplaintsByUser = async (req, res) => {
+  try {
+    const complaints = await Complaint.find({ userId: req.params.userId }).sort({
+      createdAt: -1,
+    });
+
+    res.status(200).json(complaints);
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to fetch your complaints.",
+      error: error.message,
+    });
+  }
+};
+
 const updateComplaint = async (req, res) => {
   try {
     const { status, adminResponse } = req.body;
@@ -106,5 +121,6 @@ const updateComplaint = async (req, res) => {
 module.exports = {
   createComplaint,
   getAllComplaints,
+  getComplaintsByUser,
   updateComplaint,
 };

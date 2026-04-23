@@ -1,6 +1,7 @@
 // backend/routes/bookingRoutes.js
 const express = require("express");
 const router  = express.Router();
+const { allowAdminRoles, requireAdminAuth } = require("../middleware/adminAuth");
 
 const {
   createBooking,
@@ -17,7 +18,7 @@ const {
 router.post("/", createBooking);
 
 // GET ALL
-router.get("/", getBookings);
+router.get("/", requireAdminAuth, allowAdminRoles("admin", "routemanager"), getBookings);
 
 // GET BY MOBILE (before /:id to avoid route conflict)
 router.get("/mobile/:mobile", getBookingsByMobile);
@@ -26,9 +27,9 @@ router.get("/mobile/:mobile", getBookingsByMobile);
 router.get("/:id", getBookingById);
 
 // PAYMENT ADMIN ACTIONS
-router.patch("/:id/payment", updateBookingPayment);
-router.patch("/:id/verify-payment", verifyBookingPayment);
-router.patch("/:id/refund", refundBookingPayment);
+router.patch("/:id/payment", requireAdminAuth, allowAdminRoles("admin"), updateBookingPayment);
+router.patch("/:id/verify-payment", requireAdminAuth, allowAdminRoles("admin"), verifyBookingPayment);
+router.patch("/:id/refund", requireAdminAuth, allowAdminRoles("admin"), refundBookingPayment);
 
 // CANCEL
 router.put("/:id/cancel", cancelBooking);

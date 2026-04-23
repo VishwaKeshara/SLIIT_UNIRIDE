@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useEffect, useMemo, useState } from "react";
+import axios from "../axiosinstance";
 import { useNavigate } from "react-router-dom";
-
-const API = "http://localhost:5000/api";
 
 function getLoggedInUserId() {
   try {
@@ -18,6 +16,21 @@ const STATUS_STYLES = {
   cancelled: "bg-red-400/10 text-red-400 border border-red-400/30",
 };
 
+const COMPLAINT_STATUS_STYLES = {
+  pending: "bg-amber-400/10 text-amber-300 border border-amber-400/30",
+  "in progress": "bg-blue-400/10 text-blue-300 border border-blue-400/30",
+  resolved: "bg-emerald-400/10 text-emerald-300 border border-emerald-400/30",
+  rejected: "bg-red-400/10 text-red-300 border border-red-400/30",
+};
+
+const COMPLAINT_TYPE_LABELS = {
+  booking: "Booking Issue",
+  driver: "Driver Issue",
+  schedule: "Schedule Issue",
+  payment: "Payment Issue",
+  other: "Other Support Issue",
+};
+
 // Compare only calendar date (ignore time)
 function startOfDay(date) {
   const d = new Date(date);
@@ -31,6 +44,7 @@ function Profile() {
 
   const [user, setUser] = useState(null);
   const [bookings, setBookings] = useState([]);
+  const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [cancelling, setCancelling] = useState(null); // booking _id being cancelled
@@ -38,6 +52,8 @@ function Profile() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [complaintSearch, setComplaintSearch] = useState("");
+  const [complaintStatusFilter, setComplaintStatusFilter] = useState("all");
 
   useEffect(() => {
     if (!CURRENT_USER_ID) {
@@ -46,12 +62,14 @@ function Profile() {
     }
     const fetchAll = async () => {
       try {
-        const [userRes, bookingsRes] = await Promise.all([
-          axios.get(`${API}/users/${CURRENT_USER_ID}`),
-          axios.get(`${API}/users/${CURRENT_USER_ID}/bookings`),
+        const [userRes, bookingsRes, complaintsRes] = await Promise.all([
+          axios.get(`/users/${CURRENT_USER_ID}`),
+          axios.get(`/users/${CURRENT_USER_ID}/bookings`),
+          axios.get(`/complaints/user/${CURRENT_USER_ID}`),
         ]);
         setUser(userRes.data);
         setBookings(bookingsRes.data);
+        setComplaints(complaintsRes.data);
       } catch (err) {
         setError(err.response?.data?.message || "Failed to load profile.");
       } finally {
@@ -66,7 +84,7 @@ function Profile() {
       return;
     setCancelling(bookingId);
     try {
-      await axios.put(`${API}/bookings/${bookingId}/cancel`);
+      await axios.put(`/bookings/${bookingId}/cancel`);
       setBookings((prev) =>
         prev.map((b) =>
           b._id === bookingId ? { ...b, status: "cancelled" } : b,
@@ -130,6 +148,36 @@ function Profile() {
   const cancelledCount = bookings.filter(
     (b) => b.status === "cancelled",
   ).length;
+  const resolvedComplaints = complaints.filter(
+    (complaint) => complaint.status === "resolved",
+  ).length;
+  const pendingComplaints = complaints.filter(
+    (complaint) => complaint.status === "pending" || complaint.status === "in progress",
+  ).length;
+
+  const filteredComplaints = useMemo(() => {
+    const query = complaintSearch.trim().toLowerCase();
+
+    return complaints.filter((complaint) => {
+      const searchableText = [
+        complaint.title,
+        complaint.message,
+        complaint.type,
+        complaint.adminResponse,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      const matchesQuery = query ? searchableText.includes(query) : true;
+      const matchesStatus =
+        complaintStatusFilter === "all"
+          ? true
+          : complaint.status === complaintStatusFilter;
+
+      return matchesQuery && matchesStatus;
+    });
+  }, [complaints, complaintSearch, complaintStatusFilter]);
 
   // ── Filter helper ────────────────────────────────────────────────────────
   const applyFilters = (list) => {
@@ -329,6 +377,53 @@ function Profile() {
           </div>
         </div>
 
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl p-6">
+            <h2 className="text-sm font-bold text-orange-400 uppercase tracking-[0.2em] mb-4">
+              Complaint Summary
+            </h2>
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-300">Total Complaints</span>
+                <span className="text-2xl font-bold text-orange-400">
+                  {complaints.length}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-300">Needs Attention</span>
+                <span className="text-lg font-semibold text-amber-300">
+                  {pendingComplaints}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-300">Resolved</span>
+                <span className="text-lg font-semibold text-emerald-300">
+                  {resolvedComplaints}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl p-6">
+            <h2 className="text-sm font-bold text-orange-400 uppercase tracking-[0.2em] mb-4">
+              Quick Actions
+            </h2>
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => navigate("/complaint")}
+                className="w-full rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-400"
+              >
+                Submit a Complaint
+              </button>
+              <p className="text-sm leading-6 text-slate-300">
+                Track complaint status updates and read admin replies directly from
+                your profile.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* ── Filter Bar ───────────────────────────────────────────────── */}
         <div className="rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl p-5">
           <div className="flex items-center justify-between mb-3">
@@ -414,6 +509,129 @@ function Profile() {
             <p className="mt-3 text-xs text-slate-400">
               Showing filtered results across all sections.
             </p>
+          )}
+        </div>
+
+        <div className="rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl p-6">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-sm font-bold text-white uppercase tracking-[0.2em]">
+                My Complaints
+              </h2>
+              <p className="mt-1 text-xs text-slate-400">
+                Review submitted issues, current status, and admin responses.
+              </p>
+            </div>
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-slate-300">
+              {filteredComplaints.length} Records
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 mb-5">
+            <div>
+              <label className="block text-xs text-slate-400 mb-1 ml-1">
+                Search Complaints
+              </label>
+              <input
+                type="text"
+                value={complaintSearch}
+                onChange={(e) => setComplaintSearch(e.target.value)}
+                placeholder="Search by title, message or response"
+                className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-orange-400/50 transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-slate-400 mb-1 ml-1">
+                Complaint Status
+              </label>
+              <select
+                value={complaintStatusFilter}
+                onChange={(e) => setComplaintStatusFilter(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white focus:outline-none focus:border-orange-400/50 transition-colors"
+              >
+                <option value="all" className="bg-[#0A2233]">
+                  All Statuses
+                </option>
+                <option value="pending" className="bg-[#0A2233]">
+                  Pending
+                </option>
+                <option value="in progress" className="bg-[#0A2233]">
+                  In Progress
+                </option>
+                <option value="resolved" className="bg-[#0A2233]">
+                  Resolved
+                </option>
+                <option value="rejected" className="bg-[#0A2233]">
+                  Rejected
+                </option>
+              </select>
+            </div>
+          </div>
+
+          {filteredComplaints.length === 0 ? (
+            <EmptyState
+              message={
+                complaints.length === 0
+                  ? "You have not submitted any complaints yet."
+                  : "No complaints match your filters."
+              }
+            />
+          ) : (
+            <div className="space-y-4">
+              {filteredComplaints.map((complaint) => (
+                <div
+                  key={complaint._id}
+                  className="rounded-2xl border border-white/10 bg-black/20 p-4"
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <h3 className="text-base font-bold text-white">
+                        {complaint.title}
+                      </h3>
+                      <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-400">
+                        <span>{COMPLAINT_TYPE_LABELS[complaint.type] || "Support Issue"}</span>
+                        <span>
+                          Submitted{" "}
+                          {new Date(complaint.createdAt).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                    <span
+                      className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${
+                        COMPLAINT_STATUS_STYLES[complaint.status] ||
+                        "bg-white/10 text-slate-300 border border-white/20"
+                      }`}
+                    >
+                      {complaint.status}
+                    </span>
+                  </div>
+
+                  <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                    <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        Your Complaint
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-slate-200">
+                        {complaint.message}
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-cyan-400/20 bg-cyan-400/10 p-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200">
+                        Admin Response
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-slate-100">
+                        {complaint.adminResponse ||
+                          "No admin response yet. Your complaint is still being reviewed."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
 
