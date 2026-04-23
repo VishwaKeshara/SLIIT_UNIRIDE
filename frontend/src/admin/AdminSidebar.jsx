@@ -50,12 +50,6 @@ function AdminSidebar() {
       active: location.pathname === "/admin/trips",
     },
     {
-      label: "Drivers & Trips",
-      to: "/admin/drivers-analytics",
-      enabled: !routeManager,
-      active: location.pathname === "/admin/drivers-analytics",
-    },
-    {
       label: "Analytics & Reports",
       to: "/admin/reports",
       enabled: !routeManager,

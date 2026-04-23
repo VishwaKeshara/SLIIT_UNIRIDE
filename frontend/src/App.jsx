@@ -47,7 +47,6 @@ import ComplaintManagement from "./admin/ComplaintManagement";
 import ManageRoutes from "./admin/ManageRoutes";
 import TripMonitoring from "./admin/TripMonitoring";
 import AnalyticsReports from "./admin/AnalyticsReports";
-import DriversAnalytics from "./admin/DriversAnalytics";
 import SystemSettings from "./admin/SystemSettings";
 import ProtectedAdminRoute from "./admin/ProtectedAdminRoute";
 
@@ -169,15 +168,6 @@ function AppLayout() {
             element={
               <ProtectedAdminRoute allowedRoles={["admin"]}>
                 <TripMonitoring />
-              </ProtectedAdminRoute>
-            }
-          />
-
-          <Route
-            path="/admin/drivers-analytics"
-            element={
-              <ProtectedAdminRoute allowedRoles={["admin"]}>
-                <DriversAnalytics />
               </ProtectedAdminRoute>
             }
           />

@@ -827,57 +827,47 @@ function BookRide() {
                     </div>
                   )}
 
-                  {/* ── Daily: start + end date pickers ───────────────────── */}
-                  {bookingBasis === "daily" && (
-                    <>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-1">
-                            Start Date <span className="text-red-400">*</span>
-                          </label>
-                          <input
-                            type="date"
-                            name="travelStartDate"
-                            value={form.travelStartDate}
-                            onChange={handleChange}
-                            required
-                            min={today}
-                            max={
-                              bookingSettings.allowAdvanceBooking === false
-                                ? today
-                                : maxStartDate
-                            }
-                            disabled={maintenanceModeEnabled || guestBookingBlocked}
-                            className="w-full rounded-xl border border-white/20 bg-[#0A2233] text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-slate-300 mb-1">
-                            End Date <span className="text-red-400">*</span>
-                          </label>
-                          <input
-                            type="date"
-                            name="travelEndDate"
-                            value={form.travelEndDate}
-                            onChange={handleChange}
-                            required
-                            min={form.travelStartDate || today}
-                            disabled={
-                              !form.travelStartDate ||
-                              maintenanceModeEnabled ||
-                              guestBookingBlocked
-                            }
-                            className="w-full rounded-xl border border-white/20 bg-[#0A2233] text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-40 disabled:cursor-not-allowed"
-                          />
-                        </div>
-                      </div>
-                      {totalDays > 0 && (
-                        <p className="mt-2 text-xs text-orange-300 font-medium">
-                          📅 {totalDays} day{totalDays > 1 ? "s" : ""} selected
-                        </p>
-                      )}
-                    </>
-                  )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-1">
+                        Start Date <span className="text-red-400">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        name="travelStartDate"
+                        value={form.travelStartDate}
+                        onChange={handleChange}
+                        required
+                        min={today}
+                        max={
+                          bookingSettings.allowAdvanceBooking === false
+                            ? today
+                            : maxStartDate
+                        }
+                        disabled={maintenanceModeEnabled || guestBookingBlocked}
+                        className="w-full rounded-xl border border-white/20 bg-[#0A2233] text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-1">
+                        End Date <span className="text-red-400">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        name="travelEndDate"
+                        value={form.travelEndDate}
+                        onChange={handleChange}
+                        required
+                        min={form.travelStartDate || today}
+                        disabled={
+                          !form.travelStartDate ||
+                          maintenanceModeEnabled ||
+                          guestBookingBlocked
+                        }
+                        className="w-full rounded-xl border border-white/20 bg-[#0A2233] text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-40 disabled:cursor-not-allowed"
+                      />
+                    </div>
+                  </div>
 
                   {/* ── Monthly: month dropdown ────────────────────────────── */}
                   {bookingBasis === "monthly" && (
