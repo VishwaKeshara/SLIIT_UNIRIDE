@@ -162,7 +162,7 @@ exports.verifyBookingPayment = async (req, res) => {
     const { paymentReference = "" } = req.body;
 
     const booking = await Booking.findById(req.params.id);
-    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    if (!booking) return res.status(404).json({ message: "Booking not found!" });
 
     booking.paymentStatus = "paid";
     booking.verificationStatus = "verified";
