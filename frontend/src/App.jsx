@@ -48,14 +48,23 @@ import ManageRoutes from "./admin/ManageRoutes";
 import TripMonitoring from "./admin/TripMonitoring";
 import AnalyticsReports from "./admin/AnalyticsReports";
 import SystemSettings from "./admin/SystemSettings";
+import DriversAnalytics from "./admin/DriversAnalytics";
+import { getStoredAdminData, hasAdminPortalAccess } from "./admin/adminAccess";
 import ProtectedAdminRoute from "./admin/ProtectedAdminRoute";
 
 function AppLayout() {
   const location = useLocation();
+  const adminData = getStoredAdminData();
+  const showAdminDriversView =
+    location.pathname === "/drivers" &&
+    Boolean(localStorage.getItem("adminToken")) &&
+    Boolean(adminData) &&
+    hasAdminPortalAccess(adminData.role);
 
   const isAdminRoute =
     location.pathname === "/adminlogin" ||
     location.pathname.startsWith("/admin/") ||
+    showAdminDriversView ||
     location.pathname === "/routes/new" ||
     location.pathname === "/RouteForm" ||
     location.pathname === "/RouteList" ||
@@ -111,7 +120,10 @@ function AppLayout() {
           />
 
           {/* Driver Management */}
-          <Route path="/drivers" element={<Drivers />} />
+          <Route
+            path="/drivers"
+            element={showAdminDriversView ? <DriversAnalytics /> : <Drivers />}
+          />
           <Route path="/drivers/add" element={<AddDriver />} />
           <Route path="/drivers/edit/:id" element={<EditDriver />} />
 
