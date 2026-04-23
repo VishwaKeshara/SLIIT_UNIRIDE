@@ -132,7 +132,7 @@ exports.updateBookingPayment = async (req, res) => {
     } = req.body;
 
     const booking = await Booking.findById(req.params.id);
-    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    if (!booking) return res.status(404).json({ message: "Booking not found!" });
 
     if (paymentStatus !== undefined) booking.paymentStatus = paymentStatus;
     if (paymentReference !== undefined) {
