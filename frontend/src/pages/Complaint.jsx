@@ -84,7 +84,7 @@ function Complaint() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("userData")) || JSON.parse(localStorage.getItem("user"));
   const errors = useMemo(() => validateComplaint(formData), [formData]);
   const selectedType =
     complaintTypes.find((item) => item.value === formData.type) ||
