@@ -158,13 +158,27 @@ const getUserById = async (req, res) => {
 
 const getUserBookings = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select("phoneNumber");
+    const user = await User.findById(req.params.id).select("phoneNumber email");
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const bookings = await Booking.find({ mobileNumber: user.phoneNumber })
+    const bookingFilters = [];
+
+    if (user.phoneNumber?.trim()) {
+      bookingFilters.push({ mobileNumber: user.phoneNumber.trim() });
+    }
+
+    if (user.email?.trim()) {
+      bookingFilters.push({ email: user.email.trim().toLowerCase() });
+    }
+
+    if (bookingFilters.length === 0) {
+      return res.json([]);
+    }
+
+    const bookings = await Booking.find({ $or: bookingFilters })
       .populate("route", "routeName startLocation endLocation startTime")
       .populate("boardingStop", "stopName order")
-      .sort({ travelDate: -1 });
+      .sort({ travelStartDate: -1, createdAt: -1 });
 
     res.json(bookings);
   } catch (err) {

@@ -15,6 +15,7 @@ import {
   FaTimes,
   FaExclamationCircle,
   FaBell,
+  FaUserCircle,
 } from "react-icons/fa";
 
 function Navbar() {
@@ -176,9 +177,14 @@ function Navbar() {
             </>
           ) : (
             <>
-              <div className="rounded-lg border border-white/10 bg-white/10 px-4 py-2 text-base font-semibold whitespace-nowrap">
+              <Link
+                to="/profile"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/10 px-4 py-2 text-base font-semibold whitespace-nowrap transition hover:border-orange-300/40 hover:bg-white/15 hover:text-orange-200"
+              >
+                <FaUserCircle className="text-orange-300" />
                 Hi, {loggedUser.name?.split(" ")[0] || "User"}
-              </div>
+              </Link>
 
               <button
                 onClick={handleLogout}
@@ -254,9 +260,14 @@ function Navbar() {
               </>
             ) : (
               <>
-                <div className="rounded-md border border-white/10 bg-white/10 px-3 py-2.5 text-base font-semibold">
+                <Link
+                  to="/profile"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 rounded-md border border-white/10 bg-white/10 px-3 py-2.5 text-base font-semibold transition hover:border-orange-300/40 hover:bg-white/15 hover:text-orange-200"
+                >
+                  <FaUserCircle className="text-orange-300" />
                   Hi, {loggedUser.name?.split(" ")[0] || "User"}
-                </div>
+                </Link>
 
                 <button
                   onClick={handleLogout}
