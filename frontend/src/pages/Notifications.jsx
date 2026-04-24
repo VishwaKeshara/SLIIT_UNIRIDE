@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "../axiosinstance";
 import {
@@ -31,17 +31,19 @@ export default function Notifications() {
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("all");
 
-  const sessionUser = (() => {
+  const sessionUser = useMemo(() => {
     try {
-      const u = JSON.parse(localStorage.getItem("userData") || localStorage.getItem("user"));
+      const u = JSON.parse(
+        localStorage.getItem("userData") || localStorage.getItem("user") || "null",
+      );
       if (u) return { ...u, role: "user" };
-      const a = JSON.parse(localStorage.getItem("adminData"));
+      const a = JSON.parse(localStorage.getItem("adminData") || "null");
       if (a) return { ...a, role: "admin" };
       return null;
     } catch {
       return null;
     }
-  })();
+  }, []);
 
   useEffect(() => {
     if (!sessionUser) {
@@ -94,8 +96,8 @@ export default function Notifications() {
   // Mark all unread notifications as read when component mounts
   useEffect(() => {
     if (notifications.length > 0) {
-      const unreadIds = notifications.filter(n => !n.isRead).map(n => n._id);
-      unreadIds.forEach(id => markAsRead(id));
+      const unreadIds = notifications.filter((n) => !n.isRead).map((n) => n._id);
+      unreadIds.forEach((id) => markAsRead(id));
     }
   }, [notifications]);
 
