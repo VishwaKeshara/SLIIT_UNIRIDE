@@ -52,14 +52,16 @@ function Navbar() {
 
     const checkAlerts = async () => {
       try {
-        const [tripsRes, complaintsRes] = await Promise.all([
+        const userData = JSON.parse(localStorage.getItem("userData") || localStorage.getItem("user"));
+        
+        const [tripsRes, complaintsRes, notificationsRes] = await Promise.all([
           axios.get("/trips"),
           axios.get("/complaints"),
+          userData ? axios.get(`/notifications/user/${userData.id}`) : Promise.resolve({ data: [] }),
         ]);
 
         const hasDelay = tripsRes.data.some((t) => t.status === "Delayed");
 
-        const userData = JSON.parse(localStorage.getItem("userData") || localStorage.getItem("user"));
         const complaintAlerts = userData
           ? complaintsRes.data.some(
               (c) =>
@@ -69,7 +71,11 @@ function Navbar() {
             )
           : false;
 
-        setHasAlert(hasDelay || complaintAlerts);
+        const paymentAlerts = userData
+          ? notificationsRes.data.some((n) => !n.isRead && n.type.startsWith("payment_"))
+          : false;
+
+        setHasAlert(hasDelay || complaintAlerts || paymentAlerts);
       } catch (err) {
         console.error("Failed to fetch alerts", err);
       }

@@ -9,6 +9,7 @@ import {
 export default function Notifications() {
   const [trips, setTrips] = useState([]);
   const [complaints, setComplaints] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("all");
 
@@ -28,12 +29,14 @@ export default function Notifications() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [tripRes, complaintRes] = await Promise.all([
+        const [tripRes, complaintRes, notificationRes] = await Promise.all([
           axios.get("/trips"),
           axios.get("/complaints"),
+          sessionUser && sessionUser.role === "user" ? axios.get(`/notifications/user/${sessionUser.id}`) : Promise.resolve({ data: [] }),
         ]);
         setTrips(tripRes.data);
         setComplaints(complaintRes.data);
+        setNotifications(notificationRes.data);
       } catch (err) {
         console.error("Failed to fetch notifications", err);
       } finally {
@@ -44,12 +47,72 @@ export default function Notifications() {
     fetchData();
   }, []);
 
+  // Mark notification as read
+  const markAsRead = async (notificationId) => {
+    try {
+      await axios.patch(`/notifications/${notificationId}/read`);
+      // Update local state
+      setNotifications(prev => prev.map(n => 
+        n._id === notificationId ? { ...n, isRead: true } : n
+      ));
+    } catch (err) {
+      console.error("Failed to mark notification as read", err);
+    }
+  };
+
+  // Mark all unread notifications as read when component mounts
+  useEffect(() => {
+    if (notifications.length > 0) {
+      const unreadIds = notifications.filter(n => !n.isRead).map(n => n._id);
+      unreadIds.forEach(id => markAsRead(id));
+    }
+  }, [notifications]);
+
   // Build notification items
-  const notifications = [];
+  const allNotifications = [];
+
+  // Backend notifications (payment, etc.)
+  notifications.forEach((n) => {
+    let icon, badge, badgeColor;
+    switch (n.type) {
+      case "payment_verified":
+        icon = <FaCheckCircle className="text-green-400" />;
+        badge = "Payment Verified";
+        badgeColor = "bg-green-500/15 text-green-400 border-green-500/30";
+        break;
+      case "payment_refunded":
+        icon = <FaCheckCircle className="text-blue-400" />;
+        badge = "Payment Refunded";
+        badgeColor = "bg-blue-500/15 text-blue-400 border-blue-500/30";
+        break;
+      case "payment_failed":
+        icon = <FaExclamationTriangle className="text-red-400" />;
+        badge = "Payment Failed";
+        badgeColor = "bg-red-500/15 text-red-400 border-red-500/30";
+        break;
+      default:
+        icon = <FaBell className="text-gray-400" />;
+        badge = "Notification";
+        badgeColor = "bg-gray-500/15 text-gray-400 border-gray-500/30";
+    }
+
+    allNotifications.push({
+      id: `backend-${n._id}`,
+      type: n.type,
+      icon,
+      title: n.title,
+      message: n.message,
+      status: "Payment",
+      time: n.createdAt,
+      badge,
+      badgeColor,
+      isRead: n.isRead,
+    });
+  });
 
   // Trip delay notifications
   trips.filter((t) => t.status === "Delayed").forEach((t) => {
-    notifications.push({
+    allNotifications.push({
       id: `trip-delay-${t._id}`,
       type: "trip_delay",
       icon: <FaExclamationTriangle className="text-red-400" />,
@@ -64,7 +127,7 @@ export default function Notifications() {
 
   // Trip completed notifications
   trips.filter((t) => t.status === "Completed").forEach((t) => {
-    notifications.push({
+    allNotifications.push({
       id: `trip-done-${t._id}`,
       type: "trip_completed",
       icon: <FaCheckCircle className="text-emerald-400" />,
@@ -79,7 +142,7 @@ export default function Notifications() {
 
   // Trip ongoing notifications
   trips.filter((t) => t.status === "Ongoing").forEach((t) => {
-    notifications.push({
+    allNotifications.push({
       id: `trip-ongoing-${t._id}`,
       type: "trip_ongoing",
       icon: <FaPlay className="text-orange-400" />,
@@ -94,7 +157,7 @@ export default function Notifications() {
 
   // Trip scheduled notifications
   trips.filter((t) => t.status === "Scheduled").forEach((t) => {
-    notifications.push({
+    allNotifications.push({
       id: `trip-scheduled-${t._id}`,
       type: "trip_scheduled",
       icon: <FaClock className="text-blue-400" />,
@@ -118,7 +181,7 @@ export default function Notifications() {
     })
     .forEach((c) => {
       if (!c.adminResponse) return;
-      notifications.push({
+      allNotifications.push({
         id: `complaint-response-${c._id}`,
         type: "complaint_response",
         icon: <FaReply className="text-cyan-400" />,
@@ -132,29 +195,35 @@ export default function Notifications() {
     });
 
   // Sort newest first
-  notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
+  allNotifications.sort((a, b) => new Date(b.time) - new Date(a.time));
 
   // Filter by type
   const filtered =
     activeFilter === "all"
-      ? notifications
-      : notifications.filter(
+      ? allNotifications
+      : allNotifications.filter(
           (n) =>
             (activeFilter === "Trips" && n.type.startsWith("trip_")) ||
-            (activeFilter === "Complaints" && n.type === "complaint_response")
+            (activeFilter === "Complaints" && n.type === "complaint_response") ||
+            (activeFilter === "Payments" && n.type.startsWith("payment_"))
         );
 
   const filterTabs = [
-    { key: "all", label: "All", count: notifications.length },
+    { key: "all", label: "All", count: allNotifications.length },
     {
       key: "Trips",
       label: "Trips",
-      count: notifications.filter((n) => n.type.startsWith("trip_")).length,
+      count: allNotifications.filter((n) => n.type.startsWith("trip_")).length,
     },
     {
       key: "Complaints",
       label: "Complaints",
-      count: notifications.filter((n) => n.type === "complaint_response").length,
+      count: allNotifications.filter((n) => n.type === "complaint_response").length,
+    },
+    {
+      key: "Payments",
+      label: "Payments",
+      count: allNotifications.filter((n) => n.type.startsWith("payment_")).length,
     },
   ];
 

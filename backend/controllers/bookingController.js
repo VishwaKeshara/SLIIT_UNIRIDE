@@ -1,6 +1,8 @@
 // backend/controllers/bookingController.js
 const Booking = require("../models/BookingModel");
 const Route   = require("../models/RouteModel");
+const User    = require("../models/User");
+const { createNotification } = require("./notificationController");
 
 // CREATE BOOKING
 exports.createBooking = async (req, res) => {
@@ -173,6 +175,25 @@ exports.verifyBookingPayment = async (req, res) => {
 
     await booking.save();
 
+    // Create notification for registered users
+    if (booking.isRegistered && booking.email) {
+      try {
+        const user = await User.findOne({ email: booking.email });
+        if (user) {
+          await createNotification(
+            user._id,
+            "payment_verified",
+            "Payment Verified",
+            `Your payment for booking ${booking._id} has been verified and your booking is now confirmed.`,
+            booking._id,
+            { paymentReference: booking.paymentReference }
+          );
+        }
+      } catch (notificationErr) {
+        console.error("Error creating payment verification notification:", notificationErr);
+      }
+    }
+
     const populated = await booking.populate([
       { path: "route", select: "routeName startLocation endLocation startTime" },
       { path: "boardingStop", select: "stopName order" },
@@ -197,6 +218,25 @@ exports.refundBookingPayment = async (req, res) => {
     booking.refundedAt = new Date();
 
     await booking.save();
+
+    // Create notification for registered users
+    if (booking.isRegistered && booking.email) {
+      try {
+        const user = await User.findOne({ email: booking.email });
+        if (user) {
+          await createNotification(
+            user._id,
+            "payment_refunded",
+            "Payment Refunded",
+            `Your payment for booking ${booking._id} has been refunded. ${refundReason ? `Reason: ${refundReason}` : ""}`,
+            booking._id,
+            { refundReason: booking.refundReason, refundedAt: booking.refundedAt }
+          );
+        }
+      } catch (notificationErr) {
+        console.error("Error creating payment refund notification:", notificationErr);
+      }
+    }
 
     const populated = await booking.populate([
       { path: "route", select: "routeName startLocation endLocation startTime" },
