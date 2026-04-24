@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   PieChart,
   Pie,
@@ -85,6 +86,18 @@ const tripStatusCls = {
 };
 
 export default function Drivers() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const sessionData = useMemo(() => {
+    try {
+      const userData = JSON.parse(localStorage.getItem("userData") || "null");
+      const adminData = JSON.parse(localStorage.getItem("adminData") || "null");
+      return userData || adminData || null;
+    } catch {
+      return null;
+    }
+  }, []);
+
   // ── UI State ─────────────────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState("drivers"); // "drivers" or "trips"
   const [banner, setBanner] = useState({ type: "", msg: "" });
@@ -120,6 +133,16 @@ export default function Drivers() {
     }
   })();
   const isAdmin = Boolean(adminData);
+
+  useEffect(() => {
+    if (!sessionData) {
+      navigate("/login", { state: { from: location.pathname } });
+    }
+  }, [location.pathname, navigate, sessionData]);
+
+  if (!sessionData) {
+    return null;
+  }
 
   // Force normal users back to the drivers tab if they somehow select analytics
   useEffect(() => {

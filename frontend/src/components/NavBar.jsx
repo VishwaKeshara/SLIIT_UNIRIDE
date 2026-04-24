@@ -105,13 +105,13 @@ function Navbar() {
     { to: "/schedules", label: "Schedules", icon: <FaCalendarAlt /> },
     { to: "/book", label: "Book Ride", icon: <FaTicketAlt /> },
     { to: "/terms-and-conditions", label: "Terms & Conditions", icon: <FaInfoCircle /> },
-    { to: "/drivers", label: "Drivers", icon: <FaUsers /> },
     { to: "/about", label: "About Us", icon: <FaInfoCircle /> },
     { to: "/contact", label: "Contact", icon: <FaPhoneAlt /> },
   ];
 
   // Links visible only to logged-in users
   const userOnlyLinks = [
+    { to: "/drivers", label: "Drivers", icon: <FaUsers /> },
     { to: "/notifications", label: "Notifications", icon: <FaBell /> },
     { to: "/complaint", label: "Complaint", icon: <FaExclamationCircle /> },
   ];
