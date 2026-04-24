@@ -108,11 +108,11 @@ function Navbar() {
     { to: "/drivers", label: "Drivers", icon: <FaUsers /> },
     { to: "/about", label: "About Us", icon: <FaInfoCircle /> },
     { to: "/contact", label: "Contact", icon: <FaPhoneAlt /> },
-    { to: "/notifications", label: "Notifications", icon: <FaBell /> },
   ];
 
   // Links visible only to logged-in users
   const userOnlyLinks = [
+    { to: "/notifications", label: "Notifications", icon: <FaBell /> },
     { to: "/complaint", label: "Complaint", icon: <FaExclamationCircle /> },
   ];
 

@@ -1,13 +1,31 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "../axiosinstance";
 import {
   FaBell, FaCheckCircle, FaClock, FaExclamationTriangle,
   FaReply, FaBus, FaRoute, FaCalendarAlt, FaArrowLeft, FaPlay,
 } from "react-icons/fa";
 
+function normalizeRouteLabel(routeValue) {
+  if (!routeValue) return "";
+
+  if (typeof routeValue === "string") {
+    return routeValue.trim().toLowerCase();
+  }
+
+  const routeName = routeValue.routeName?.trim();
+  if (routeName) return routeName.toLowerCase();
+
+  return `${routeValue.startLocation || ""} - ${routeValue.endLocation || ""}`
+    .trim()
+    .toLowerCase();
+}
+
 export default function Notifications() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [trips, setTrips] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [complaints, setComplaints] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,15 +44,24 @@ export default function Notifications() {
   })();
 
   useEffect(() => {
+    if (!sessionUser) {
+      navigate("/login", { state: { from: location.pathname } });
+      return;
+    }
+
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [tripRes, complaintRes, notificationRes] = await Promise.all([
+        const [tripRes, bookingRes, complaintRes, notificationRes] = await Promise.all([
           axios.get("/trips"),
+          sessionUser && sessionUser.role === "user"
+            ? axios.get(`/users/${sessionUser.id}/bookings`)
+            : Promise.resolve({ data: [] }),
           axios.get("/complaints"),
           sessionUser && sessionUser.role === "user" ? axios.get(`/notifications/user/${sessionUser.id}`) : Promise.resolve({ data: [] }),
         ]);
         setTrips(tripRes.data);
+        setBookings(bookingRes.data);
         setComplaints(complaintRes.data);
         setNotifications(notificationRes.data);
       } catch (err) {
@@ -45,7 +72,11 @@ export default function Notifications() {
     };
 
     fetchData();
-  }, []);
+  }, [location.pathname, navigate, sessionUser]);
+
+  if (!sessionUser) {
+    return null;
+  }
 
   // Mark notification as read
   const markAsRead = async (notificationId) => {
@@ -70,6 +101,13 @@ export default function Notifications() {
 
   // Build notification items
   const allNotifications = [];
+  const userRouteKeys = new Set(
+    bookings.map((booking) => normalizeRouteLabel(booking.route)).filter(Boolean),
+  );
+  const userTripNotifications = trips.filter((trip) => {
+    if (sessionUser?.role !== "user") return false;
+    return userRouteKeys.has(normalizeRouteLabel(trip.route));
+  });
 
   // Backend notifications (payment, etc.)
   notifications.forEach((n) => {
@@ -111,7 +149,7 @@ export default function Notifications() {
   });
 
   // Trip delay notifications
-  trips.filter((t) => t.status === "Delayed").forEach((t) => {
+  userTripNotifications.filter((t) => t.status === "Delayed").forEach((t) => {
     allNotifications.push({
       id: `trip-delay-${t._id}`,
       type: "trip_delay",
@@ -126,7 +164,7 @@ export default function Notifications() {
   });
 
   // Trip completed notifications
-  trips.filter((t) => t.status === "Completed").forEach((t) => {
+  userTripNotifications.filter((t) => t.status === "Completed").forEach((t) => {
     allNotifications.push({
       id: `trip-done-${t._id}`,
       type: "trip_completed",
@@ -141,7 +179,7 @@ export default function Notifications() {
   });
 
   // Trip ongoing notifications
-  trips.filter((t) => t.status === "Ongoing").forEach((t) => {
+  userTripNotifications.filter((t) => t.status === "Ongoing").forEach((t) => {
     allNotifications.push({
       id: `trip-ongoing-${t._id}`,
       type: "trip_ongoing",
@@ -156,7 +194,7 @@ export default function Notifications() {
   });
 
   // Trip scheduled notifications
-  trips.filter((t) => t.status === "Scheduled").forEach((t) => {
+  userTripNotifications.filter((t) => t.status === "Scheduled").forEach((t) => {
     allNotifications.push({
       id: `trip-scheduled-${t._id}`,
       type: "trip_scheduled",
@@ -316,22 +354,22 @@ export default function Notifications() {
         </div>
 
         {/* Summary Stats */}
-        {!loading && notifications.length > 0 && (
+        {!loading && allNotifications.length > 0 && (
           <div className="mt-10 grid gap-4 sm:grid-cols-4">
             <div className="rounded-2xl bg-white/10 backdrop-blur-md p-5 border border-white/10 text-center">
-              <p className="text-3xl font-black text-emerald-400">{trips.filter(t => t.status === "Completed").length}</p>
+              <p className="text-3xl font-black text-emerald-400">{userTripNotifications.filter(t => t.status === "Completed").length}</p>
               <p className="mt-1 text-sm text-slate-400 font-medium">Completed</p>
             </div>
             <div className="rounded-2xl bg-white/10 backdrop-blur-md p-5 border border-white/10 text-center">
-              <p className="text-3xl font-black text-red-400">{trips.filter(t => t.status === "Delayed").length}</p>
+              <p className="text-3xl font-black text-red-400">{userTripNotifications.filter(t => t.status === "Delayed").length}</p>
               <p className="mt-1 text-sm text-slate-400 font-medium">Delayed</p>
             </div>
             <div className="rounded-2xl bg-white/10 backdrop-blur-md p-5 border border-white/10 text-center">
-              <p className="text-3xl font-black text-orange-400">{trips.filter(t => t.status === "Ongoing").length}</p>
+              <p className="text-3xl font-black text-orange-400">{userTripNotifications.filter(t => t.status === "Ongoing").length}</p>
               <p className="mt-1 text-sm text-slate-400 font-medium">Ongoing</p>
             </div>
             <div className="rounded-2xl bg-white/10 backdrop-blur-md p-5 border border-white/10 text-center">
-              <p className="text-3xl font-black text-blue-400">{trips.filter(t => t.status === "Scheduled").length}</p>
+              <p className="text-3xl font-black text-blue-400">{userTripNotifications.filter(t => t.status === "Scheduled").length}</p>
               <p className="mt-1 text-sm text-slate-400 font-medium">Scheduled</p>
             </div>
           </div>

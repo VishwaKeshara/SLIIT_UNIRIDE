@@ -6,10 +6,10 @@ import heroBusImage from "../assets/hero-bus.jpg";
 
 const API = "http://localhost:5000/api";
 
-function getLoggedInUserId() {
+function getLoggedInUser() {
   try {
     const userData = localStorage.getItem("userData");
-    return userData ? JSON.parse(userData).id : null;
+    return userData ? JSON.parse(userData) : null;
   } catch {
     return null;
   }
@@ -28,7 +28,8 @@ function formatDate(dateValue, options = {}) {
 
 function BookRide() {
   const location = useLocation();
-  const loggedInUserId = getLoggedInUserId();
+  const storedUser = getLoggedInUser();
+  const loggedInUserId = storedUser?.id;
 
   const [routes, setRoutes] = useState([]);
   const [stops, setStops] = useState([]);
@@ -529,6 +530,94 @@ function BookRide() {
             </div>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (!loggedInUserId) {
+    return (
+      <div className="min-h-screen bg-slate-100">
+        <section className="relative overflow-hidden bg-slate-950 text-white">
+          <div className="absolute inset-0">
+            <img
+              src={heroBusImage}
+              alt="Bus booking cover"
+              className="h-full w-full object-cover opacity-35"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-slate-900/70" />
+          </div>
+
+          <div className="relative mx-auto flex min-h-[calc(100vh-80px)] max-w-5xl items-center px-4 py-12 sm:px-6 lg:px-8">
+            <div className="grid w-full gap-8 rounded-[32px] border border-white/10 bg-white/10 p-6 shadow-2xl backdrop-blur-xl lg:grid-cols-[1.15fr_0.85fr] lg:p-8">
+              <div>
+                <p className="text-sm uppercase tracking-[0.35em] text-orange-300">
+                  Login Required
+                </p>
+                <h1 className="mt-4 text-4xl font-semibold leading-tight sm:text-5xl">
+                  Sign in before booking your ride.
+                </h1>
+                <p className="mt-4 max-w-2xl text-base leading-8 text-slate-200 sm:text-lg">
+                  Guest users can still view schedules, drivers, and notifications,
+                  but booking a shuttle is available only for logged-in UniRide users.
+                </p>
+
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <Link
+                    to="/login"
+                    state={{
+                      from: "/book",
+                      selectedRoute: location.state?.selectedRoute || null,
+                    }}
+                    className="inline-flex items-center justify-center rounded-2xl bg-orange-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+                  >
+                    Login to Book Ride
+                  </Link>
+                  <Link
+                    to="/schedules"
+                    className="inline-flex items-center justify-center rounded-2xl border border-white/20 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                  >
+                    View Schedules
+                  </Link>
+                </div>
+              </div>
+
+              <div className="rounded-[28px] border border-white/10 bg-slate-950/40 p-6">
+                <p className="text-sm uppercase tracking-[0.3em] text-orange-300">
+                  Guest Access
+                </p>
+                <div className="mt-6 space-y-4">
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <p className="text-base font-semibold text-white">You can view</p>
+                    <p className="mt-2 text-sm leading-7 text-slate-300">
+                      Schedules, drivers, and public trip notifications without signing in.
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <p className="text-base font-semibold text-white">You need login for</p>
+                    <p className="mt-2 text-sm leading-7 text-slate-300">
+                      Booking rides, saving payment history, and connecting rides to your
+                      personal profile.
+                    </p>
+                  </div>
+                  {location.state?.selectedRoute && (
+                    <div className="rounded-2xl border border-orange-400/20 bg-orange-500/10 p-4">
+                      <p className="text-sm font-semibold text-orange-200">
+                        Selected route
+                      </p>
+                      <p className="mt-2 text-base font-semibold text-white">
+                        {location.state.selectedRoute.routeName ||
+                          `${location.state.selectedRoute.startLocation} to ${location.state.selectedRoute.endLocation}`}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-300">
+                        After login, you can continue booking this route.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     );
   }
