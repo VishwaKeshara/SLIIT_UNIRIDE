@@ -51,15 +51,24 @@ function AdminSidebar() {
     },
     {
       label: "Driver Management",
-      to: "/drivers",
+      to: "/admin/drivers",
       enabled: !routeManager,
-      active: location.pathname === "/drivers",
+      active:
+        location.pathname === "/admin/drivers" ||
+        location.pathname === "/admin/drivers/add" ||
+        location.pathname.startsWith("/admin/drivers/edit/"),
     },
     {
       label: "Analytics & Reports",
       to: "/admin/reports",
       enabled: !routeManager,
       active: location.pathname === "/admin/reports",
+    },
+    {
+      label: "Notifications",
+      to: "/admin/notifications",
+      enabled: !routeManager,
+      active: location.pathname === "/admin/notifications",
     },
     {
       label: "System Settings",

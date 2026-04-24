@@ -165,7 +165,6 @@ function UserManagement() {
                 <option value="">All Roles</option>
                 <option value="student">Student</option>
                 <option value="lecturer">Lecturer</option>
-                <option value="instructor">Instructor</option>
                 <option value="admin">Admin</option>
                 <option value="routemanager">Route Manager</option>
                 <option value="driver">Driver</option>
