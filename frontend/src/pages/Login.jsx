@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "../axiosinstance";
 import bgImage from "../assets/bus.jpg";
 import {
@@ -13,6 +13,7 @@ import {
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -49,7 +50,17 @@ function Login() {
       localStorage.setItem("userData", JSON.stringify(res.data.user));
       window.dispatchEvent(new Event("userChanged"));
 
-      navigate("/home");
+      const userRole = res.data.user?.role;
+      const requestedPath = location.state?.from;
+
+      const defaultPath =
+        userRole === "driver"
+          ? "/drivers"
+          : userRole === "student" || userRole === "lecturer"
+            ? "/trips"
+            : "/home";
+
+      navigate(requestedPath || defaultPath);
     } catch (err) {
       setError(err.response?.data?.message || "Login failed.");
     } finally {

@@ -6,19 +6,25 @@ import {
   FaReply, FaArrowLeft, FaPlay, FaReceipt, FaRoute,
 } from "react-icons/fa";
 
-function normalizeRouteLabel(routeValue) {
-  if (!routeValue) return "";
+function normalizeRouteLabel(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function getRouteAliases(routeValue) {
+  if (!routeValue) return [];
 
   if (typeof routeValue === "string") {
-    return routeValue.trim().toLowerCase();
+    return [normalizeRouteLabel(routeValue)].filter(Boolean);
   }
 
-  const routeName = routeValue.routeName?.trim();
-  if (routeName) return routeName.toLowerCase();
+  const aliases = [
+    normalizeRouteLabel(routeValue.routeName),
+    normalizeRouteLabel(
+      `${routeValue.startLocation || ""} - ${routeValue.endLocation || ""}`
+    ),
+  ];
 
-  return `${routeValue.startLocation || ""} - ${routeValue.endLocation || ""}`
-    .trim()
-    .toLowerCase();
+  return [...new Set(aliases.filter(Boolean))];
 }
 
 export default function Notifications() {
@@ -33,12 +39,10 @@ export default function Notifications() {
 
   const sessionUser = useMemo(() => {
     try {
-      const u = JSON.parse(
-        localStorage.getItem("userData") || localStorage.getItem("user") || "null",
-      );
-      if (u) return { ...u, role: "user" };
+      const u = JSON.parse(localStorage.getItem("userData") || localStorage.getItem("user") || "null");
+      if (u) return u;
       const a = JSON.parse(localStorage.getItem("adminData") || "null");
-      if (a) return { ...a, role: "admin" };
+      if (a) return a;
       return null;
     } catch {
       return null;
@@ -56,11 +60,11 @@ export default function Notifications() {
       try {
         const [tripRes, bookingRes, complaintRes, notificationRes] = await Promise.all([
           axios.get("/trips"),
-          sessionUser && sessionUser.role === "user"
+          sessionUser && sessionUser.role !== "admin" && sessionUser.role !== "routemanager"
             ? axios.get(`/users/${sessionUser.id}/bookings`)
             : Promise.resolve({ data: [] }),
           axios.get("/complaints"),
-          sessionUser && sessionUser.role === "user" ? axios.get(`/notifications/user/${sessionUser.id}`) : Promise.resolve({ data: [] }),
+          sessionUser ? axios.get(`/notifications/user/${sessionUser.id}`) : Promise.resolve({ data: [] }),
         ]);
         setTrips(tripRes.data);
         setBookings(bookingRes.data);
@@ -104,11 +108,11 @@ export default function Notifications() {
   // Build notification items
   const allNotifications = [];
   const userRouteKeys = new Set(
-    bookings.map((booking) => normalizeRouteLabel(booking.route)).filter(Boolean),
+    bookings.flatMap((booking) => getRouteAliases(booking.route)).filter(Boolean),
   );
   const userTripNotifications = trips.filter((trip) => {
-    if (sessionUser?.role !== "user") return false;
-    return userRouteKeys.has(normalizeRouteLabel(trip.route));
+    if (!sessionUser || sessionUser.role === "admin" || sessionUser.role === "routemanager") return false;
+    return getRouteAliases(trip.route).some((alias) => userRouteKeys.has(alias));
   });
 
   // Backend notifications (payment, etc.)
@@ -130,6 +134,11 @@ export default function Notifications() {
         badge = "Payment Failed";
         badgeColor = "bg-red-500/15 text-red-400 border-red-500/30";
         break;
+      case "trip_delayed":
+        icon = <FaExclamationTriangle className="text-red-400" />;
+        badge = n.metadata?.audience === "admin" ? "Admin Alert" : "Delayed";
+        badgeColor = "bg-red-500/15 text-red-400 border-red-500/30";
+        break;
       default:
         icon = <FaBell className="text-gray-400" />;
         badge = "Notification";
@@ -142,7 +151,12 @@ export default function Notifications() {
       icon,
       title: n.title,
       message: n.message,
-      status: "Payment",
+      status:
+        n.type === "trip_delayed"
+          ? n.metadata?.audience === "admin"
+            ? "Admin"
+            : "Trip"
+          : "Payment",
       time: n.createdAt,
       badge,
       badgeColor,
@@ -213,7 +227,7 @@ export default function Notifications() {
   // Complaint response notifications for the current user
   complaints
     .filter((c) => {
-      if (!sessionUser || sessionUser.role !== "user") return false;
+      if (!sessionUser || sessionUser.role === "admin" || sessionUser.role === "routemanager") return false;
       return (
         c.userEmail?.toLowerCase() === sessionUser.email?.toLowerCase() ||
         c.userId === sessionUser.id
@@ -244,6 +258,7 @@ export default function Notifications() {
       : allNotifications.filter(
           (n) =>
             (activeFilter === "Trips" && n.type.startsWith("trip_")) ||
+            (activeFilter === "Admin" && n.status === "Admin") ||
             (activeFilter === "Complaints" && n.type === "complaint_response") ||
             (activeFilter === "Payments" && n.type.startsWith("payment_"))
         );
@@ -254,6 +269,11 @@ export default function Notifications() {
       key: "Trips",
       label: "Trips",
       count: allNotifications.filter((n) => n.type.startsWith("trip_")).length,
+    },
+    {
+      key: "Admin",
+      label: "Admin",
+      count: allNotifications.filter((n) => n.status === "Admin").length,
     },
     {
       key: "Complaints",

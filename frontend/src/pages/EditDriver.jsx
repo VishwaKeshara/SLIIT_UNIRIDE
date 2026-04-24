@@ -65,7 +65,7 @@ function EditDriver() {
     setSubmitting(true);
     try {
       await updateDriver(id, form);
-      navigate("/drivers");
+      navigate("/admin/drivers");
     } catch (err) {
       setServerError(err.response?.data?.message || "Failed to update driver.");
     } finally {
@@ -82,7 +82,7 @@ function EditDriver() {
   return (
     <section className="min-h-screen bg-slate-50 pb-16">
       <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
-        <button onClick={() => navigate("/drivers")} className="mb-6 inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition">
+        <button onClick={() => navigate("/admin/drivers")} className="mb-6 inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition">
           <FaArrowLeft /> Back to Drivers
         </button>
 
@@ -153,7 +153,7 @@ function EditDriver() {
                 className="flex-1 rounded-xl bg-yellow-500 py-3 text-sm font-bold text-white shadow hover:bg-yellow-600 disabled:opacity-60 transition">
                 {submitting ? "Saving..." : "Save Changes"}
               </button>
-              <button type="button" onClick={() => navigate("/drivers")}
+              <button type="button" onClick={() => navigate("/admin/drivers")}
                 className="rounded-xl border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">
                 Cancel
               </button>
