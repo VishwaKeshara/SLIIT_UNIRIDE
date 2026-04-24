@@ -18,6 +18,27 @@ import {
   FaUserCircle,
 } from "react-icons/fa";
 
+function normalizeRouteLabel(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function getRouteAliases(routeValue) {
+  if (!routeValue) return [];
+
+  if (typeof routeValue === "string") {
+    return [normalizeRouteLabel(routeValue)].filter(Boolean);
+  }
+
+  const aliases = [
+    normalizeRouteLabel(routeValue.routeName),
+    normalizeRouteLabel(
+      `${routeValue.startLocation || ""} - ${routeValue.endLocation || ""}`
+    ),
+  ];
+
+  return [...new Set(aliases.filter(Boolean))];
+}
+
 function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loggedUser, setLoggedUser] = useState(() => {
@@ -55,13 +76,24 @@ function Navbar() {
       try {
         const userData = JSON.parse(localStorage.getItem("userData") || localStorage.getItem("user"));
         
-        const [tripsRes, complaintsRes, notificationsRes] = await Promise.all([
-          axios.get("/trips"),
+        const [tripsRes, bookingsRes, complaintsRes, notificationsRes] = await Promise.all([
+          userData ? axios.get("/trips") : Promise.resolve({ data: [] }),
+          userData ? axios.get(`/users/${userData.id}/bookings`) : Promise.resolve({ data: [] }),
           axios.get("/complaints"),
           userData ? axios.get(`/notifications/user/${userData.id}`) : Promise.resolve({ data: [] }),
         ]);
 
-        const hasDelay = tripsRes.data.some((t) => t.status === "Delayed");
+        const bookedRouteKeys = new Set(
+          bookingsRes.data.flatMap((booking) => getRouteAliases(booking.route)).filter(Boolean)
+        );
+
+        const delayedTripAlerts = userData
+          ? tripsRes.data.some(
+              (trip) =>
+                trip.status === "Delayed" &&
+                getRouteAliases(trip.route).some((alias) => bookedRouteKeys.has(alias))
+            )
+          : false;
 
         const complaintAlerts = userData
           ? complaintsRes.data.some(
@@ -72,11 +104,13 @@ function Navbar() {
             )
           : false;
 
-        const paymentAlerts = userData
-          ? notificationsRes.data.some((n) => !n.isRead && n.type.startsWith("payment_"))
+        const notificationAlerts = userData
+          ? notificationsRes.data.some(
+              (n) => !n.isRead && (n.type.startsWith("payment_") || n.type === "trip_delayed")
+            )
           : false;
 
-        setHasAlert(hasDelay || complaintAlerts || paymentAlerts);
+        setHasAlert(delayedTripAlerts || complaintAlerts || notificationAlerts);
       } catch (err) {
         console.error("Failed to fetch alerts", err);
       }
@@ -153,9 +187,15 @@ function Navbar() {
               <Link
                 key={item.to}
                 to={item.to}
-                className="flex items-center gap-2 whitespace-nowrap transition hover:text-orange-300"
+                className="relative flex items-center gap-2 whitespace-nowrap transition hover:text-orange-300"
               >
                 {item.icon} {item.label}
+                {item.label === "Notifications" && hasAlert && (
+                  <span className="absolute -right-2 -top-1 flex h-3 w-3">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500"></span>
+                  </span>
+                )}
               </Link>
             ))}
 
@@ -231,13 +271,19 @@ function Navbar() {
             {loggedUser &&
               userOnlyLinks.map((item) => (
                 <Link
-                key={item.to}
-                to={item.to}
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 rounded-md px-3 py-2.5 transition hover:bg-white/10 hover:text-orange-300"
-              >
-                {item.icon} {item.label}
-              </Link>
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setMobileOpen(false)}
+                  className="relative flex items-center gap-3 rounded-md px-3 py-2.5 transition hover:bg-white/10 hover:text-orange-300"
+                >
+                  {item.icon} {item.label}
+                  {item.label === "Notifications" && hasAlert && (
+                    <span className="absolute right-3 top-2.5 flex h-2.5 w-2.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500"></span>
+                    </span>
+                  )}
+                </Link>
             ))}
 
             {!loggedUser ? (
