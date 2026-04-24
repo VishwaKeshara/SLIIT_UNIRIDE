@@ -7,33 +7,33 @@ exports.createBooking = async (req, res) => {
   try {
     const { passengerName, mobileNumber, route, travelStartDate, travelEndDate } = req.body;
 
-    if (!passengerName)    return res.status(400).json({ message: "Passenger name is required" });
-    if (!mobileNumber)     return res.status(400).json({ message: "Mobile number is required" });
-    if (!route)            return res.status(400).json({ message: "Route is required" });
-    if (!travelStartDate)  return res.status(400).json({ message: "Travel start date is required" });
-    if (!travelEndDate)    return res.status(400).json({ message: "Travel end date is required" });
+    if (!passengerName)    return res.status(400).json({ message: "Passenger name is required!" });
+    if (!mobileNumber)     return res.status(400).json({ message: "Mobile number is required!" });
+    if (!route)            return res.status(400).json({ message: "Route is required!" });
+    if (!travelStartDate)  return res.status(400).json({ message: "Travel start date is required!" });
+    if (!travelEndDate)    return res.status(400).json({ message: "Travel end date is required!" });
 
     // Validate mobile format (7–15 digits/+/spaces/dashes)
     if (!/^[0-9+\-\s]{7,15}$/.test(mobileNumber)) {
-      return res.status(400).json({ message: "Invalid mobile number format" });
+      return res.status(400).json({ message: "Invalid mobile number format!" });
     }
 
     const start = new Date(travelStartDate);
     const end   = new Date(travelEndDate);
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      return res.status(400).json({ message: "Invalid travel dates" });
+      return res.status(400).json({ message: "Invalid travel dates!" });
     }
     if (end < start) {
-      return res.status(400).json({ message: "End date cannot be before start date" });
+      return res.status(400).json({ message: "End date cannot be before start date!" });
     }
 
     const totalDays = Math.round((end - start) / 86400000) + 1;
 
     // Verify route exists, is active, and has available seats
     const routeDoc = await Route.findById(route);
-    if (!routeDoc)              return res.status(404).json({ message: "Route not found" });
-    if (!routeDoc.active)       return res.status(400).json({ message: "Selected route is not currently active" });
-    if (routeDoc.seatCapacity <= 0) return res.status(400).json({ message: "No seats available on this route" });
+    if (!routeDoc)              return res.status(404).json({ message: "Route not found!" });
+    if (!routeDoc.active)       return res.status(400).json({ message: "Selected route is not currently active!" });
+    if (routeDoc.seatCapacity <= 0) return res.status(400).json({ message: "No seats available on this route!" });
 
     const pricePerDay = routeDoc.pricePerDay || 0;
     const totalAmount = pricePerDay * totalDays;
@@ -82,7 +82,7 @@ exports.getBookingById = async (req, res) => {
     const booking = await Booking.findById(req.params.id)
       .populate("route")
       .populate("boardingStop");
-    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    if (!booking) return res.status(404).json({ message: "Booking not found!" });
     res.json(booking);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -106,8 +106,8 @@ exports.getBookingsByMobile = async (req, res) => {
 exports.cancelBooking = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id);
-    if (!booking) return res.status(404).json({ message: "Booking not found" });
-    if (booking.status === "cancelled") return res.status(400).json({ message: "Booking is already cancelled" });
+    if (!booking) return res.status(404).json({ message: "Booking not found!" });
+    if (booking.status === "cancelled") return res.status(400).json({ message: "Booking is already cancelled!" });
 
     // Restore seat and cancel booking atomically
     await Promise.all([
@@ -132,7 +132,7 @@ exports.updateBookingPayment = async (req, res) => {
     } = req.body;
 
     const booking = await Booking.findById(req.params.id);
-    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    if (!booking) return res.status(404).json({ message: "Booking not found!" });
 
     if (paymentStatus !== undefined) booking.paymentStatus = paymentStatus;
     if (paymentReference !== undefined) {
@@ -162,7 +162,7 @@ exports.verifyBookingPayment = async (req, res) => {
     const { paymentReference = "" } = req.body;
 
     const booking = await Booking.findById(req.params.id);
-    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    if (!booking) return res.status(404).json({ message: "Booking not found!" });
 
     booking.paymentStatus = "paid";
     booking.verificationStatus = "verified";
@@ -190,7 +190,7 @@ exports.refundBookingPayment = async (req, res) => {
     const { refundReason = "" } = req.body;
 
     const booking = await Booking.findById(req.params.id);
-    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    if (!booking) return res.status(404).json({ message: "Booking not found!" });
 
     booking.paymentStatus = "refunded";
     booking.refundReason = refundReason.trim();
