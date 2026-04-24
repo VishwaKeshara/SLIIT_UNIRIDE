@@ -7,26 +7,34 @@ const Route = require("../models/RouteModel");
 const User = require("../models/User");
 const { createNotification } = require("../controllers/notificationController");
 
-function normalizeRouteLabel(routeValue) {
-  if (!routeValue) return "";
+function normalizeRouteLabel(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function getRouteAliases(routeValue) {
+  if (!routeValue) return [];
 
   if (typeof routeValue === "string") {
-    return routeValue.trim().toLowerCase();
+    return [normalizeRouteLabel(routeValue)].filter(Boolean);
   }
 
-  const routeName = routeValue.routeName?.trim();
-  if (routeName) return routeName.toLowerCase();
+  const aliases = [
+    normalizeRouteLabel(routeValue.routeName),
+    normalizeRouteLabel(
+      `${routeValue.startLocation || ""} - ${routeValue.endLocation || ""}`
+    ),
+  ];
 
-  return `${routeValue.startLocation || ""} - ${routeValue.endLocation || ""}`
-    .trim()
-    .toLowerCase();
+  return [...new Set(aliases.filter(Boolean))];
 }
 
 async function createTripDelayNotifications(trip) {
-  const tripRouteLabel = normalizeRouteLabel(trip.route);
+  const tripRouteAliases = new Set(getRouteAliases(trip.route));
   const allRoutes = await Route.find().select("_id routeName startLocation endLocation");
   const matchingRouteIds = allRoutes
-    .filter((routeDoc) => normalizeRouteLabel(routeDoc) === tripRouteLabel)
+    .filter((routeDoc) =>
+      getRouteAliases(routeDoc).some((alias) => tripRouteAliases.has(alias))
+    )
     .map((routeDoc) => routeDoc._id);
 
   const tripDate = new Date(trip.date);
@@ -43,13 +51,25 @@ async function createTripDelayNotifications(trip) {
   });
 
   const eligibleEmails = [...new Set(eligibleBookings.map((booking) => booking.email.toLowerCase()))];
-  const eligibleUsers = eligibleEmails.length
+  const bookedUsers = eligibleEmails.length
     ? await User.find({
         email: { $in: eligibleEmails },
         isActive: true,
-        role: { $in: ["student", "lecturer", "driver"] },
+        role: { $in: ["student", "lecturer"] },
       }).select("_id email")
     : [];
+
+  const generalUsers = await User.find({
+    role: { $in: ["student", "lecturer"] },
+    isActive: true,
+  }).select("_id email");
+
+  const userMap = new Map();
+  [...bookedUsers, ...generalUsers].forEach((userDoc) => {
+    userMap.set(String(userDoc._id), userDoc);
+  });
+
+  const eligibleUsers = [...userMap.values()];
 
   const bookingIdByEmail = new Map(
     eligibleBookings.map((booking) => [booking.email.toLowerCase(), booking._id])
@@ -61,7 +81,7 @@ async function createTripDelayNotifications(trip) {
         userDoc._id,
         "trip_delayed",
         `Trip Delayed: ${trip.route}`,
-        trip.delayReason || "A trip related to your booking has been delayed.",
+        trip.delayReason || "A driver has reported a delay for a trip.",
         bookingIdByEmail.get(userDoc.email.toLowerCase()) || null,
         {
           audience: "user",
