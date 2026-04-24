@@ -84,7 +84,7 @@ function Complaint() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const user = JSON.parse(localStorage.getItem("userData")) || JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(localStorage.getItem("user"));
   const errors = useMemo(() => validateComplaint(formData), [formData]);
   const selectedType =
     complaintTypes.find((item) => item.value === formData.type) ||
@@ -230,8 +230,7 @@ function Complaint() {
                 Add a complaint
               </h1>
               <p className="mt-3 max-w-xl text-sm leading-7 text-slate-300">
-                Provide a professional summary of the issue so our team can verify,
-                prioritize, and respond properly.
+              
               </p>
             </div>
 
@@ -326,7 +325,7 @@ function Complaint() {
                       value={formData.type}
                       onChange={handleChange}
                       onBlur={handleBlur}
-                      className={fieldClassName("type")}
+                      className={`${fieldClassName("type")} bg-[#11263f] text-white appearance-none`}
                     >
                       {complaintTypes.map((item) => (
                         <option key={item.value} value={item.value}>

@@ -8,6 +8,7 @@ import {
 
 export default function Notifications() {
   const [trips, setTrips] = useState([]);
+  const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("all");
 
@@ -18,15 +19,21 @@ export default function Notifications() {
       const a = JSON.parse(localStorage.getItem("adminData"));
       if (a) return { ...a, role: "admin" };
       return null;
-    } catch { return null; }
+    } catch {
+      return null;
+    }
   })();
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const tripRes = await axios.get("/trips");
+        const [tripRes, complaintRes] = await Promise.all([
+          axios.get("/trips"),
+          axios.get("/complaints"),
+        ]);
         setTrips(tripRes.data);
+        setComplaints(complaintRes.data);
       } catch (err) {
         console.error("Failed to fetch notifications", err);
       } finally {
@@ -48,7 +55,7 @@ export default function Notifications() {
       icon: <FaExclamationTriangle className="text-red-400" />,
       title: `Trip Delayed: ${t.route}`,
       message: t.delayReason || "A trip on your route has been delayed.",
-      status: "Delayed",
+      status: "Trip",
       time: t.updatedAt || t.date,
       badge: "Delayed",
       badgeColor: "bg-red-500/15 text-red-400 border-red-500/30",
@@ -63,7 +70,7 @@ export default function Notifications() {
       icon: <FaCheckCircle className="text-emerald-400" />,
       title: `Trip Completed: ${t.route}`,
       message: `The trip on ${t.date} (${t.startTime} – ${t.endTime}) has been completed.`,
-      status: "Completed",
+      status: "Trip",
       time: t.updatedAt || t.date,
       badge: "Completed",
       badgeColor: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
@@ -78,7 +85,7 @@ export default function Notifications() {
       icon: <FaPlay className="text-orange-400" />,
       title: `Trip Ongoing: ${t.route}`,
       message: `Trip in progress from ${t.startTime} to ${t.endTime} with ${t.passengers} passengers.`,
-      status: "Ongoing",
+      status: "Trip",
       time: t.updatedAt || t.date,
       badge: "Ongoing",
       badgeColor: "bg-orange-500/15 text-orange-400 border-orange-500/30",
@@ -93,26 +100,62 @@ export default function Notifications() {
       icon: <FaClock className="text-blue-400" />,
       title: `Trip Scheduled: ${t.route}`,
       message: `Trip scheduled on ${t.date} from ${t.startTime} to ${t.endTime}.`,
-      status: "Scheduled",
+      status: "Trip",
       time: t.updatedAt || t.date,
       badge: "Scheduled",
       badgeColor: "bg-blue-500/15 text-blue-400 border-blue-500/30",
     });
   });
 
+  // Complaint response notifications for the current user
+  complaints
+    .filter((c) => {
+      if (!sessionUser || sessionUser.role !== "user") return false;
+      return (
+        c.userEmail?.toLowerCase() === sessionUser.email?.toLowerCase() ||
+        c.userId === sessionUser.id
+      );
+    })
+    .forEach((c) => {
+      if (!c.adminResponse) return;
+      notifications.push({
+        id: `complaint-response-${c._id}`,
+        type: "complaint_response",
+        icon: <FaReply className="text-cyan-400" />,
+        title: `Complaint Response: ${c.title}`,
+        message: c.adminResponse,
+        status: "Complaint",
+        time: c.updatedAt || c.createdAt,
+        badge: "Complaint",
+        badgeColor: "bg-cyan-500/15 text-cyan-400 border-cyan-500/30",
+      });
+    });
+
   // Sort newest first
   notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
 
-  // Filter by status
-  const filtered = activeFilter === "all"
-    ? notifications
-    : notifications.filter((n) => n.status === activeFilter);
+  // Filter by type
+  const filtered =
+    activeFilter === "all"
+      ? notifications
+      : notifications.filter(
+          (n) =>
+            (activeFilter === "Trips" && n.type.startsWith("trip_")) ||
+            (activeFilter === "Complaints" && n.type === "complaint_response")
+        );
 
   const filterTabs = [
     { key: "all", label: "All", count: notifications.length },
-    { key: "Completed", label: "Completed", count: notifications.filter(n => n.status === "Completed").length },
-    { key: "Delayed", label: "Delayed", count: notifications.filter(n => n.status === "Delayed").length },
-    { key: "Ongoing", label: "Ongoing", count: notifications.filter(n => n.status === "Ongoing").length },
+    {
+      key: "Trips",
+      label: "Trips",
+      count: notifications.filter((n) => n.type.startsWith("trip_")).length,
+    },
+    {
+      key: "Complaints",
+      label: "Complaints",
+      count: notifications.filter((n) => n.type === "complaint_response").length,
+    },
   ];
 
   const formatTime = (t) => {
