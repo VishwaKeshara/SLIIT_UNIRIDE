@@ -1,29 +1,45 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import { jsPDF } from "jspdf";
+import heroBusImage from "../assets/hero-bus.jpg";
 
 const API = "http://localhost:5000/api";
 
-function getLoggedInUserId() {
+function getLoggedInUser() {
   try {
     const userData = localStorage.getItem("userData");
-    return userData ? JSON.parse(userData).id : null;
+    return userData ? JSON.parse(userData) : null;
   } catch {
     return null;
   }
 }
 
+function formatDate(dateValue, options = {}) {
+  if (!dateValue) return "Not selected";
+
+  return new Date(dateValue).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    ...options,
+  });
+}
+
 function BookRide() {
   const location = useLocation();
+  const storedUser = getLoggedInUser();
+  const loggedInUserId = storedUser?.id;
+
   const [routes, setRoutes] = useState([]);
   const [stops, setStops] = useState([]);
   const [loggedInUser, setLoggedInUser] = useState(null);
-  const LOGGED_IN_USER_ID = getLoggedInUserId();
   const [routesLoading, setRoutesLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
+  const [bookingBasis, setBookingBasis] = useState("daily");
+  const [selectedMonth, setSelectedMonth] = useState("");
 
   const [form, setForm] = useState({
     selectedRoute: "",
@@ -37,7 +53,7 @@ function BookRide() {
   });
 
   const [payment, setPayment] = useState({
-    method: "", // "card" | "cash"
+    method: "card",
     cardNumber: "",
     cardName: "",
     cardExpiry: "",
@@ -45,59 +61,169 @@ function BookRide() {
     cardProcessed: false,
   });
 
-  // Fetch logged-in user profile and pre-fill form
   useEffect(() => {
-    if (!LOGGED_IN_USER_ID) return;
+    if (!loggedInUserId) return;
+
     axios
-      .get(`${API}/users/${LOGGED_IN_USER_ID}`)
+      .get(`${API}/users/${loggedInUserId}`)
       .then((res) => {
-        const u = res.data;
-        setLoggedInUser(u);
+        const user = res.data;
+        setLoggedInUser(user);
         setForm((prev) => ({
           ...prev,
-          passengerName: u.name || "",
-          mobileNumber: u.phoneNumber || "",
-          email: u.email || "",
-          studentId: u.studentId || "",
+          passengerName: user.name || "",
+          mobileNumber: user.phoneNumber || "",
+          email: user.email || "",
+          studentId: user.studentId || "",
         }));
       })
       .catch(() => {
         setLoggedInUser(null);
       });
-  }, []);
+  }, [loggedInUserId]);
 
-  // Fetch active routes on mount; pre-select route passed from Schedules page
   useEffect(() => {
     axios
       .get(`${API}/routes/active`)
       .then((res) => {
         setRoutes(res.data);
         const passedRoute = location.state?.selectedRoute;
+
         if (passedRoute?._id) {
-          setForm((prev) => ({ ...prev, selectedRoute: passedRoute._id }));
+          setForm((prev) => ({
+            ...prev,
+            selectedRoute: passedRoute._id,
+          }));
         }
       })
-      .catch(() =>
-        setError(
-          "Failed to load routes. Please make sure the server is running.",
-        ),
-      )
+      .catch(() => {
+        setError("Failed to load routes. Please make sure the server is running.");
+      })
       .finally(() => setRoutesLoading(false));
-  }, []);
+  }, [location.state]);
 
-  // Fetch stops when selected route changes
   useEffect(() => {
     if (!form.selectedRoute) {
       setStops([]);
       return;
     }
+
     axios
       .get(`${API}/stops/route/${form.selectedRoute}`)
       .then((res) => setStops(res.data))
       .catch(() => setStops([]));
   }, [form.selectedRoute]);
 
-  const selectedRouteObj = routes.find((r) => r._id === form.selectedRoute);
+  const selectedRouteObj = useMemo(
+    () => routes.find((route) => route._id === form.selectedRoute),
+    [routes, form.selectedRoute],
+  );
+
+  const monthOptions = useMemo(() => {
+    const options = [];
+    const now = new Date();
+
+    for (let i = 1; i <= 12; i += 1) {
+      const monthDate = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      const value = `${monthDate.getFullYear()}-${String(
+        monthDate.getMonth() + 1,
+      ).padStart(2, "0")}`;
+
+      options.push({
+        value,
+        label: monthDate.toLocaleDateString("en-US", {
+          month: "long",
+          year: "numeric",
+        }),
+      });
+    }
+
+    return options;
+  }, []);
+
+  const totalDays =
+    form.travelStartDate && form.travelEndDate
+      ? Math.round(
+          (new Date(form.travelEndDate) - new Date(form.travelStartDate)) /
+            86400000,
+        ) + 1
+      : 0;
+
+  const pricePerDay = selectedRouteObj?.pricePerDay ?? 0;
+  const totalAmount = totalDays * pricePerDay;
+
+  const cardValid =
+    payment.cardNumber.replace(/\s/g, "").length === 16 &&
+    payment.cardName.trim().length >= 3 &&
+    /^\d{2}\/\d{2}$/.test(payment.cardExpiry) &&
+    payment.cardCvv.length >= 3;
+
+  const paymentComplete = payment.method === "card" && payment.cardProcessed;
+
+  const canSubmit =
+    form.selectedRoute &&
+    form.travelStartDate &&
+    form.travelEndDate &&
+    form.passengerName.trim() &&
+    form.mobileNumber.trim() &&
+    paymentComplete;
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+
+    setForm((prev) => {
+      const next = {
+        ...prev,
+        [name]: value,
+        ...(name === "selectedRoute" ? { boardingStop: "" } : {}),
+      };
+
+      if (
+        name === "travelStartDate" &&
+        next.travelEndDate &&
+        next.travelEndDate < value
+      ) {
+        next.travelEndDate = "";
+      }
+
+      return next;
+    });
+  };
+
+  const handleBookingBasisChange = (basis) => {
+    setBookingBasis(basis);
+    setSelectedMonth("");
+    setForm((prev) => ({
+      ...prev,
+      travelStartDate: "",
+      travelEndDate: "",
+    }));
+  };
+
+  const handleMonthChange = (event) => {
+    const value = event.target.value;
+    setSelectedMonth(value);
+
+    if (!value) {
+      setForm((prev) => ({
+        ...prev,
+        travelStartDate: "",
+        travelEndDate: "",
+      }));
+      return;
+    }
+
+    const [year, month] = value.split("-").map(Number);
+    const firstDate = new Date(year, month - 1, 1);
+    const lastDate = new Date(year, month, 0);
+    const toInputFormat = (date) => date.toISOString().split("T")[0];
+
+    setForm((prev) => ({
+      ...prev,
+      travelStartDate: toInputFormat(firstDate),
+      travelEndDate: toInputFormat(lastDate),
+    }));
+  };
 
   const handlePaymentMethodChange = (method) => {
     setPayment({
@@ -110,89 +236,28 @@ function BookRide() {
     });
   };
 
-  const handleCardNumber = (e) => {
-    const digits = e.target.value.replace(/\D/g, "").slice(0, 16);
+  const handleCardNumber = (event) => {
+    const digits = event.target.value.replace(/\D/g, "").slice(0, 16);
     const formatted = digits.replace(/(.{4})/g, "$1 ").trim();
     setPayment((prev) => ({ ...prev, cardNumber: formatted }));
   };
 
-  const handleCardExpiry = (e) => {
-    const digits = e.target.value.replace(/\D/g, "").slice(0, 4);
+  const handleCardExpiry = (event) => {
+    const digits = event.target.value.replace(/\D/g, "").slice(0, 4);
     const formatted =
-      digits.length > 2 ? digits.slice(0, 2) + "/" + digits.slice(2) : digits;
+      digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+
     setPayment((prev) => ({ ...prev, cardExpiry: formatted }));
-  };
-
-  // Compute date range stats (derived from form)
-  const totalDays =
-    form.travelStartDate && form.travelEndDate
-      ? Math.round(
-          (new Date(form.travelEndDate) - new Date(form.travelStartDate)) /
-            86400000,
-        ) + 1
-      : 0;
-  const pricePerDay = selectedRouteObj?.pricePerDay ?? 0;
-  const totalAmount = totalDays * pricePerDay;
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => {
-      const next = {
-        ...prev,
-        [name]: value,
-        ...(name === "selectedRoute" ? { boardingStop: "" } : {}),
-      };
-      // Reset end date if it's before the new start date
-      if (
-        name === "travelStartDate" &&
-        next.travelEndDate &&
-        next.travelEndDate < value
-      ) {
-        next.travelEndDate = "";
-      }
-      return next;
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setError(null);
-    try {
-      const payload = {
-        passengerName: form.passengerName.trim(),
-        mobileNumber: form.mobileNumber.trim(),
-        isRegistered: !!loggedInUser,
-        route: form.selectedRoute,
-        travelStartDate: form.travelStartDate,
-        travelEndDate: form.travelEndDate,
-        ...(form.boardingStop ? { boardingStop: form.boardingStop } : {}),
-        ...(form.email ? { email: form.email.trim() } : {}),
-        ...(form.studentId ? { studentId: form.studentId.trim() } : {}),
-        paymentMethod: payment.method,
-        paymentStatus: payment.method === "cash" ? "pending" : "paid",
-        ...(payment.method !== "cash"
-          ? {
-              paymentReference: `MOCK-${Date.now().toString(36).toUpperCase()}`,
-            }
-          : {}),
-      };
-      const res = await axios.post(`${API}/bookings`, payload);
-      setSuccess({ booking: res.data, routeObj: selectedRouteObj });
-    } catch (err) {
-      setError(
-        err.response?.data?.message || "Booking failed. Please try again.",
-      );
-    } finally {
-      setSubmitting(false);
-    }
   };
 
   const resetForm = () => {
     setSuccess(null);
     setError(null);
+    setBookingBasis("daily");
+    setSelectedMonth("");
+    setStops([]);
     setPayment({
-      method: "",
+      method: "card",
       cardNumber: "",
       cardName: "",
       cardExpiry: "",
@@ -211,956 +276,924 @@ function BookRide() {
     });
   };
 
-  // ── PDF download ─────────────────────────────────────────────────────────────
   const downloadPDF = () => {
+    if (!success) return;
+
     const { booking, routeObj } = success;
     const refId = booking._id?.slice(-8).toUpperCase();
     const doc = new jsPDF({ unit: "pt", format: "a4" });
-    const W = doc.internal.pageSize.getWidth();
+    const width = doc.internal.pageSize.getWidth();
+    const height = doc.internal.pageSize.getHeight();
 
-    // ── Header band ──
-    doc.setFillColor(14, 62, 99); // #0E3E63
-    doc.rect(0, 0, W, 80, "F");
-    doc.setFillColor(249, 115, 22); // orange-500
-    doc.rect(0, 80, W, 6, "F");
+    doc.setFillColor(17, 24, 39);
+    doc.rect(0, 0, width, 92, "F");
 
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(22);
+    doc.setFontSize(24);
     doc.setTextColor(255, 255, 255);
-    doc.text("SLIIT-UniRide", 40, 38);
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(203, 213, 225); // slate-300
-    doc.text("Booking Confirmation", 40, 58);
+    doc.text("SLIIT UniRide", 40, 40);
 
-    // Ref badge (top-right)
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.setTextColor(209, 213, 219);
+    doc.text("Booking confirmation receipt", 40, 62);
+
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
-    doc.setTextColor(249, 115, 22);
-    doc.text(`REF: ${refId}`, W - 40, 45, { align: "right" });
-    const issuedDate = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    doc.setTextColor(251, 146, 60);
+    doc.text(`Reference: ${refId}`, width - 40, 42, { align: "right" });
+
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(203, 213, 225);
-    doc.text(`Issued: ${issuedDate}`, W - 40, 62, { align: "right" });
+    doc.setTextColor(229, 231, 235);
+    doc.text(`Issued: ${formatDate(new Date())}`, width - 40, 60, {
+      align: "right",
+    });
 
-    // ── Section helper ──
-    let y = 115;
-    const COL1 = 40;
-    const COL2 = 220;
-    const LINE_H = 24;
+    let y = 128;
+    const left = 40;
+    const right = 230;
 
-    const sectionTitle = (title) => {
-      doc.setFillColor(243, 244, 246); // gray-100
-      doc.rect(COL1, y - 14, W - 80, 22, "F");
+    const section = (title) => {
+      doc.setFillColor(243, 244, 246);
+      doc.rect(left, y - 16, width - 80, 24, "F");
       doc.setFont("helvetica", "bold");
       doc.setFontSize(11);
-      doc.setTextColor(14, 62, 99);
-      doc.text(title, COL1 + 8, y + 2);
-      y += 28;
+      doc.setTextColor(31, 41, 55);
+      doc.text(title, left + 10, y);
+      y += 30;
     };
 
-    const row = (label, value, highlight = false) => {
+    const row = (label, value, emphasis = false) => {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
-      doc.setTextColor(100, 116, 139); // slate-500
-      doc.text(label, COL1, y);
-      doc.setFont("helvetica", highlight ? "bold" : "normal");
-      if (highlight) {
-        doc.setTextColor(249, 115, 22); // orange-500
-      } else {
-        doc.setTextColor(30, 41, 59); // slate-800
-      }
-      doc.text(String(value ?? "—"), COL2, y);
-      // light separator
-      doc.setDrawColor(226, 232, 240);
-      doc.line(COL1, y + 6, W - 40, y + 6);
-      y += LINE_H;
+      doc.setTextColor(107, 114, 128);
+      doc.text(label, left, y);
+
+      doc.setFont("helvetica", emphasis ? "bold" : "normal");
+      doc.setTextColor(emphasis ? 249 : 31, emphasis ? 115 : 41, emphasis ? 22 : 55);
+      doc.text(String(value || "-"), right, y);
+
+      doc.setDrawColor(229, 231, 235);
+      doc.line(left, y + 6, width - 40, y + 6);
+      y += 24;
     };
 
-    // ── Route Details ──
-    sectionTitle("Route Details");
-    row("Route Name", routeObj?.routeName);
+    section("Trip");
+    row("Route", routeObj?.routeName);
     row("From", routeObj?.startLocation);
     row("To", routeObj?.endLocation);
-    if (routeObj?.startTime) row("Departure Time", routeObj.startTime);
+    row("Boarding stop", booking.boardingStop?.stopName || "Main route boarding");
+    row("Travel period", `${formatDate(booking.travelStartDate)} to ${formatDate(booking.travelEndDate)}`);
 
-    y += 8;
-    // ── Travel Dates ──
-    sectionTitle("Travel Dates");
-    row(
-      "Start Date",
-      new Date(booking.travelStartDate).toLocaleDateString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-    );
-    row(
-      "End Date",
-      new Date(booking.travelEndDate).toLocaleDateString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-    );
-    row(
-      "Duration",
-      `${booking.totalDays} day${booking.totalDays > 1 ? "s" : ""}`,
-    );
-
-    y += 8;
-    // ── Passenger Details ──
-    sectionTitle("Passenger Details");
-    row("Full Name", booking.passengerName);
+    y += 10;
+    section("Passenger");
+    row("Name", booking.passengerName);
     row("Mobile", booking.mobileNumber);
-    if (booking.email) row("Email", booking.email);
-    if (booking.studentId) row("Student ID", booking.studentId);
-    row("Booking Type", booking.isRegistered ? "Registered User" : "Guest");
+    row("Email", booking.email || "Not provided");
+    row("Student ID", booking.studentId || "Not provided");
 
-    y += 8;
-    // ── Payment ──
-    sectionTitle("Payment");
-    const methodLabel =
-      booking.paymentMethod === "card"
-        ? "Card Payment (Mock)"
-        : "Cash on Board";
-    row("Method", methodLabel);
-    row("Status", booking.paymentStatus === "paid" ? "Paid" : "Pay on Board");
-    if (booking.paymentReference) row("Reference", booking.paymentReference);
-    if (booking.pricePerDay > 0) {
-      row("Price per Day", `LKR ${booking.pricePerDay.toFixed(2)}`);
-      row("Total Amount", `LKR ${booking.totalAmount.toFixed(2)}`, true);
-    }
+    y += 10;
+    section("Payment");
+    row("Method", "Card payment");
+    row("Status", booking.paymentStatus);
+    row("Days", `${booking.totalDays} day${booking.totalDays > 1 ? "s" : ""}`);
+    row("Price per day", `LKR ${booking.pricePerDay?.toFixed(2) || "0.00"}`);
+    row("Total", `LKR ${booking.totalAmount?.toFixed(2) || "0.00"}`, true);
 
-    y += 8;
-    // ── Booking Status ──
-    sectionTitle("Booking Status");
-    row("Status", booking.status?.toUpperCase() ?? "CONFIRMED");
-
-    // ── Footer ──
-    const pageH = doc.internal.pageSize.getHeight();
-    doc.setFillColor(14, 62, 99);
-    doc.rect(0, pageH - 46, W, 46, "F");
-    doc.setFontSize(9);
+    doc.setFillColor(17, 24, 39);
+    doc.rect(0, height - 48, width, 48, "F");
     doc.setFont("helvetica", "normal");
-    doc.setTextColor(148, 163, 184); // slate-400
-    doc.text(
-      "SLIIT-UniRide · Faculty of Computing, SLIIT Malabe",
-      W / 2,
-      pageH - 26,
-      { align: "center" },
-    );
-    doc.text(
-      "This is a computer-generated document. No signature required.",
-      W / 2,
-      pageH - 12,
-      { align: "center" },
-    );
+    doc.setFontSize(9);
+    doc.setTextColor(209, 213, 219);
+    doc.text("This is a system generated booking receipt.", width / 2, height - 20, {
+      align: "center",
+    });
 
     doc.save(`UniRide_Booking_${refId}.pdf`);
   };
 
-  // ── Success screen ──────────────────────────────────────────────────────────
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      const payload = {
+        passengerName: form.passengerName.trim(),
+        mobileNumber: form.mobileNumber.trim(),
+        isRegistered: Boolean(loggedInUser),
+        route: form.selectedRoute,
+        travelStartDate: form.travelStartDate,
+        travelEndDate: form.travelEndDate,
+        bookingBasis,
+        ...(form.boardingStop ? { boardingStop: form.boardingStop } : {}),
+        ...(form.email.trim() ? { email: form.email.trim() } : {}),
+        ...(form.studentId.trim() ? { studentId: form.studentId.trim() } : {}),
+        paymentMethod: payment.method,
+        paymentStatus: "paid",
+        paymentReference: `CARD-${Date.now()
+          .toString(36)
+          .toUpperCase()}`,
+      };
+
+      const response = await axios.post(`${API}/bookings`, payload);
+
+      setSuccess({
+        booking: response.data,
+        routeObj: selectedRouteObj,
+      });
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Booking failed. Please try again.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (success) {
     const { booking, routeObj } = success;
     const refId = booking._id?.slice(-8).toUpperCase();
+
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0A2233] via-[#123B57] to-[#16476A] flex items-center justify-center px-4 py-16 text-white">
-        <div className="w-full max-w-lg rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 p-10 shadow-2xl text-center">
-          <div className="text-5xl mb-4">🎉</div>
-          <h2 className="text-2xl font-extrabold text-white mb-1">
-            Booking Confirmed!
-          </h2>
-          <p className="text-sm text-slate-300 mb-6">
-            Your seat has been reserved.
-          </p>
+      <div className="min-h-screen bg-slate-100 px-4 py-10 text-slate-900">
+        <div className="mx-auto max-w-4xl">
+          <div className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-xl">
+            <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
+              <div className="relative min-h-[320px]">
+                <img
+                  src={heroBusImage}
+                  alt="Bus ready for booking"
+                  className="h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/35 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
+                  <p className="text-sm uppercase tracking-[0.35em] text-orange-300">
+                    Booking Confirmed
+                  </p>
+                  <h1 className="mt-3 text-3xl font-semibold leading-tight">
+                    Your ride is reserved and ready.
+                  </h1>
+                  <p className="mt-3 max-w-md text-sm text-slate-200">
+                    Keep this reference for boarding and download the receipt if
+                    you need a copy.
+                  </p>
+                </div>
+              </div>
 
-          <div className="rounded-2xl bg-black/20 border border-white/10 p-5 text-left text-sm space-y-3">
-            <p>
-              <span className="font-semibold text-orange-400">
-                Reference&nbsp;ID:
-              </span>{" "}
-              <span className="font-mono font-bold text-white">{refId}</span>
-            </p>
-            <p>
-              <span className="font-semibold text-orange-400">Route:</span>{" "}
-              <span className="text-slate-300">{routeObj?.routeName}</span>
-            </p>
-            <p>
-              <span className="font-semibold text-orange-400">From → To:</span>{" "}
-              <span className="text-slate-300">
-                {routeObj?.startLocation} → {routeObj?.endLocation}
-              </span>
-            </p>
-            <p>
-              <span className="font-semibold text-orange-400">
-                Travel Period:
-              </span>{" "}
-              <span className="text-slate-300">
-                {new Date(booking.travelStartDate).toLocaleDateString()} →{" "}
-                {new Date(booking.travelEndDate).toLocaleDateString()}
-              </span>
-            </p>
-            <p>
-              <span className="font-semibold text-orange-400">Days:</span>{" "}
-              <span className="text-slate-300">
-                {booking.totalDays} day{booking.totalDays > 1 ? "s" : ""}
-              </span>
-            </p>
-            {booking.pricePerDay > 0 && (
-              <p>
-                <span className="font-semibold text-orange-400">
-                  Total Fare:
-                </span>{" "}
-                <span className="text-white font-bold">
-                  LKR {booking.totalAmount?.toFixed(2)}
-                </span>
-                <span className="text-slate-400 text-xs ml-1">
-                  (LKR {booking.pricePerDay?.toFixed(2)} × {booking.totalDays}{" "}
-                  day{booking.totalDays > 1 ? "s" : ""})
-                </span>
-              </p>
-            )}
-            <p>
-              <span className="font-semibold text-orange-400">Passenger:</span>{" "}
-              <span className="text-slate-300">{booking.passengerName}</span>
-            </p>
-            <p>
-              <span className="font-semibold text-orange-400">Mobile:</span>{" "}
-              <span className="text-slate-300">{booking.mobileNumber}</span>
-            </p>
-            <p>
-              <span className="font-semibold text-orange-400">Status:</span>{" "}
-              <span className="inline-block px-2 py-0.5 rounded-full bg-emerald-400/10 text-emerald-400 text-xs font-semibold capitalize border border-emerald-400/30">
-                {booking.status}
-              </span>
-            </p>
-            <p>
-              <span className="font-semibold text-orange-400">Payment:</span>{" "}
-              <span className="text-slate-300 capitalize">
-                {booking.paymentMethod === "card"
-                  ? "Card (Mock)"
-                  : booking.paymentMethod === "wallet"
-                    ? "Digital Wallet (Mock)"
-                    : "Cash on Board"}
-              </span>
-              {booking.paymentStatus && (
-                <span
-                  className={`ml-2 inline-block px-2 py-0.5 rounded-full text-xs font-semibold border ${
-                    booking.paymentStatus === "paid"
-                      ? "bg-emerald-400/10 text-emerald-400 border-emerald-400/30"
-                      : "bg-yellow-400/10 text-yellow-400 border-yellow-400/30"
-                  }`}
-                >
-                  {booking.paymentStatus === "paid" ? "Paid" : "Pay on Board"}
-                </span>
-              )}
-            </p>
-            {booking.paymentReference && (
-              <p>
-                <span className="font-semibold text-orange-400">
-                  Payment Ref:
-                </span>{" "}
-                <span className="font-mono text-xs text-slate-400">
-                  {booking.paymentReference}
-                </span>
-              </p>
-            )}
-          </div>
+              <div className="p-8">
+                <div className="rounded-3xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                  Confirmation ID: <span className="font-semibold">{refId}</span>
+                </div>
 
-          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-            <button
-              onClick={downloadPDF}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-white/10 border border-white/20 text-white font-bold rounded-xl hover:bg-white/20 transition-colors active:scale-95"
-            >
-              <span>📄</span> Download PDF
-            </button>
-            <button
-              onClick={resetForm}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/20 active:scale-95"
-            >
-              <span>🚌</span> Book Another Ride
-            </button>
+                <div className="mt-6 space-y-4 text-sm">
+                  <div className="rounded-2xl bg-slate-50 p-4">
+                    <p className="text-slate-500">Route</p>
+                    <p className="mt-1 text-base font-semibold text-slate-900">
+                      {routeObj?.routeName || "Selected route"}
+                    </p>
+                    <p className="mt-1 text-slate-600">
+                      {routeObj?.startLocation} to {routeObj?.endLocation}
+                    </p>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="rounded-2xl bg-slate-50 p-4">
+                      <p className="text-slate-500">Travel dates</p>
+                      <p className="mt-1 font-semibold text-slate-900">
+                        {formatDate(booking.travelStartDate)}
+                      </p>
+                      <p className="text-slate-600">
+                        to {formatDate(booking.travelEndDate)}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl bg-slate-50 p-4">
+                      <p className="text-slate-500">Payment</p>
+                      <p className="mt-1 font-semibold capitalize text-slate-900">
+                        {booking.paymentMethod}
+                      </p>
+                      <p className="text-slate-600 capitalize">
+                        {booking.paymentStatus}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-50 p-4">
+                    <p className="text-slate-500">Passenger</p>
+                    <p className="mt-1 font-semibold text-slate-900">
+                      {booking.passengerName}
+                    </p>
+                    <p className="text-slate-600">{booking.mobileNumber}</p>
+                  </div>
+
+                  <div className="rounded-2xl bg-orange-50 p-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-slate-500">Total fare</p>
+                        <p className="mt-1 text-2xl font-semibold text-slate-900">
+                          LKR {booking.totalAmount?.toFixed(2)}
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600">
+                        {booking.totalDays} day{booking.totalDays > 1 ? "s" : ""}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={downloadPDF}
+                    className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
+                  >
+                    Download receipt
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    className="inline-flex items-center justify-center rounded-2xl border border-slate-300 px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Book another ride
+                  </button>
+                  <Link
+                    to="/myrides"
+                    className="inline-flex items-center justify-center rounded-2xl border border-orange-300 bg-orange-50 px-5 py-3 text-sm font-medium text-orange-700 transition hover:bg-orange-100"
+                  >
+                    View my rides
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  const today = new Date().toISOString().split("T")[0];
-  const showTripDetails = !!form.selectedRoute;
-  const showPassengerForm = !!(
-    form.selectedRoute &&
-    form.travelStartDate &&
-    form.travelEndDate
-  );
-  const showPriceSummary =
-    showPassengerForm &&
-    !!(form.passengerName.trim() && form.mobileNumber.trim());
+  if (!loggedInUserId) {
+    return (
+      <div className="min-h-screen bg-slate-100">
+        <section className="relative overflow-hidden bg-slate-950 text-white">
+          <div className="absolute inset-0">
+            <img
+              src={heroBusImage}
+              alt="Bus booking cover"
+              className="h-full w-full object-cover opacity-35"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-slate-900/70" />
+          </div>
 
-  const passengerDetailsFilled = showPriceSummary;
-  const showPaymentSection = showPriceSummary;
+          <div className="relative mx-auto flex min-h-[calc(100vh-80px)] max-w-5xl items-center px-4 py-12 sm:px-6 lg:px-8">
+            <div className="grid w-full gap-8 rounded-[32px] border border-white/10 bg-white/10 p-6 shadow-2xl backdrop-blur-xl lg:grid-cols-[1.15fr_0.85fr] lg:p-8">
+              <div>
+                <p className="text-sm uppercase tracking-[0.35em] text-orange-300">
+                  Login Required
+                </p>
+                <h1 className="mt-4 text-4xl font-semibold leading-tight sm:text-5xl">
+                  Sign in before booking your ride.
+                </h1>
+                <p className="mt-4 max-w-2xl text-base leading-8 text-slate-200 sm:text-lg">
+                  Guest users can still view schedules, drivers, and notifications,
+                  but booking a shuttle is available only for logged-in UniRide users.
+                </p>
 
-  const cardValid =
-    payment.method === "card" &&
-    payment.cardNumber.replace(/\s/g, "").length === 16 &&
-    payment.cardName.trim().length >= 2 &&
-    /^\d{2}\/\d{2}$/.test(payment.cardExpiry) &&
-    payment.cardCvv.length >= 3;
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <Link
+                    to="/login"
+                    state={{
+                      from: "/book",
+                      selectedRoute: location.state?.selectedRoute || null,
+                    }}
+                    className="inline-flex items-center justify-center rounded-2xl bg-orange-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+                  >
+                    Login to Book Ride
+                  </Link>
+                  <Link
+                    to="/schedules"
+                    className="inline-flex items-center justify-center rounded-2xl border border-white/20 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                  >
+                    View Schedules
+                  </Link>
+                </div>
+              </div>
 
-  const paymentComplete =
-    payment.method === "cash" ||
-    (payment.method === "card" && payment.cardProcessed);
+              <div className="rounded-[28px] border border-white/10 bg-slate-950/40 p-6">
+                <p className="text-sm uppercase tracking-[0.3em] text-orange-300">
+                  Guest Access
+                </p>
+                <div className="mt-6 space-y-4">
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <p className="text-base font-semibold text-white">You can view</p>
+                    <p className="mt-2 text-sm leading-7 text-slate-300">
+                      Schedules, drivers, and public trip notifications without signing in.
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <p className="text-base font-semibold text-white">You need login for</p>
+                    <p className="mt-2 text-sm leading-7 text-slate-300">
+                      Booking rides, saving payment history, and connecting rides to your
+                      personal profile.
+                    </p>
+                  </div>
+                  {location.state?.selectedRoute && (
+                    <div className="rounded-2xl border border-orange-400/20 bg-orange-500/10 p-4">
+                      <p className="text-sm font-semibold text-orange-200">
+                        Selected route
+                      </p>
+                      <p className="mt-2 text-base font-semibold text-white">
+                        {location.state.selectedRoute.routeName ||
+                          `${location.state.selectedRoute.startLocation} to ${location.state.selectedRoute.endLocation}`}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-300">
+                        After login, you can continue booking this route.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
-  // ── Booking form ────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0A2233] via-[#123B57] to-[#16476A] text-white">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 py-10 lg:py-14">
-        <div
-          className={`flex gap-8 items-start ${loggedInUser ? "flex-col lg:flex-row" : ""}`}
-        >
-          <div
-            className={
-              loggedInUser ? "flex-1 min-w-0" : "w-full max-w-2xl mx-auto"
-            }
-          >
-            <p className="text-sm uppercase tracking-[0.2em] text-orange-400 font-bold mb-2">
-              SLIIT-UniRide
+    <div className="min-h-screen bg-slate-100">
+      <section className="relative overflow-hidden bg-slate-950 text-white">
+        <div className="absolute inset-0">
+          <img
+            src={heroBusImage}
+            alt="Bus booking cover"
+            className="h-full w-full object-cover opacity-40"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/85 to-slate-900/50" />
+        </div>
+
+        <div className="relative mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8 lg:py-16">
+          <div className="max-w-2xl">
+            <p className="text-sm uppercase tracking-[0.35em] text-orange-300">
+              UniRide Booking
             </p>
-            <h1 className="text-3xl font-extrabold text-white mb-1">
-              Book a Shuttle Ride
+            <h1 className="mt-4 text-4xl font-semibold leading-tight sm:text-5xl">
+              Book your campus shuttle in a clean, familiar flow.
             </h1>
-            <p className="text-slate-300 mb-8">
-              Reserve your seat on an upcoming SLIIT-UniRide shuttle.
+            <p className="mt-4 max-w-xl text-base text-slate-200 sm:text-lg">
+              Select your route, choose dates, confirm passenger details, and
+              complete the booking in one place.
             </p>
 
+            <div className="mt-8 grid gap-4 sm:grid-cols-3">
+              <div className="rounded-3xl border border-white/10 bg-white/10 p-4 backdrop-blur-sm">
+                <p className="text-sm text-slate-300">Active routes</p>
+                <p className="mt-2 text-3xl font-semibold">{routes.length}</p>
+              </div>
+              <div className="rounded-3xl border border-white/10 bg-white/10 p-4 backdrop-blur-sm">
+                <p className="text-sm text-slate-300">Booking basis</p>
+                <p className="mt-2 text-3xl font-semibold capitalize">
+                  {bookingBasis}
+                </p>
+              </div>
+              <div className="rounded-3xl border border-white/10 bg-white/10 p-4 backdrop-blur-sm">
+                <p className="text-sm text-slate-300">Current total</p>
+                <p className="mt-2 text-3xl font-semibold">
+                  LKR {totalAmount.toFixed(0)}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="self-end rounded-[28px] border border-white/10 bg-white/10 p-6 backdrop-blur-md">
+            <p className="text-sm uppercase tracking-[0.35em] text-orange-300">
+              Quick Summary
+            </p>
+            <div className="mt-5 space-y-4 text-sm text-slate-200">
+              <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-4">
+                <span className="text-slate-400">Route</span>
+                <span className="text-right font-medium text-white">
+                  {selectedRouteObj?.routeName || "Choose a route"}
+                </span>
+              </div>
+              <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-4">
+                <span className="text-slate-400">Travel period</span>
+                <span className="text-right font-medium text-white">
+                  {form.travelStartDate
+                    ? `${formatDate(form.travelStartDate)} to ${formatDate(
+                        form.travelEndDate,
+                      )}`
+                    : "Select dates"}
+                </span>
+              </div>
+              <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-4">
+                <span className="text-slate-400">Boarding stop</span>
+                <span className="text-right font-medium text-white">
+                  {stops.find((stop) => stop._id === form.boardingStop)?.stopName ||
+                    "Optional"}
+                </span>
+              </div>
+              <div className="flex items-start justify-between gap-4">
+                <span className="text-slate-400">Payment status</span>
+                <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white">
+                  {payment.method
+                    ? paymentComplete
+                      ? "Ready to confirm"
+                      : "Complete payment details"
+                    : "Choose payment method"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
-              <div className="mb-5 rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-3 text-red-400 text-sm">
+              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {error}
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* ── Section 1: Route ─────────────────────────────────────────────── */}
-              <div className="rounded-3xl bg-white/10 backdrop-blur-md shadow-2xl border border-white/20 p-6">
-                <h2 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-orange-500 text-white text-xs font-bold">
-                    1
-                  </span>
-                  Select Route
-                </h2>
+            <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm uppercase tracking-[0.3em] text-orange-500">
+                    Step 1
+                  </p>
+                  <h2 className="mt-1 text-2xl font-semibold text-slate-900">
+                    Trip details
+                  </h2>
+                </div>
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
+                  Route, stop, and date selection
+                </span>
+              </div>
 
-                <label className="block text-sm font-medium text-slate-300 mb-1">
-                  Active Route <span className="text-red-400">*</span>
-                </label>
-                {routesLoading ? (
-                  <p className="text-sm text-slate-400">Loading routes…</p>
-                ) : (
+              <div className="mt-6 grid gap-5 md:grid-cols-2">
+                <div className="md:col-span-2">
+                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                    Select route
+                  </label>
                   <select
                     name="selectedRoute"
                     value={form.selectedRoute}
                     onChange={handleChange}
                     required
-                    className="w-full rounded-xl border border-white/20 px-3 py-2 text-sm bg-[#0A2233] text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    disabled={routesLoading}
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100 disabled:bg-slate-100"
                   >
-                    <option value="">-- Select a route --</option>
-                    {routes.map((r) => (
-                      <option key={r._id} value={r._id}>
-                        {r.routeName} &nbsp;({r.startLocation} → {r.endLocation}
-                        )
+                    <option value="">
+                      {routesLoading ? "Loading routes..." : "Choose a route"}
+                    </option>
+                    {routes.map((route) => (
+                      <option key={route._id} value={route._id}>
+                        {route.routeName} - {route.startLocation} to{" "}
+                        {route.endLocation}
                       </option>
                     ))}
                   </select>
-                )}
+                </div>
 
-                {selectedRouteObj && (
-                  <div className="mt-4 rounded-2xl bg-black/20 border border-white/10 p-4 text-sm text-slate-300 space-y-1">
-                    <p>
-                      <span className="font-medium text-orange-400">
-                        Departure:
-                      </span>{" "}
-                      {selectedRouteObj.startTime}
-                    </p>
-                    <p>
-                      <span className="font-medium text-orange-400">
-                        Available Seats:
-                      </span>{" "}
-                      {selectedRouteObj.seatCapacity}
-                    </p>
-                    <p>
-                      <span className="font-medium text-orange-400">
-                        Schedule:
-                      </span>{" "}
-                      {selectedRouteObj.recurrence === "none"
-                        ? "One-time"
-                        : selectedRouteObj.recurrence === "daily"
-                          ? "Daily"
-                          : `Weekly (${selectedRouteObj.days?.join(", ")})`}
-                    </p>
-                  </div>
-                )}
-              </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                    Boarding stop
+                  </label>
+                  <select
+                    name="boardingStop"
+                    value={form.boardingStop}
+                    onChange={handleChange}
+                    disabled={!stops.length}
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100 disabled:bg-slate-100"
+                  >
+                    <option value="">Choose a stop</option>
+                    {stops.map((stop) => (
+                      <option key={stop._id} value={stop._id}>
+                        {stop.stopName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              {/* ── Section 2: Trip Details ──────────────────────────────────────── */}
-              {showTripDetails && (
-                <div className="rounded-3xl bg-white/10 backdrop-blur-md shadow-2xl border border-white/20 p-6">
-                  <h2 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
-                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-orange-500 text-white text-xs font-bold">
-                      2
-                    </span>
-                    Trip Details
-                  </h2>
-
-                  {stops.length > 0 && (
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-slate-300 mb-1">
-                        Boarding Stop{" "}
-                        <span className="text-slate-400">(optional)</span>
-                      </label>
-                      <select
-                        name="boardingStop"
-                        value={form.boardingStop}
-                        onChange={handleChange}
-                        className="w-full rounded-xl border border-white/20 px-3 py-2 text-sm bg-[#0A2233] text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                    Booking type
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {["daily", "monthly"].map((basis) => (
+                      <button
+                        key={basis}
+                        type="button"
+                        onClick={() => handleBookingBasisChange(basis)}
+                        className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${
+                          bookingBasis === basis
+                            ? "border-orange-400 bg-orange-50 text-orange-700"
+                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                        }`}
                       >
-                        <option value="">
-                          -- Select your boarding stop --
-                        </option>
-                        {stops.map((s) => (
-                          <option key={s._id} value={s._id}>
-                            {s.order}. {s.stopName}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
+                        {basis === "daily" ? "Daily pass" : "Monthly pass"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {bookingBasis === "daily" ? (
+                  <>
                     <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-1">
-                        Start Date <span className="text-red-400">*</span>
+                      <label className="mb-2 block text-sm font-medium text-slate-700">
+                        Start date
                       </label>
                       <input
                         type="date"
                         name="travelStartDate"
                         value={form.travelStartDate}
                         onChange={handleChange}
+                        min={new Date().toISOString().split("T")[0]}
                         required
-                        min={today}
-                        className="w-full rounded-xl border border-white/20 bg-[#0A2233] text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
                       />
                     </div>
+
                     <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-1">
-                        End Date <span className="text-red-400">*</span>
+                      <label className="mb-2 block text-sm font-medium text-slate-700">
+                        End date
                       </label>
                       <input
                         type="date"
                         name="travelEndDate"
                         value={form.travelEndDate}
                         onChange={handleChange}
+                        min={form.travelStartDate || new Date().toISOString().split("T")[0]}
                         required
-                        min={form.travelStartDate || today}
-                        disabled={!form.travelStartDate}
-                        className="w-full rounded-xl border border-white/20 bg-[#0A2233] text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
                       />
                     </div>
+                  </>
+                ) : (
+                  <div className="md:col-span-2">
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Select month
+                    </label>
+                    <select
+                      value={selectedMonth}
+                      onChange={handleMonthChange}
+                      required
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                    >
+                      <option value="">Choose the travel month</option>
+                      {monthOptions.map((month) => (
+                        <option key={month.value} value={month.value}>
+                          {month.label}
+                        </option>
+                      ))}
+                    </select>
+                    {form.travelStartDate && (
+                      <p className="mt-2 text-xs text-slate-500">
+                        Travel window: {formatDate(form.travelStartDate)} to{" "}
+                        {formatDate(form.travelEndDate)}
+                      </p>
+                    )}
                   </div>
+                )}
+              </div>
+            </section>
 
-                  {totalDays > 0 && (
-                    <p className="mt-2 text-xs text-orange-300 font-medium">
-                      📅 {totalDays} day{totalDays > 1 ? "s" : ""} selected
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {/* ── Section 3: Passenger Info ────────────────────────────────────── */}
-              {showPassengerForm && (
-                <div className="rounded-3xl bg-white/10 backdrop-blur-md shadow-2xl border border-white/20 p-6">
-                  <h2 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
-                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-orange-500 text-white text-xs font-bold">
-                      3
-                    </span>
-                    Passenger Details
+            <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm uppercase tracking-[0.3em] text-orange-500">
+                    Step 2
+                  </p>
+                  <h2 className="mt-1 text-2xl font-semibold text-slate-900">
+                    Passenger details
                   </h2>
+                </div>
+                {loggedInUser && (
+                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                    Auto-filled from your profile
+                  </span>
+                )}
+              </div>
 
-                  {/* ── Logged-in user banner ─────────────────────────────────── */}
-                  {loggedInUser ? (
-                    <div className="flex items-center gap-3 p-3 mb-5 rounded-xl bg-orange-500/10 border border-orange-500/30">
-                      <div className="flex-shrink-0 w-9 h-9 rounded-full bg-orange-500/20 border border-orange-500/40 text-orange-400 flex items-center justify-center text-sm font-bold">
-                        {loggedInUser.name.slice(0, 1).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-white">
-                          {loggedInUser.name}
-                        </p>
-                        <p className="text-xs text-orange-400">
-                          Logged in · {loggedInUser.role}
-                        </p>
-                      </div>
-                      <span className="ml-auto inline-block px-2 py-0.5 rounded-full bg-emerald-400/10 text-emerald-400 text-xs font-semibold border border-emerald-400/30">
-                        ✓ Registered
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 p-3 mb-5 rounded-xl bg-white/5 border border-white/10 text-slate-300 text-sm">
-                      <span className="text-base">👤</span>
-                      <span>
-                        Booking as{" "}
-                        <span className="font-semibold text-orange-400">
-                          guest
-                        </span>{" "}
-                        — enter your details below. Your mobile number will be
-                        used to track your rides.
-                      </span>
-                    </div>
-                  )}
+              <div className="mt-6 grid gap-5 md:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                    Full name
+                  </label>
+                  <input
+                    type="text"
+                    name="passengerName"
+                    value={form.passengerName}
+                    onChange={handleChange}
+                    required
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                  />
+                </div>
 
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-1">
-                        Full Name <span className="text-red-400">*</span>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                    Mobile number
+                  </label>
+                  <input
+                    type="tel"
+                    name="mobileNumber"
+                    value={form.mobileNumber}
+                    onChange={handleChange}
+                    required
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                    Email address
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    disabled={Boolean(loggedInUser)}
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100 disabled:bg-slate-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                    Student ID
+                  </label>
+                  <input
+                    type="text"
+                    name="studentId"
+                    value={form.studentId}
+                    onChange={handleChange}
+                    placeholder="Optional"
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                  />
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm uppercase tracking-[0.3em] text-orange-500">
+                    Step 3
+                  </p>
+                  <h2 className="mt-1 text-2xl font-semibold text-slate-900">
+                    Payment method
+                  </h2>
+                </div>
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
+                  Demo payment flow
+                </span>
+              </div>
+
+              <div className="mt-6">
+                <button
+                  type="button"
+                  onClick={() => handlePaymentMethodChange("card")}
+                  className={`rounded-[24px] border p-5 text-left transition ${
+                    payment.method === "card"
+                      ? "border-orange-400 bg-orange-50"
+                      : "border-slate-200 bg-white hover:bg-slate-50"
+                  }`}
+                >
+                  <p className="text-sm font-semibold text-slate-900">
+                    Card payment
+                  </p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Confirm card details now and complete instantly.
+                  </p>
+                </button>
+              </div>
+
+              {payment.method === "card" && (
+                <div className="mt-6 rounded-[24px] border border-slate-200 bg-slate-50 p-5">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="md:col-span-2">
+                      <div className="rounded-[24px] bg-slate-900 p-5 text-white">
+                        <p className="text-xs uppercase tracking-[0.35em] text-orange-300">
+                          UniRide Card
+                        </p>
+                        <p className="mt-6 font-mono text-xl tracking-[0.35em]">
+                          {payment.cardNumber || "0000 0000 0000 0000"}
+                        </p>
+                        <div className="mt-6 flex items-end justify-between">
+                          <div>
+                            <p className="text-xs text-slate-400">Cardholder</p>
+                            <p className="mt-1 text-sm font-medium">
+                              {payment.cardName || "YOUR NAME"}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs text-slate-400">Expiry</p>
+                            <p className="mt-1 text-sm font-medium">
+                              {payment.cardExpiry || "MM/YY"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="mb-2 block text-sm font-medium text-slate-700">
+                        Card number
                       </label>
                       <input
                         type="text"
-                        name="passengerName"
-                        value={form.passengerName}
-                        onChange={handleChange}
-                        required
-                        readOnly={!!loggedInUser}
-                        placeholder="Enter your full name"
-                        className={`w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-                          loggedInUser
-                            ? "border-white/10 bg-black/20 text-slate-400 cursor-not-allowed"
-                            : "border-white/20 bg-[#0A2233] text-white"
-                        }`}
+                        value={payment.cardNumber}
+                        onChange={handleCardNumber}
+                        maxLength={19}
+                        placeholder="1234 5678 9012 3456"
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="mb-2 block text-sm font-medium text-slate-700">
+                        Cardholder name
+                      </label>
+                      <input
+                        type="text"
+                        value={payment.cardName}
+                        onChange={(event) =>
+                          setPayment((prev) => ({
+                            ...prev,
+                            cardName: event.target.value.toUpperCase(),
+                          }))
+                        }
+                        placeholder="NAME SURNAME"
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm uppercase text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-1">
-                        Mobile Number <span className="text-red-400">*</span>
+                      <label className="mb-2 block text-sm font-medium text-slate-700">
+                        Expiry
                       </label>
                       <input
-                        type="tel"
-                        name="mobileNumber"
-                        value={form.mobileNumber}
-                        onChange={handleChange}
-                        required
-                        readOnly={!!loggedInUser}
-                        placeholder="e.g. 0771234567"
-                        pattern="[0-9+\-\s]{7,15}"
-                        title="Enter a valid mobile number (7–15 digits)"
-                        className={`w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-                          loggedInUser
-                            ? "border-white/10 bg-black/20 text-slate-400 cursor-not-allowed"
-                            : "border-white/20 bg-[#0A2233] text-white"
-                        }`}
+                        type="text"
+                        value={payment.cardExpiry}
+                        onChange={handleCardExpiry}
+                        maxLength={5}
+                        placeholder="MM/YY"
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-1">
-                        Email <span className="text-slate-400">(optional)</span>
+                      <label className="mb-2 block text-sm font-medium text-slate-700">
+                        CVV
                       </label>
                       <input
-                        type="email"
-                        name="email"
-                        value={form.email}
-                        onChange={handleChange}
-                        readOnly={!!loggedInUser}
-                        placeholder="student@sliit.lk"
-                        className={`w-full rounded-xl border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-                          loggedInUser
-                            ? "border-white/10 bg-black/20 text-slate-400 cursor-not-allowed"
-                            : "border-white/20 bg-[#0A2233] text-white"
-                        }`}
+                        type="password"
+                        value={payment.cardCvv}
+                        onChange={(event) =>
+                          setPayment((prev) => ({
+                            ...prev,
+                            cardCvv: event.target.value.replace(/\D/g, "").slice(0, 4),
+                          }))
+                        }
+                        maxLength={4}
+                        placeholder="123"
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
                       />
                     </div>
-
-                    {/* Student ID — only shown for registered users */}
-                    {loggedInUser && (
-                      <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">
-                          Student ID{" "}
-                          <span className="text-slate-400">(optional)</span>
-                        </label>
-                        <input
-                          type="text"
-                          name="studentId"
-                          value={form.studentId}
-                          onChange={handleChange}
-                          placeholder="e.g. IT22000000"
-                          className="w-full rounded-xl border border-white/20 bg-[#0A2233] text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* ── Section 4: Price Summary ───────────────────────────────────── */}
-              {showPriceSummary && (
-                <div className="rounded-3xl bg-white/10 backdrop-blur-md shadow-2xl border border-white/20 p-6">
-                  <h2 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
-                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-orange-500 text-white text-xs font-bold">
-                      4
-                    </span>
-                    Price Summary
-                  </h2>
-
-                  <div className="rounded-2xl bg-black/20 border border-white/10 p-5 space-y-3 text-sm">
-                    <div className="flex justify-between text-slate-300">
-                      <span>Route</span>
-                      <span className="font-medium text-white">
-                        {selectedRouteObj?.routeName}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-slate-300">
-                      <span>Travel Period</span>
-                      <span className="font-medium text-white">
-                        {new Date(form.travelStartDate).toLocaleDateString()} →{" "}
-                        {new Date(form.travelEndDate).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-slate-300">
-                      <span>Number of Days</span>
-                      <span className="font-medium text-white">
-                        {totalDays} day{totalDays > 1 ? "s" : ""}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-slate-300">
-                      <span>Price per Day</span>
-                      <span className="font-medium text-white">
-                        {pricePerDay > 0 ? (
-                          `LKR ${pricePerDay.toFixed(2)}`
-                        ) : (
-                          <span className="text-slate-400 italic">Not set</span>
-                        )}
-                      </span>
-                    </div>
-
-                    <div className="border-t border-white/10 pt-3 flex justify-between items-center">
-                      <span className="font-semibold text-white text-base">
-                        Total Amount
-                      </span>
-                      <span className="text-xl font-extrabold text-orange-400">
-                        {pricePerDay > 0 ? (
-                          `LKR ${totalAmount.toFixed(2)}`
-                        ) : (
-                          <span className="text-slate-400 text-sm italic">
-                            — pricing N/A
-                          </span>
-                        )}
-                      </span>
-                    </div>
                   </div>
 
-                  {pricePerDay === 0 && (
-                    <p className="mt-3 text-xs text-yellow-400 flex items-center gap-1.5">
-                      <span>⚠</span> Price not configured for this route.
-                      Confirm fare with the driver.
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {/* ── Section 5: Payment Method ──────────────────────────────────── */}
-              {showPaymentSection && (
-                <div className="rounded-3xl bg-white/10 backdrop-blur-md shadow-2xl border border-white/20 p-6">
-                  <h2 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
-                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-orange-500 text-white text-xs font-bold">
-                      5
-                    </span>
-                    Payment Method
-                  </h2>
-
-                  {/* Method selector */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
-                    {[
-                      {
-                        key: "card",
-                        icon: "💳",
-                        label: "Card Payment",
-                        desc: "Visa / Mastercard",
-                      },
-                      {
-                        key: "cash",
-                        icon: "💵",
-                        label: "Cash on Board",
-                        desc: "Pay the driver",
-                      },
-                    ].map(({ key, icon, label, desc }) => (
+                  {!payment.cardProcessed ? (
+                    <button
+                      type="button"
+                      disabled={!cardValid}
+                      onClick={() =>
+                        setPayment((prev) => ({ ...prev, cardProcessed: true }))
+                      }
+                      className="mt-5 inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+                    >
+                      Confirm card details
+                    </button>
+                  ) : (
+                    <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 sm:flex-row sm:items-center sm:justify-between">
+                      <span>Card details confirmed. The booking is ready to submit.</span>
                       <button
-                        key={key}
                         type="button"
-                        onClick={() => handlePaymentMethodChange(key)}
-                        className={`flex flex-col items-center gap-1.5 rounded-2xl border p-4 text-center transition-all ${
-                          payment.method === key
-                            ? "border-orange-500 bg-orange-500/10 text-white ring-2 ring-orange-500/40"
-                            : "border-white/20 bg-white/5 text-slate-300 hover:border-orange-400/50 hover:bg-white/10"
-                        }`}
+                        onClick={() =>
+                          setPayment((prev) => ({ ...prev, cardProcessed: false }))
+                        }
+                        className="font-medium text-emerald-800 underline"
                       >
-                        <span className="text-2xl">{icon}</span>
-                        <span className="text-sm font-semibold">{label}</span>
-                        <span className="text-xs text-slate-400">{desc}</span>
+                        Edit card
                       </button>
-                    ))}
-                  </div>
-
-                  {/* ── Card Payment Form (mock) ── */}
-                  {payment.method === "card" && (
-                    <div className="rounded-2xl bg-black/20 border border-white/10 p-5 space-y-4">
-                      <div className="flex items-center gap-2">
-                        <span className="inline-block px-2 py-0.5 rounded-full bg-yellow-400/10 text-yellow-400 text-xs font-semibold border border-yellow-400/30">
-                          Demo Mode
-                        </span>
-                        <span className="text-xs text-slate-400">
-                          No real payment is processed — this is a simulation.
-                        </span>
-                      </div>
-
-                      {/* Mock card preview */}
-                      <div className="rounded-2xl bg-gradient-to-br from-orange-600 to-orange-900 p-4 text-white shadow-lg select-none">
-                        <p className="text-xs text-orange-200 mb-3 font-semibold tracking-widest">
-                          UNIRIDE CARD
-                        </p>
-                        <p className="font-mono text-base tracking-widest mb-3">
-                          {payment.cardNumber || "•••• •••• •••• ••••"}
-                        </p>
-                        <div className="flex justify-between text-xs text-orange-200">
-                          <span>{payment.cardName || "CARDHOLDER NAME"}</span>
-                          <span>{payment.cardExpiry || "MM/YY"}</span>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-medium text-slate-300 mb-1">
-                          Card Number
-                        </label>
-                        <input
-                          type="text"
-                          value={payment.cardNumber}
-                          onChange={handleCardNumber}
-                          placeholder="1234 5678 9012 3456"
-                          maxLength={19}
-                          className="w-full rounded-xl border border-white/20 bg-[#0A2233] text-white px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-medium text-slate-300 mb-1">
-                          Cardholder Name
-                        </label>
-                        <input
-                          type="text"
-                          value={payment.cardName}
-                          onChange={(e) =>
-                            setPayment((prev) => ({
-                              ...prev,
-                              cardName: e.target.value.toUpperCase(),
-                            }))
-                          }
-                          placeholder="JOHN DOE"
-                          className="w-full rounded-xl border border-white/20 bg-[#0A2233] text-white px-3 py-2 text-sm uppercase focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-xs font-medium text-slate-300 mb-1">
-                            Expiry (MM/YY)
-                          </label>
-                          <input
-                            type="text"
-                            value={payment.cardExpiry}
-                            onChange={handleCardExpiry}
-                            placeholder="MM/YY"
-                            maxLength={5}
-                            disabled={payment.cardProcessed}
-                            className="w-full rounded-xl border border-white/20 bg-[#0A2233] text-white px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-slate-300 mb-1">
-                            CVV
-                          </label>
-                          <input
-                            type="password"
-                            value={payment.cardCvv}
-                            onChange={(e) =>
-                              setPayment((prev) => ({
-                                ...prev,
-                                cardCvv: e.target.value
-                                  .replace(/\D/g, "")
-                                  .slice(0, 4),
-                              }))
-                            }
-                            placeholder="•••"
-                            maxLength={4}
-                            disabled={payment.cardProcessed}
-                            className="w-full rounded-xl border border-white/20 bg-[#0A2233] text-white px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-50"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Confirm Card button */}
-                      {!payment.cardProcessed ? (
-                        <button
-                          type="button"
-                          disabled={!cardValid}
-                          onClick={() =>
-                            setPayment((prev) => ({
-                              ...prev,
-                              cardProcessed: true,
-                            }))
-                          }
-                          className="w-full py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
-                        >
-                          💳 Confirm Card Details
-                        </button>
-                      ) : (
-                        <div className="flex items-center justify-between text-sm text-emerald-400 bg-emerald-400/10 border border-emerald-400/30 rounded-xl px-4 py-3">
-                          <span className="flex items-center gap-2">
-                            <span className="text-lg">✓</span>
-                            <div>
-                              <p className="font-semibold">
-                                Card Confirmed (Mock)
-                              </p>
-                              <p className="text-xs text-slate-400">
-                                Ready to complete booking.
-                              </p>
-                            </div>
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setPayment((prev) => ({
-                                ...prev,
-                                cardProcessed: false,
-                              }))
-                            }
-                            className="text-xs text-slate-400 hover:text-white underline"
-                          >
-                            Edit
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* ── Cash on Board Info ── */}
-                  {payment.method === "cash" && (
-                    <div className="rounded-2xl bg-black/20 border border-white/10 p-5 text-sm text-slate-300 space-y-2">
-                      <p className="flex items-center gap-2">
-                        <span className="text-green-400">✓</span>
-                        Your seat will be reserved. Please pay the driver cash
-                        when you board.
-                      </p>
-                      {pricePerDay > 0 ? (
-                        <p className="flex items-center gap-2">
-                          <span className="text-orange-400">💰</span>
-                          Amount due:{" "}
-                          <span className="text-white font-bold ml-1">
-                            LKR {totalAmount.toFixed(2)}
-                          </span>
-                          <span className="text-slate-400 text-xs">
-                            (LKR {pricePerDay.toFixed(2)} × {totalDays} day
-                            {totalDays > 1 ? "s" : ""})
-                          </span>
-                        </p>
-                      ) : (
-                        <p className="flex items-center gap-2">
-                          <span className="text-orange-400">ℹ</span>
-                          Have the exact fare ready. Confirm amount with the
-                          driver.
-                        </p>
-                      )}
                     </div>
                   )}
                 </div>
               )}
 
-              {/* ── Submit ───────────────────────────────────────────────────────── */}
-              {showPaymentSection && paymentComplete && (
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full py-3.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-bold rounded-xl transition-colors text-sm shadow-lg shadow-orange-500/20 active:scale-95"
-                >
-                  {submitting
-                    ? payment.method === "card"
-                      ? "Processing Payment…"
-                      : "Confirming Booking…"
-                    : payment.method === "cash"
-                      ? "Confirm & Reserve Seat"
-                      : "Confirm & Pay"}
-                </button>
-              )}
-            </form>
-          </div>
+            </section>
 
-          {/* ── Profile Side Panel ──────────────────────────────────────────────── */}
-          {loggedInUser && (
-            <div className="w-full lg:w-72 flex-shrink-0">
-              <div className="rounded-3xl bg-white/10 backdrop-blur-md shadow-2xl border border-white/20 p-6 sticky top-24">
-                <h3 className="text-sm font-bold text-orange-400 uppercase tracking-[0.2em] mb-4">
-                  Your Profile
-                </h3>
+            <div className="flex flex-col gap-4 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-500">
+                  Final check
+                </p>
+                <p className="mt-1 text-lg font-semibold text-slate-900">
+                  {canSubmit
+                    ? "Everything looks ready for confirmation."
+                    : "Complete the required details to continue."}
+                </p>
+              </div>
 
-                {/* Avatar + Name */}
-                <div className="flex items-center gap-4 mb-5">
-                  <div className="w-14 h-14 rounded-2xl bg-orange-500/20 border border-orange-500/30 text-orange-400 flex items-center justify-center text-xl font-bold flex-shrink-0">
-                    {loggedInUser.name?.slice(0, 1).toUpperCase()}
+              <button
+                type="submit"
+                disabled={!canSubmit || submitting}
+                className="inline-flex items-center justify-center rounded-2xl bg-orange-500 px-6 py-3 text-sm font-medium text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-300"
+              >
+                {submitting ? "Processing booking..." : "Confirm booking"}
+              </button>
+            </div>
+          </form>
+
+          <aside className="space-y-6">
+            <div className="sticky top-24 space-y-6">
+              <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+                <p className="text-sm uppercase tracking-[0.3em] text-orange-500">
+                  Fare summary
+                </p>
+
+                <div className="mt-5 space-y-4 text-sm">
+                  <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                    <span className="text-slate-500">Route</span>
+                    <span className="text-right font-medium text-slate-900">
+                      {selectedRouteObj?.routeName || "Not selected"}
+                    </span>
                   </div>
-                  <div>
-                    <p className="font-bold text-white text-base leading-tight">
-                      {loggedInUser.name}
-                    </p>
-                    <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 text-xs font-semibold capitalize border border-orange-500/30">
-                      {loggedInUser.role}
+                  <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                    <span className="text-slate-500">Schedule</span>
+                    <span className="text-right font-medium text-slate-900">
+                      {selectedRouteObj?.startTime || "Check route details"}
+                    </span>
+                  </div>
+                  <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                    <span className="text-slate-500">Travel period</span>
+                    <span className="text-right font-medium text-slate-900">
+                      {form.travelStartDate
+                        ? `${formatDate(form.travelStartDate)} to ${formatDate(
+                            form.travelEndDate,
+                          )}`
+                        : "Not selected"}
+                    </span>
+                  </div>
+                  <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                    <span className="text-slate-500">Duration</span>
+                    <span className="text-right font-medium text-slate-900">
+                      {totalDays ? `${totalDays} day${totalDays > 1 ? "s" : ""}` : "-"}
+                    </span>
+                  </div>
+                  <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                    <span className="text-slate-500">Price per day</span>
+                    <span className="text-right font-medium text-slate-900">
+                      LKR {pricePerDay.toFixed(2)}
                     </span>
                   </div>
                 </div>
 
-                {/* Details */}
-                <div className="space-y-3 text-sm text-slate-300 border-t border-white/10 pt-4">
-                  <div>
-                    <p className="text-xs text-slate-400 font-medium mb-0.5">
-                      Email
-                    </p>
-                    <p className="truncate">{loggedInUser.email}</p>
-                  </div>
-                  {loggedInUser.phoneNumber && (
-                    <div>
-                      <p className="text-xs text-slate-400 font-medium mb-0.5">
-                        Mobile
-                      </p>
-                      <p>{loggedInUser.phoneNumber}</p>
-                    </div>
-                  )}
+                <div className="mt-5 rounded-3xl bg-slate-900 p-5 text-white">
+                  <p className="text-sm text-slate-300">Estimated total</p>
+                  <p className="mt-2 text-3xl font-semibold">
+                    LKR {totalAmount.toFixed(2)}
+                  </p>
+                  <p className="mt-2 text-xs text-slate-400">
+                    Fare is calculated from route pricing and selected travel
+                    dates.
+                  </p>
                 </div>
+              </section>
 
-                {/* View Profile Link */}
-                <Link
-                  to="/profile"
-                  className="mt-5 block w-full text-center py-2.5 rounded-xl border border-orange-500/50 text-orange-400 text-sm font-semibold hover:bg-orange-500/10 transition-colors"
-                >
-                  View Full Profile →
-                </Link>
-              </div>
+              <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+                <p className="text-sm uppercase tracking-[0.3em] text-orange-500">
+                  Need help?
+                </p>
+                <div className="mt-4 space-y-3 text-sm text-slate-600">
+                  <p>Choose a route first to unlock stops and pricing.</p>
+                  <p>Monthly bookings automatically cover the full selected month.</p>
+                  <p>Card details must be confirmed before the booking can be submitted.</p>
+                </div>
+                {loggedInUser && (
+                  <Link
+                    to="/profile"
+                    className="mt-5 inline-flex items-center justify-center rounded-2xl border border-slate-300 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Review profile details
+                  </Link>
+                )}
+              </section>
             </div>
-          )}
+          </aside>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

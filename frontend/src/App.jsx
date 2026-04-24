@@ -8,12 +8,14 @@ import {
 
 import Navbar from "./components/NavBar";
 import Footer from "./components/Footer";
+import ProtectedRoleRoute from "./components/ProtectedRoleRoute";
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import Complaint from "./pages/Complaint";
+import Notifications from "./pages/Notifications";
 import Schedules from "./pages/Schedules";
 import BookRide from "./pages/BookRide";
 import MyRides from "./pages/MyRides";
@@ -25,7 +27,7 @@ import StopManagerPage from "./features/Shuttle & Route Management/StopManagerPa
 import Profile from "./pages/Profile";
 
 // Driver Management
-import Drivers from "./pages/Drivers";
+import DriverListPage from "./pages/DriverListPage";
 import AddDriver from "./pages/AddDriver";
 import EditDriver from "./pages/EditDriver";
 
@@ -44,11 +46,14 @@ import AdminDashboard from "./admin/AdminDashboard";
 import UserManagement from "./admin/UserManagement";
 import ComplaintManagement from "./admin/ComplaintManagement";
 import ManageRoutes from "./admin/ManageRoutes";
+import TripMonitoring from "./admin/TripMonitoring";
+import AnalyticsReports from "./admin/AnalyticsReports";
+import SystemSettings from "./admin/SystemSettings";
+import DriversAnalytics from "./admin/DriversAnalytics";
 import ProtectedAdminRoute from "./admin/ProtectedAdminRoute";
 
 function AppLayout() {
   const location = useLocation();
-
   const isAdminRoute =
     location.pathname === "/adminlogin" ||
     location.pathname.startsWith("/admin/") ||
@@ -77,6 +82,7 @@ function AppLayout() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/complaint" element={<Complaint />} />
+          <Route path="/notifications" element={<Notifications />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/routes" element={<RouteList />} />
           <Route path="/RouteList" element={<RouteList />} />
@@ -106,18 +112,68 @@ function AppLayout() {
           />
 
           {/* Driver Management */}
-          <Route path="/drivers" element={<Drivers />} />
-          <Route path="/drivers/add" element={<AddDriver />} />
-          <Route path="/drivers/edit/:id" element={<EditDriver />} />
+          <Route path="/drivers" element={<DriverListPage />} />
+          <Route
+            path="/admin/drivers"
+            element={
+              <ProtectedAdminRoute allowedRoles={["admin"]}>
+                <DriversAnalytics />
+              </ProtectedAdminRoute>
+            }
+          />
+          <Route
+            path="/admin/drivers/add"
+            element={
+              <ProtectedAdminRoute allowedRoles={["admin"]}>
+                <AddDriver />
+              </ProtectedAdminRoute>
+            }
+          />
+          <Route
+            path="/admin/drivers/edit/:id"
+            element={
+              <ProtectedAdminRoute allowedRoles={["admin"]}>
+                <EditDriver />
+              </ProtectedAdminRoute>
+            }
+          />
 
           {/* Trip Management */}
           <Route path="/trips" element={<Trips />} />
-          <Route path="/trips/add" element={<AddTrip />} />
-          <Route path="/trips/edit/:id" element={<EditTrip />} />
-          <Route path="/trips/:id" element={<TripDetails />} />
+          <Route
+            path="/trips/add"
+            element={
+              <ProtectedRoleRoute allowedRoles={["admin", "driver"]}>
+                <AddTrip />
+              </ProtectedRoleRoute>
+            }
+          />
+          <Route
+            path="/trips/edit/:id"
+            element={
+              <ProtectedRoleRoute allowedRoles={["admin", "driver"]}>
+                <EditTrip />
+              </ProtectedRoleRoute>
+            }
+          />
+          <Route
+            path="/trips/:id"
+            element={
+              <ProtectedRoleRoute allowedRoles={["admin", "driver"]}>
+                <TripDetails />
+              </ProtectedRoleRoute>
+            }
+          />
 
           {/* Driver Portal */}
-          <Route path="/driver-portal" element={<DriverDashboard />} />
+          <Route
+            path="/driver-portal"
+            element={
+              <ProtectedRoleRoute allowedRoles={["admin", "driver"]}>
+                <DriverDashboard />
+              </ProtectedRoleRoute>
+            }
+          />
 
           {/* Admin */}
           <Route path="/adminlogin" element={<AdminLogin />} />
@@ -154,6 +210,42 @@ function AppLayout() {
             element={
               <ProtectedAdminRoute allowedRoles={["admin"]}>
                 <ManageRoutes />
+              </ProtectedAdminRoute>
+            }
+          />
+
+          <Route
+            path="/admin/trips"
+            element={
+              <ProtectedAdminRoute allowedRoles={["admin"]}>
+                <TripMonitoring />
+              </ProtectedAdminRoute>
+            }
+          />
+
+          <Route
+            path="/admin/reports"
+            element={
+              <ProtectedAdminRoute allowedRoles={["admin"]}>
+                <AnalyticsReports />
+              </ProtectedAdminRoute>
+            }
+          />
+
+          <Route
+            path="/admin/notifications"
+            element={
+              <ProtectedAdminRoute allowedRoles={["admin"]}>
+                <Notifications />
+              </ProtectedAdminRoute>
+            }
+          />
+
+          <Route
+            path="/admin/settings"
+            element={
+              <ProtectedAdminRoute allowedRoles={["admin"]}>
+                <SystemSettings />
               </ProtectedAdminRoute>
             }
           />

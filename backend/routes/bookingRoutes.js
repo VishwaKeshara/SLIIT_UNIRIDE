@@ -7,7 +7,10 @@ const {
   getBookings,
   getBookingById,
   getBookingsByMobile,
-  cancelBooking
+  cancelBooking,
+  updateBookingPayment,
+  verifyBookingPayment,
+  refundBookingPayment,
 } = require("../controllers/bookingController");
 
 // CREATE
@@ -21,6 +24,11 @@ router.get("/mobile/:mobile", getBookingsByMobile);
 
 // GET BY ID
 router.get("/:id", getBookingById);
+
+// PAYMENT ADMIN ACTIONS
+router.patch("/:id/payment", updateBookingPayment);
+router.patch("/:id/verify-payment", verifyBookingPayment);
+router.patch("/:id/refund", refundBookingPayment);
 
 // CANCEL
 router.put("/:id/cancel", cancelBooking);

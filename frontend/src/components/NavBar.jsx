@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "../axiosinstance";
 import {
   FaBus,
   FaCalendarAlt,
@@ -13,7 +14,30 @@ import {
   FaBars,
   FaTimes,
   FaExclamationCircle,
+  FaBell,
+  FaUserCircle,
 } from "react-icons/fa";
+
+function normalizeRouteLabel(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function getRouteAliases(routeValue) {
+  if (!routeValue) return [];
+
+  if (typeof routeValue === "string") {
+    return [normalizeRouteLabel(routeValue)].filter(Boolean);
+  }
+
+  const aliases = [
+    normalizeRouteLabel(routeValue.routeName),
+    normalizeRouteLabel(
+      `${routeValue.startLocation || ""} - ${routeValue.endLocation || ""}`
+    ),
+  ];
+
+  return [...new Set(aliases.filter(Boolean))];
+}
 
 function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -25,6 +49,7 @@ function Navbar() {
       return null;
     }
   });
+  const [hasAlert, setHasAlert] = useState(false);
   const navigate = useNavigate();
 
   // Check user login status
@@ -47,9 +72,56 @@ function Navbar() {
     window.addEventListener("storage", checkUser);
     window.addEventListener("userChanged", checkUser);
 
+    const checkAlerts = async () => {
+      try {
+        const userData = JSON.parse(localStorage.getItem("userData") || localStorage.getItem("user"));
+        
+        const [tripsRes, bookingsRes, complaintsRes, notificationsRes] = await Promise.all([
+          userData ? axios.get("/trips") : Promise.resolve({ data: [] }),
+          userData ? axios.get(`/users/${userData.id}/bookings`) : Promise.resolve({ data: [] }),
+          axios.get("/complaints"),
+          userData ? axios.get(`/notifications/user/${userData.id}`) : Promise.resolve({ data: [] }),
+        ]);
+
+        const bookedRouteKeys = new Set(
+          bookingsRes.data.flatMap((booking) => getRouteAliases(booking.route)).filter(Boolean)
+        );
+
+        const delayedTripAlerts = userData
+          ? tripsRes.data.some(
+              (trip) =>
+                trip.status === "Delayed" &&
+                getRouteAliases(trip.route).some((alias) => bookedRouteKeys.has(alias))
+            )
+          : false;
+
+        const complaintAlerts = userData
+          ? complaintsRes.data.some(
+              (c) =>
+                (c.userEmail?.toLowerCase() === userData.email?.toLowerCase() ||
+                  c.userId === userData.id) &&
+                Boolean(c.adminResponse)
+            )
+          : false;
+
+        const notificationAlerts = userData
+          ? notificationsRes.data.some(
+              (n) => !n.isRead && (n.type.startsWith("payment_") || n.type === "trip_delayed")
+            )
+          : false;
+
+        setHasAlert(delayedTripAlerts || complaintAlerts || notificationAlerts);
+      } catch (err) {
+        console.error("Failed to fetch alerts", err);
+      }
+    };
+    checkAlerts();
+    const interval = setInterval(checkAlerts, 60000); // Check every minute
+
     return () => {
       window.removeEventListener("storage", checkUser);
       window.removeEventListener("userChanged", checkUser);
+      clearInterval(interval);
     };
   }, []);
 
@@ -67,13 +139,14 @@ function Navbar() {
     { to: "/schedules", label: "Schedules", icon: <FaCalendarAlt /> },
     { to: "/book", label: "Book Ride", icon: <FaTicketAlt /> },
     { to: "/terms-and-conditions", label: "Terms & Conditions", icon: <FaInfoCircle /> },
-    { to: "/drivers", label: "Drivers", icon: <FaUsers /> },
     { to: "/about", label: "About Us", icon: <FaInfoCircle /> },
     { to: "/contact", label: "Contact", icon: <FaPhoneAlt /> },
   ];
 
   // Links visible only to logged-in users
   const userOnlyLinks = [
+    { to: "/drivers", label: "Drivers", icon: <FaUsers /> },
+    { to: "/notifications", label: "Notifications", icon: <FaBell /> },
     { to: "/complaint", label: "Complaint", icon: <FaExclamationCircle /> },
   ];
 
@@ -97,9 +170,15 @@ function Navbar() {
             <Link
               key={item.to}
               to={item.to}
-              className="flex items-center gap-2 whitespace-nowrap transition hover:text-orange-300"
+              className="relative flex items-center gap-2 whitespace-nowrap transition hover:text-orange-300"
             >
               {item.icon} {item.label}
+              {item.label === "Notifications" && hasAlert && (
+                <span className="absolute -right-2 -top-1 flex h-3 w-3">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500"></span>
+                </span>
+              )}
             </Link>
           ))}
 
@@ -108,9 +187,15 @@ function Navbar() {
               <Link
                 key={item.to}
                 to={item.to}
-                className="flex items-center gap-2 whitespace-nowrap transition hover:text-orange-300"
+                className="relative flex items-center gap-2 whitespace-nowrap transition hover:text-orange-300"
               >
                 {item.icon} {item.label}
+                {item.label === "Notifications" && hasAlert && (
+                  <span className="absolute -right-2 -top-1 flex h-3 w-3">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500"></span>
+                  </span>
+                )}
               </Link>
             ))}
 
@@ -132,9 +217,14 @@ function Navbar() {
             </>
           ) : (
             <>
-              <div className="rounded-lg border border-white/10 bg-white/10 px-4 py-2 text-base font-semibold whitespace-nowrap">
+              <Link
+                to="/profile"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/10 px-4 py-2 text-base font-semibold whitespace-nowrap transition hover:border-orange-300/40 hover:bg-white/15 hover:text-orange-200"
+              >
+                <FaUserCircle className="text-orange-300" />
                 Hi, {loggedUser.name?.split(" ")[0] || "User"}
-              </div>
+              </Link>
 
               <button
                 onClick={handleLogout}
@@ -166,22 +256,34 @@ function Navbar() {
                 key={item.to}
                 to={item.to}
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 rounded-md px-3 py-2.5 transition hover:bg-white/10 hover:text-orange-300"
+                className="relative flex w-fit items-center gap-3 rounded-md px-3 py-2.5 transition hover:bg-white/10 hover:text-orange-300"
               >
                 {item.icon} {item.label}
+                {item.label === "Notifications" && hasAlert && (
+                  <span className="absolute right-0 top-2.5 flex h-2.5 w-2.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500"></span>
+                  </span>
+                )}
               </Link>
             ))}
 
             {loggedUser &&
               userOnlyLinks.map((item) => (
                 <Link
-                key={item.to}
-                to={item.to}
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 rounded-md px-3 py-2.5 transition hover:bg-white/10 hover:text-orange-300"
-              >
-                {item.icon} {item.label}
-              </Link>
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setMobileOpen(false)}
+                  className="relative flex items-center gap-3 rounded-md px-3 py-2.5 transition hover:bg-white/10 hover:text-orange-300"
+                >
+                  {item.icon} {item.label}
+                  {item.label === "Notifications" && hasAlert && (
+                    <span className="absolute right-3 top-2.5 flex h-2.5 w-2.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500"></span>
+                    </span>
+                  )}
+                </Link>
             ))}
 
             {!loggedUser ? (
@@ -204,9 +306,14 @@ function Navbar() {
               </>
             ) : (
               <>
-                <div className="rounded-md border border-white/10 bg-white/10 px-3 py-2.5 text-base font-semibold">
+                <Link
+                  to="/profile"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 rounded-md border border-white/10 bg-white/10 px-3 py-2.5 text-base font-semibold transition hover:border-orange-300/40 hover:bg-white/15 hover:text-orange-200"
+                >
+                  <FaUserCircle className="text-orange-300" />
                   Hi, {loggedUser.name?.split(" ")[0] || "User"}
-                </div>
+                </Link>
 
                 <button
                   onClick={handleLogout}

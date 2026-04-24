@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { Link, useLocation } from "react-router-dom";
 import { getStoredAdminRole, isRouteManager } from "../../admin/adminAccess";
@@ -47,6 +47,8 @@ function RouteList({
   const [editingStopId, setEditingStopId] = useState("");
   const [editingStopName, setEditingStopName] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [recurrenceFilter, setRecurrenceFilter] = useState("all");
   const [editForm, setEditForm] = useState({
     routeName: "",
     startLocation: "",
@@ -223,6 +225,8 @@ function RouteList({
   };
 
   const deleteRoute = async (id) => {
+    if (!window.confirm("Delete this route?")) return;
+
     try {
       await axios.delete(`http://localhost:5000/api/routes/${id}`);
       setSuccessMessage("Route deleted successfully.");
@@ -281,25 +285,50 @@ function RouteList({
     "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200";
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
-  const filteredRoutes = routes.filter((route) => {
-    if (!normalizedSearch) return true;
+  const filteredRoutes = useMemo(() => {
+    return routes.filter((route) => {
+      const routeStops = stopsByRoute[route._id] || [];
+      const searchableText = [
+        route.routeName,
+        route.startLocation,
+        route.endLocation,
+        route.startTime,
+        route.recurrence,
+        ...(route.days || []),
+        ...routeStops.map((stop) => stop.stopName),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
 
-    const routeStops = stopsByRoute[route._id] || [];
-    const searchableText = [
-      route.routeName,
-      route.startLocation,
-      route.endLocation,
-      route.startTime,
-      route.recurrence,
-      ...(route.days || []),
-      ...routeStops.map((stop) => stop.stopName),
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
+      const matchesSearch = normalizedSearch
+        ? searchableText.includes(normalizedSearch)
+        : true;
+      const matchesStatus =
+        statusFilter === "all"
+          ? true
+          : statusFilter === "active"
+            ? route.active !== false
+            : route.active === false;
+      const routeRecurrence = route.recurrence || "none";
+      const matchesRecurrence =
+        recurrenceFilter === "all"
+          ? true
+          : routeRecurrence === recurrenceFilter;
 
-    return searchableText.includes(normalizedSearch);
-  });
+      return matchesSearch && matchesStatus && matchesRecurrence;
+    });
+  }, [routes, stopsByRoute, normalizedSearch, statusFilter, recurrenceFilter]);
+
+  const totalRoutes = routes.length;
+  const activeRoutes = routes.filter((route) => route.active !== false).length;
+  const inactiveRoutes = routes.filter((route) => route.active === false).length;
+
+  const statCards = [
+    { label: "Total Routes", value: totalRoutes },
+    { label: "Active Routes", value: activeRoutes },
+    { label: "Inactive Routes", value: inactiveRoutes },
+  ];
 
   const wrapperClass = embedded
     ? "relative min-h-full bg-transparent"
@@ -393,89 +422,215 @@ function RouteList({
     ? "mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
     : "mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5";
 
+  const adminPageView = embedded && !readOnly;
+
   return (
     <div className={wrapperClass}>
       <div className={overlayClass}></div>
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className={headerCardClass}>
-          <div className="grid gap-6 p-6 md:grid-cols-[1.5fr_1fr] md:p-8">
-            <div>
-              <div className={pillClass}>
-                <BusFront size={16} />
-                Shuttle Route Management
-              </div>
-
-              <h1 className={titleClass}>
-                {title}
-              </h1>
-              <p className={descriptionClass}>
-                {description}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className={statCardClass}>
-                <p className={statLabelClass}>Total Routes</p>
-                <p className="mt-2 text-3xl font-bold">{filteredRoutes.length}</p>
-              </div>
-              <div className={statCardClass}>
-                <p className={statLabelClass}>Mode</p>
-                <p className="mt-2 text-lg font-semibold">
-                  {readOnly
-                    ? "Booking View"
-                    : routeManagerView
-                      ? "Route Manager View"
-                      : "Admin View"}
+        {adminPageView ? (
+          <div className="space-y-8">
+            <div className="mb-10 flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+              <div>
+                <h1 className="text-4xl font-extrabold text-[#0b2f67] sm:text-6xl">
+                  {title}
+                </h1>
+                <p className="mt-3 max-w-3xl text-base text-[#5c79a8] sm:text-lg">
+                  {description}
                 </p>
               </div>
+
+              <div className="flex flex-wrap gap-4">
+                <Link
+                  to="/admin/dashboard"
+                  className="rounded-3xl bg-[#e8eefb] px-7 py-4 text-lg font-extrabold text-[#0a3772] shadow-sm transition hover:opacity-90"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  to="/admin/complaints"
+                  className="rounded-3xl bg-[#ffbf00] px-7 py-4 text-lg font-extrabold text-[#111827] shadow-sm transition hover:opacity-90"
+                >
+                  Complaints
+                </Link>
+              </div>
+            </div>
+
+            <div className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
+              {statCards.map((card) => (
+                <div
+                  key={card.label}
+                  className="rounded-[30px] border border-blue-100 bg-white p-7 shadow-[0_18px_45px_rgba(80,122,191,0.18)]"
+                >
+                  <p className="text-[1.05rem] font-bold text-[#5c79a8]">
+                    {card.label}
+                  </p>
+                  <h2 className="mt-5 text-5xl font-extrabold text-[#0b2f67]">
+                    {card.value}
+                  </h2>
+                </div>
+              ))}
+            </div>
+
+            <section className="mb-8 rounded-[34px] border border-blue-100 bg-white p-7 shadow-[0_18px_45px_rgba(80,122,191,0.18)]">
+              <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <h3 className="text-2xl font-extrabold text-[#0b2f67] sm:text-4xl">
+                  Filter Routes
+                </h3>
+                <span className="rounded-full bg-[#e8eefb] px-5 py-2 text-lg font-bold text-[#3464d4]">
+                  Admin Control
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.4fr_0.8fr_0.8fr]">
+                <div>
+                  <label className="mb-2 block text-base font-bold text-[#5c79a8]">
+                    Search
+                  </label>
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5c79a8]" size={18} />
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(event) => setSearchTerm(event.target.value)}
+                      placeholder="Search routes, stops, locations, or time"
+                      className="w-full rounded-[20px] border border-blue-100 bg-[#f7faff] py-3 pl-11 pr-4 text-base text-[#0b1f45] outline-none transition focus:border-[#3464d4] focus:ring-2 focus:ring-[#dbe7ff]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-base font-bold text-[#5c79a8]">
+                    Status
+                  </label>
+                  <select
+                    value={statusFilter}
+                    onChange={(event) => setStatusFilter(event.target.value)}
+                    className="w-full rounded-[20px] border border-blue-100 bg-[#f7faff] p-3 text-base text-[#0b1f45] outline-none transition focus:border-[#3464d4] focus:ring-2 focus:ring-[#dbe7ff]"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-base font-bold text-[#5c79a8]">
+                    Recurrence
+                  </label>
+                  <select
+                    value={recurrenceFilter}
+                    onChange={(event) => setRecurrenceFilter(event.target.value)}
+                    className="w-full rounded-[20px] border border-blue-100 bg-[#f7faff] p-3 text-base text-[#0b1f45] outline-none transition focus:border-[#3464d4] focus:ring-2 focus:ring-[#dbe7ff]"
+                  >
+                    <option value="all">All Types</option>
+                    <option value="none">One Time</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Link
+                  to="/routes/new"
+                  className="inline-flex items-center gap-2 rounded-[18px] bg-[#143d7a] px-5 py-3 text-sm font-extrabold text-white transition hover:opacity-90"
+                >
+                  <PlusCircle size={18} />
+                  Add New Route
+                </Link>
+              </div>
+            </section>
+
+            <div className="rounded-[34px] border border-blue-100 bg-white p-7 shadow-[0_18px_45px_rgba(80,122,191,0.18)]">
+              <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <h3 className="text-2xl font-extrabold text-[#0b2f67] sm:text-4xl">
+                  Route Records
+                </h3>
+                <span className="rounded-full bg-[#e8eefb] px-5 py-2 text-lg font-bold text-[#3464d4]">
+                  {filteredRoutes.length} Results
+                </span>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <>
+            <div className={headerCardClass}>
+              <div className="grid gap-6 p-6 md:grid-cols-[1.5fr_1fr] md:p-8">
+                <div>
+                  <div className={pillClass}>
+                    <BusFront size={16} />
+                    Shuttle Route Management
+                  </div>
 
-        <div className={searchPanelClass}>
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className={searchTitleClass}>
-                {readOnly ? "Search Schedules" : "Search Routes"}
-              </p>
-              <p className={searchDescClass}>
-                {readOnly
-                  ? "Find routes by name, location, time, recurrence, or stop."
-                  : routeManagerView
-                    ? "Manage route details and stops while route status controls stay disabled."
-                    : "Quickly find routes by name, location, time, recurrence, or stop."}
-              </p>
+                  <h1 className={titleClass}>{title}</h1>
+                  <p className={descriptionClass}>{description}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className={statCardClass}>
+                    <p className={statLabelClass}>Total Routes</p>
+                    <p className="mt-2 text-3xl font-bold">{filteredRoutes.length}</p>
+                  </div>
+                  <div className={statCardClass}>
+                    <p className={statLabelClass}>Mode</p>
+                    <p className="mt-2 text-lg font-semibold">
+                      {readOnly
+                        ? "Booking View"
+                        : routeManagerView
+                          ? "Route Manager View"
+                          : "Admin View"}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="relative w-full md:max-w-md">
-              <Search
-                size={18}
-                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-              />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Search routes, stops, or locations"
-                className={searchInputClass}
-              />
-            </div>
-          </div>
+            <div className={searchPanelClass}>
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className={searchTitleClass}>
+                    {readOnly ? "Search Schedules" : "Search Routes"}
+                  </p>
+                  <p className={searchDescClass}>
+                    {readOnly
+                      ? "Find routes by name, location, time, recurrence, or stop."
+                      : routeManagerView
+                        ? "Manage route details and stops while route status controls stay disabled."
+                        : "Quickly find routes by name, location, time, recurrence, or stop."}
+                  </p>
+                </div>
 
-          {!readOnly && (
-            <div className="mt-4 flex flex-wrap gap-3">
-              <Link
-                to="/routes/new"
-                className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
-              >
-                <PlusCircle size={18} />
-                Add New Route
-              </Link>
+                <div className="relative w-full md:max-w-md">
+                  <Search
+                    size={18}
+                    className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                  />
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    placeholder="Search routes, stops, or locations"
+                    className={searchInputClass}
+                  />
+                </div>
+              </div>
+
+              {!readOnly && (
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <Link
+                    to="/routes/new"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+                  >
+                    <PlusCircle size={18} />
+                    Add New Route
+                  </Link>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </>
+        )}
 
         {!readOnly && successMessage && (
           <div className="mb-5 flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50 px-4 py-4 text-sm text-green-700 shadow-sm">
