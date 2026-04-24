@@ -53,7 +53,7 @@ function BookRide() {
   });
 
   const [payment, setPayment] = useState({
-    method: "",
+    method: "card",
     cardNumber: "",
     cardName: "",
     cardExpiry: "",
@@ -158,9 +158,7 @@ function BookRide() {
     /^\d{2}\/\d{2}$/.test(payment.cardExpiry) &&
     payment.cardCvv.length >= 3;
 
-  const paymentComplete =
-    payment.method === "cash" ||
-    (payment.method === "card" && payment.cardProcessed);
+  const paymentComplete = payment.method === "card" && payment.cardProcessed;
 
   const canSubmit =
     form.selectedRoute &&
@@ -259,7 +257,7 @@ function BookRide() {
     setSelectedMonth("");
     setStops([]);
     setPayment({
-      method: "",
+      method: "card",
       cardNumber: "",
       cardName: "",
       cardExpiry: "",
@@ -356,7 +354,7 @@ function BookRide() {
 
     y += 10;
     section("Payment");
-    row("Method", booking.paymentMethod === "card" ? "Card payment" : "Cash on boarding");
+    row("Method", "Card payment");
     row("Status", booking.paymentStatus);
     row("Days", `${booking.totalDays} day${booking.totalDays > 1 ? "s" : ""}`);
     row("Price per day", `LKR ${booking.pricePerDay?.toFixed(2) || "0.00"}`);
@@ -392,8 +390,8 @@ function BookRide() {
         ...(form.email.trim() ? { email: form.email.trim() } : {}),
         ...(form.studentId.trim() ? { studentId: form.studentId.trim() } : {}),
         paymentMethod: payment.method,
-        paymentStatus: payment.method === "card" ? "paid" : "pending",
-        paymentReference: `${payment.method === "card" ? "CARD" : "CASH"}-${Date.now()
+        paymentStatus: "paid",
+        paymentReference: `CARD-${Date.now()
           .toString(36)
           .toUpperCase()}`,
       };
@@ -953,7 +951,7 @@ function BookRide() {
                 </span>
               </div>
 
-              <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="mt-6">
                 <button
                   type="button"
                   onClick={() => handlePaymentMethodChange("card")}
@@ -968,23 +966,6 @@ function BookRide() {
                   </p>
                   <p className="mt-1 text-sm text-slate-500">
                     Confirm card details now and complete instantly.
-                  </p>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handlePaymentMethodChange("cash")}
-                  className={`rounded-[24px] border p-5 text-left transition ${
-                    payment.method === "cash"
-                      ? "border-orange-400 bg-orange-50"
-                      : "border-slate-200 bg-white hover:bg-slate-50"
-                  }`}
-                >
-                  <p className="text-sm font-semibold text-slate-900">
-                    Cash on boarding
-                  </p>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Reserve your seat now and pay when you get on the shuttle.
                   </p>
                 </button>
               </div>
@@ -1111,12 +1092,6 @@ function BookRide() {
                 </div>
               )}
 
-              {payment.method === "cash" && (
-                <div className="mt-6 rounded-[24px] border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
-                  Your seat will be reserved now. Payment will remain pending
-                  until you pay the driver when boarding.
-                </div>
-              )}
             </section>
 
             <div className="flex flex-col gap-4 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
@@ -1204,7 +1179,7 @@ function BookRide() {
                 <div className="mt-4 space-y-3 text-sm text-slate-600">
                   <p>Choose a route first to unlock stops and pricing.</p>
                   <p>Monthly bookings automatically cover the full selected month.</p>
-                  <p>Cash bookings stay pending until payment is collected on board.</p>
+                  <p>Card details must be confirmed before the booking can be submitted.</p>
                 </div>
                 {loggedInUser && (
                   <Link
