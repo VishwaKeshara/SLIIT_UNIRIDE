@@ -2,6 +2,108 @@ const express = require("express");
 const router = express.Router();
 const Trip = require("../models/Trip");
 const Driver = require("../models/Driver");
+const Booking = require("../models/BookingModel");
+const Route = require("../models/RouteModel");
+const User = require("../models/User");
+const { createNotification } = require("../controllers/notificationController");
+
+function normalizeRouteLabel(routeValue) {
+  if (!routeValue) return "";
+
+  if (typeof routeValue === "string") {
+    return routeValue.trim().toLowerCase();
+  }
+
+  const routeName = routeValue.routeName?.trim();
+  if (routeName) return routeName.toLowerCase();
+
+  return `${routeValue.startLocation || ""} - ${routeValue.endLocation || ""}`
+    .trim()
+    .toLowerCase();
+}
+
+async function createTripDelayNotifications(trip) {
+  const tripRouteLabel = normalizeRouteLabel(trip.route);
+  const allRoutes = await Route.find().select("_id routeName startLocation endLocation");
+  const matchingRouteIds = allRoutes
+    .filter((routeDoc) => normalizeRouteLabel(routeDoc) === tripRouteLabel)
+    .map((routeDoc) => routeDoc._id);
+
+  const tripDate = new Date(trip.date);
+  const affectedBookings = await Booking.find({
+    route: { $in: matchingRouteIds },
+    status: "confirmed",
+    isRegistered: true,
+  }).select("_id email travelStartDate travelEndDate");
+
+  const eligibleBookings = affectedBookings.filter((booking) => {
+    const startDate = new Date(booking.travelStartDate);
+    const endDate = new Date(booking.travelEndDate);
+    return booking.email && tripDate >= startDate && tripDate <= endDate;
+  });
+
+  const eligibleEmails = [...new Set(eligibleBookings.map((booking) => booking.email.toLowerCase()))];
+  const eligibleUsers = eligibleEmails.length
+    ? await User.find({
+        email: { $in: eligibleEmails },
+        isActive: true,
+        role: { $in: ["student", "lecturer", "driver"] },
+      }).select("_id email")
+    : [];
+
+  const bookingIdByEmail = new Map(
+    eligibleBookings.map((booking) => [booking.email.toLowerCase(), booking._id])
+  );
+
+  await Promise.allSettled(
+    eligibleUsers.map((userDoc) =>
+      createNotification(
+        userDoc._id,
+        "trip_delayed",
+        `Trip Delayed: ${trip.route}`,
+        trip.delayReason || "A trip related to your booking has been delayed.",
+        bookingIdByEmail.get(userDoc.email.toLowerCase()) || null,
+        {
+          audience: "user",
+          route: trip.route,
+          tripDate: trip.date,
+          startTime: trip.startTime,
+          endTime: trip.endTime,
+          delayReason: trip.delayReason || "",
+        },
+        trip._id
+      )
+    )
+  );
+
+  const adminUsers = await User.find({
+    role: { $in: ["admin", "routemanager"] },
+    isActive: true,
+  }).select("_id");
+
+  await Promise.allSettled(
+    adminUsers.map((adminUser) =>
+      createNotification(
+        adminUser._id,
+        "trip_delayed",
+        `Driver Delay Reported: ${trip.route}`,
+        trip.delayReason || "A driver reported a delay for an active trip.",
+        null,
+        {
+          audience: "admin",
+          route: trip.route,
+          tripDate: trip.date,
+          startTime: trip.startTime,
+          endTime: trip.endTime,
+          delayReason: trip.delayReason || "",
+          driverName: trip.driver?.name || "",
+          bus: trip.driver?.assignedBus || "",
+        },
+        trip._id
+      )
+    )
+  );
+}
 
 // Helper: check if times overlap for a driver on the same date
 async function hasOverlap(driverId, date, startTime, endTime, excludeId = null) {
@@ -120,6 +222,10 @@ router.patch("/:id/status", async (req, res) => {
     let driverStatus = "Available";
     if (status === "Ongoing") driverStatus = "On Trip";
     await Driver.findByIdAndUpdate(trip.driver._id, { status: driverStatus });
+
+    if (status === "Delayed") {
+      await createTripDelayNotifications(trip);
+    }
 
     res.json(trip);
   } catch (err) {

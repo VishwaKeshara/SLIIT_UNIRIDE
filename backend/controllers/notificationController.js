@@ -34,7 +34,15 @@ exports.markAsRead = async (req, res) => {
 };
 
 // Create notification (internal function)
-exports.createNotification = async (userId, type, title, message, bookingId, metadata = {}) => {
+exports.createNotification = async (
+  userId,
+  type,
+  title,
+  message,
+  bookingId = null,
+  metadata = {},
+  tripId = null
+) => {
   try {
     const notification = new Notification({
       userId,
@@ -42,6 +50,7 @@ exports.createNotification = async (userId, type, title, message, bookingId, met
       title,
       message,
       bookingId,
+      tripId,
       metadata
     });
 

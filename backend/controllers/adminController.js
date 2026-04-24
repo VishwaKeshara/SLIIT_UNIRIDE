@@ -121,7 +121,7 @@ const createUser = async (req, res) => {
       });
     }
 
-    const allowedRoles = ["student", "instructor", "lecturer", "admin", "routemanager"];
+    const allowedRoles = ["student", "lecturer", "driver", "admin", "routemanager"];
 
     if (!allowedRoles.includes(role)) {
       return res.status(400).json({ message: "Invalid role selected" });

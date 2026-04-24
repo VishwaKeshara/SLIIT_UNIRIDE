@@ -9,7 +9,13 @@ const notificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["payment_verified", "payment_refunded", "payment_failed", "booking_cancelled"],
+      enum: [
+        "payment_verified",
+        "payment_refunded",
+        "payment_failed",
+        "booking_cancelled",
+        "trip_delayed",
+      ],
       required: true
     },
     title: {
@@ -23,7 +29,12 @@ const notificationSchema = new mongoose.Schema(
     bookingId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Booking",
-      required: true
+      default: null
+    },
+    tripId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Trip",
+      default: null
     },
     isRead: {
       type: Boolean,
