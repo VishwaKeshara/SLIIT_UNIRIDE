@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "../axiosinstance";
 import {
   FaBell, FaCheckCircle, FaClock, FaExclamationTriangle,
-  FaReply, FaBus, FaRoute, FaCalendarAlt, FaArrowLeft, FaPlay,
+  FaReply, FaArrowLeft, FaPlay, FaReceipt, FaRoute,
 } from "react-icons/fa";
 
 function normalizeRouteLabel(routeValue) {
@@ -282,97 +282,229 @@ export default function Notifications() {
     return d.toLocaleDateString();
   };
 
-  return (
-    <section className="min-h-screen bg-gradient-to-br from-[#0A2233] via-[#123B57] to-[#16476A] pb-20 text-white">
-      <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+  const summaryCards = [
+    {
+      label: "All Updates",
+      value: allNotifications.length,
+      tone: "text-cyan-200",
+      detail: "Personal alerts tied to your account",
+    },
+    {
+      label: "Payments",
+      value: allNotifications.filter((n) => n.type.startsWith("payment_")).length,
+      tone: "text-emerald-300",
+      detail: "Verification, refunds, and payment actions",
+    },
+    {
+      label: "Complaints",
+      value: allNotifications.filter((n) => n.type === "complaint_response").length,
+      tone: "text-orange-300",
+      detail: "Replies from the support team",
+    },
+    {
+      label: "Trip Updates",
+      value: allNotifications.filter((n) => n.type.startsWith("trip_")).length,
+      tone: "text-sky-300",
+      detail: "Route progress and schedule changes",
+    },
+  ];
 
-        {/* Header */}
-        <div className="rounded-3xl bg-white/10 backdrop-blur-md p-6 shadow-2xl md:px-10 md:py-8 border border-white/20">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+  return (
+    <section className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.12),transparent_22%),radial-gradient(circle_at_top_right,rgba(249,115,22,0.10),transparent_18%),linear-gradient(180deg,#eef6fb_0%,#f7fbfe_42%,#ffffff_100%)] pb-20 text-slate-900">
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+        <div className="overflow-hidden rounded-[36px] border border-slate-200/80 bg-[linear-gradient(135deg,#f8fcff_0%,#eef7fc_52%,#e8f2f8_100%)] shadow-[0_26px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl">
+          <div className="border-b border-slate-200/80 bg-[linear-gradient(90deg,rgba(255,255,255,0.8),rgba(255,255,255,0.4))] px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.32em] text-slate-500 md:px-10">
+            UniRide Notification Center
+          </div>
+          <div className="p-6 md:px-10 md:py-8">
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-[0.2em] text-orange-400 font-bold mb-2">Updates</p>
-              <h1 className="text-3xl font-extrabold text-white sm:text-4xl flex items-center gap-3">
-                <FaBell className="text-orange-400" /> Notifications
+              <p className="mb-2 text-sm font-bold uppercase tracking-[0.22em] text-orange-400">
+                Account Updates
+              </p>
+              <h1 className="flex items-center gap-3 text-3xl font-extrabold text-slate-900 sm:text-4xl">
+                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-100 text-orange-500 ring-1 ring-orange-200 shadow-[0_10px_30px_rgba(249,115,22,0.12)]">
+                  <FaBell />
+                </span>
+                Notifications
               </h1>
-              <p className="mt-2 text-slate-300 max-w-2xl">Stay updated on your complaints, trip statuses, and important alerts.</p>
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
+                Review payment confirmations, complaint responses, and trip updates
+                connected to your personal UniRide activity in one organized space.
+              </p>
             </div>
-            <Link to="/home" className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10 transition backdrop-blur-sm shrink-0">
-              <FaArrowLeft /> Back to Home
-            </Link>
+
+            <div className="flex flex-col gap-4 lg:items-end">
+              <Link
+                to="/home"
+                className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                <FaArrowLeft /> Back to Home
+              </Link>
+              <div className="grid gap-3 sm:grid-cols-2 lg:w-[520px]">
+                {summaryCards.map((card) => (
+                  <div
+                    key={card.label}
+                    className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 backdrop-blur-sm"
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                      {card.label}
+                    </p>
+                    <p className={`mt-3 text-3xl font-black ${card.tone}`}>{card.value}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{card.detail}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
           </div>
         </div>
 
-        {/* Filter Tabs */}
-        <div className="mt-6 flex gap-2 p-1.5 bg-black/20 rounded-xl border border-white/10 shadow-inner w-fit">
-          {filterTabs.map(tab => (
-            <button key={tab.key} onClick={() => setActiveFilter(tab.key)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition ${
-                activeFilter === tab.key ? "bg-orange-500 text-white shadow-lg" : "text-slate-300 hover:text-white"
-              }`}>
-              {tab.label}
-              <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${
-                activeFilter === tab.key ? "bg-white/20" : "bg-white/10"
-              }`}>{tab.count}</span>
-            </button>
-          ))}
+        <div className="mt-6 rounded-[28px] border border-slate-200/80 bg-white/90 p-3 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                Filter Notifications
+              </p>
+              <p className="mt-1 text-sm text-slate-600">
+                View all updates or focus on a specific category.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+            {filterTabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveFilter(tab.key)}
+                className={`flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition ${
+                  activeFilter === tab.key
+                    ? "bg-orange-500 text-white shadow-lg shadow-orange-500/20"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+              >
+                  {tab.label}
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+                      activeFilter === tab.key ? "bg-white/20" : "bg-white/10"
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              </button>
+            ))}
+            </div>
+          </div>
         </div>
 
-        {/* Content */}
-        <div className="mt-8 space-y-4">
+        <div className="mt-8 space-y-5">
           {loading ? (
             <div className="flex justify-center py-16">
               <div className="h-10 w-10 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" />
             </div>
           ) : filtered.length === 0 ? (
-            <div className="rounded-3xl bg-white/10 backdrop-blur-md p-10 text-center border border-white/10 shadow-2xl">
-              <FaBell className="mx-auto text-5xl text-slate-500 mb-4" />
-              <h2 className="text-xl font-bold text-white mb-2">No notifications yet</h2>
-              <p className="text-slate-400">When there are updates to your complaints or trips, they'll appear here.</p>
+            <div className="rounded-[30px] border border-slate-200/80 bg-white/90 p-10 text-center shadow-[0_24px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+              <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-[28px] bg-slate-100 text-4xl text-slate-400 ring-1 ring-slate-200">
+                <FaBell />
+              </div>
+              <h2 className="text-xl font-bold text-slate-900">No notifications yet</h2>
+              <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-slate-600">
+                New complaint replies, trip alerts, and payment updates connected to
+                your profile will appear here automatically.
+              </p>
             </div>
           ) : (
-            filtered.map((notif) => (
-              <div key={notif.id} className="group rounded-2xl bg-white/10 backdrop-blur-md p-5 border border-white/10 shadow-lg hover:bg-white/15 transition">
-                <div className="flex items-start gap-4">
-                  {/* Icon */}
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-lg border border-white/10 shadow-inner">
-                    {notif.icon}
-                  </div>
+            filtered.map((notif) => {
+              const categoryIcon =
+                notif.status === "Trip" ? (
+                  <FaRoute className="text-sky-300" />
+                ) : notif.status === "Complaint" ? (
+                  <FaReply className="text-cyan-300" />
+                ) : (
+                  <FaReceipt className="text-emerald-300" />
+                );
 
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                      <h3 className="text-base font-bold text-white">{notif.title}</h3>
-                      <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border ${notif.badgeColor}`}>
-                        {notif.badge}
+              return (
+                <article
+                  key={notif.id}
+                  className="group overflow-hidden rounded-[30px] border border-slate-200/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.95),rgba(247,250,252,0.98))] shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl transition hover:border-slate-300 hover:shadow-[0_20px_55px_rgba(15,23,42,0.12)]"
+                >
+                  <div className="grid gap-0 lg:grid-cols-[88px_1fr_170px]">
+                    <div className="flex items-center justify-center border-b border-slate-200 bg-slate-50 px-6 py-6 lg:border-b-0 lg:border-r">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl shadow-inner">
+                        {notif.icon}
+                      </div>
+                    </div>
+
+                    <div className="px-6 py-5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-sky-700 ring-1 ring-sky-200">
+                          {categoryIcon}
+                          {notif.status}
+                        </span>
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider border ${notif.badgeColor}`}
+                        >
+                          {notif.badge}
+                        </span>
+                      </div>
+
+                      <h3 className="mt-3 text-lg font-bold text-slate-900">{notif.title}</h3>
+                      <p className="mt-2 text-sm leading-7 text-slate-600">{notif.message}</p>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-4 border-t border-slate-200 bg-slate-50 px-6 py-4 text-sm text-slate-600 lg:flex-col lg:items-start lg:justify-center lg:border-l lg:border-t-0">
+                      <span className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+                        Received
+                      </span>
+                      <span className="font-medium text-slate-800">{formatTime(notif.time)}</span>
+                      <span className="text-xs uppercase tracking-[0.22em] text-slate-400">
+                        {notif.isRead === false ? "Unread" : "Seen"}
                       </span>
                     </div>
-                    <p className="text-sm text-slate-300 leading-relaxed">{notif.message}</p>
-                    <p className="mt-2 text-xs text-slate-500 font-medium">{formatTime(notif.time)}</p>
                   </div>
-                </div>
-              </div>
-            ))
+                </article>
+              );
+            })
           )}
         </div>
 
-        {/* Summary Stats */}
         {!loading && allNotifications.length > 0 && (
-          <div className="mt-10 grid gap-4 sm:grid-cols-4">
-            <div className="rounded-2xl bg-white/10 backdrop-blur-md p-5 border border-white/10 text-center">
-              <p className="text-3xl font-black text-emerald-400">{userTripNotifications.filter(t => t.status === "Completed").length}</p>
-              <p className="mt-1 text-sm text-slate-400 font-medium">Completed</p>
+          <div className="mt-10 rounded-[30px] border border-slate-200/80 bg-white/90 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+            <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-orange-300">
+                Trip Status Summary
+              </p>
+              <h2 className="mt-2 text-2xl font-bold text-slate-900">Your ride-related activity</h2>
+              </div>
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                Related to your booked routes
+              </span>
             </div>
-            <div className="rounded-2xl bg-white/10 backdrop-blur-md p-5 border border-white/10 text-center">
-              <p className="text-3xl font-black text-red-400">{userTripNotifications.filter(t => t.status === "Delayed").length}</p>
-              <p className="mt-1 text-sm text-slate-400 font-medium">Delayed</p>
-            </div>
-            <div className="rounded-2xl bg-white/10 backdrop-blur-md p-5 border border-white/10 text-center">
-              <p className="text-3xl font-black text-orange-400">{userTripNotifications.filter(t => t.status === "Ongoing").length}</p>
-              <p className="mt-1 text-sm text-slate-400 font-medium">Ongoing</p>
-            </div>
-            <div className="rounded-2xl bg-white/10 backdrop-blur-md p-5 border border-white/10 text-center">
-              <p className="text-3xl font-black text-blue-400">{userTripNotifications.filter(t => t.status === "Scheduled").length}</p>
-              <p className="mt-1 text-sm text-slate-400 font-medium">Scheduled</p>
+            <div className="grid gap-4 sm:grid-cols-4">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-center">
+                <p className="text-3xl font-black text-emerald-400">
+                  {userTripNotifications.filter((t) => t.status === "Completed").length}
+                </p>
+                <p className="mt-1 text-sm font-medium text-slate-600">Completed</p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-center">
+                <p className="text-3xl font-black text-red-400">
+                  {userTripNotifications.filter((t) => t.status === "Delayed").length}
+                </p>
+                <p className="mt-1 text-sm font-medium text-slate-600">Delayed</p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-center">
+                <p className="text-3xl font-black text-orange-400">
+                  {userTripNotifications.filter((t) => t.status === "Ongoing").length}
+                </p>
+                <p className="mt-1 text-sm font-medium text-slate-600">Ongoing</p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-center">
+                <p className="text-3xl font-black text-blue-400">
+                  {userTripNotifications.filter((t) => t.status === "Scheduled").length}
+                </p>
+                <p className="mt-1 text-sm font-medium text-slate-600">Scheduled</p>
+              </div>
             </div>
           </div>
         )}
