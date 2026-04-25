@@ -165,8 +165,8 @@ function Complaint() {
   const fieldClassName = (fieldName) =>
     `mt-2 w-full rounded-2xl border px-4 py-3 text-sm transition outline-none ${
       touched[fieldName] && errors[fieldName]
-        ? "border-red-400 bg-red-500/10 text-white placeholder:text-red-200/70 focus:border-red-300 focus:ring-4 focus:ring-red-500/20"
-        : "border-white/12 bg-white/6 text-white placeholder:text-slate-400 focus:border-cyan-300 focus:ring-4 focus:ring-cyan-400/20"
+        ? "border-red-300 bg-red-50 text-slate-900 placeholder:text-red-400 focus:border-red-300 focus:ring-4 focus:ring-red-500/20"
+        : "border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-cyan-400/50 focus:ring-4 focus:ring-cyan-400/20"
     }`;
 
   return (
@@ -232,27 +232,28 @@ function Complaint() {
                 Add a complaint
               </h1>
               <p className="mt-3 max-w-xl text-sm leading-7 text-slate-300">
-              
+                Submit a clear complaint with enough detail for the UniRide team
+                to review, verify, and respond properly.
               </p>
             </div>
 
-            <div className="mb-6 grid gap-4 rounded-[28px] border border-white/10 bg-white/5 p-5 sm:grid-cols-2">
+            <div className="mb-6 grid gap-4 rounded-[28px] border border-white/40 bg-white/76 p-5 shadow-[0_24px_70px_rgba(2,8,23,0.24)] backdrop-blur-xl sm:grid-cols-2">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
                   Submitted by
                 </p>
-                <p className="mt-2 text-sm font-semibold text-white">
+                <p className="mt-2 text-sm font-semibold text-slate-900">
                   {user?.name || "Not logged in"}
                 </p>
-                <p className="mt-1 text-sm text-slate-400">
+                <p className="mt-1 text-sm text-slate-500">
                   {user?.email || "Sign in to file a complaint"}
                 </p>
               </div>
-              <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/10 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200">
+              <div className="rounded-2xl border border-cyan-300/35 bg-cyan-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-700">
                   Service standard
                 </p>
-                <p className="mt-2 text-sm leading-6 text-slate-100/90">
+                <p className="mt-2 text-sm leading-6 text-slate-700">
                   Complaints should be factual, respectful, and specific enough for
                   investigation.
                 </p>
@@ -260,34 +261,34 @@ function Complaint() {
             </div>
 
             {error && (
-              <div className="mb-4 rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+              <div className="mb-4 rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {error}
               </div>
             )}
 
             {success && (
-              <div className="mb-4 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+              <div className="mb-4 rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
                 {success}
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 sm:p-6">
+              <div className="rounded-[28px] border border-white/45 bg-white/76 p-5 shadow-[0_24px_70px_rgba(2,8,23,0.24)] backdrop-blur-xl sm:p-6">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-lg font-bold text-white">Case details</h2>
-                    <p className="mt-1 text-sm text-slate-400">
+                    <h2 className="text-lg font-bold text-slate-900">Case details</h2>
+                    <p className="mt-1 text-sm text-slate-500">
                       Start with the subject and the issue category.
                     </p>
                   </div>
-                  <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">
+                  <div className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
                     Step 1
                   </div>
                 </div>
 
                 <div className="space-y-5">
                   <div>
-                    <label htmlFor="title" className="text-sm font-semibold text-white">
+                    <label htmlFor="title" className="text-sm font-semibold text-slate-900">
                       Complaint subject
                     </label>
                     <input
@@ -304,7 +305,7 @@ function Complaint() {
                     <div className="mt-2 flex items-center justify-between gap-3 text-xs">
                       <span
                         className={
-                          touched.title && errors.title ? "text-red-300" : "text-slate-400"
+                          touched.title && errors.title ? "text-red-500" : "text-slate-500"
                         }
                       >
                         {touched.title && errors.title
@@ -318,7 +319,7 @@ function Complaint() {
                   </div>
 
                   <div>
-                    <label htmlFor="type" className="text-sm font-semibold text-white">
+                    <label htmlFor="type" className="text-sm font-semibold text-slate-900">
                       Complaint category
                     </label>
                     <select
@@ -327,7 +328,7 @@ function Complaint() {
                       value={formData.type}
                       onChange={handleChange}
                       onBlur={handleBlur}
-                      className={`${fieldClassName("type")} bg-[#11263f] text-white appearance-none`}
+                      className={`${fieldClassName("type")} appearance-none`}
                     >
                       {complaintTypes.map((item) => (
                         <option key={item.value} value={item.value}>
@@ -337,7 +338,7 @@ function Complaint() {
                     </select>
                     <p
                       className={`mt-2 text-xs ${
-                        touched.type && errors.type ? "text-red-300" : "text-slate-400"
+                        touched.type && errors.type ? "text-red-500" : "text-slate-500"
                       }`}
                     >
                       {touched.type && errors.type ? errors.type : selectedType.detail}
@@ -346,21 +347,21 @@ function Complaint() {
                 </div>
               </div>
 
-              <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 sm:p-6">
+              <div className="rounded-[28px] border border-white/45 bg-white/76 p-5 shadow-[0_24px_70px_rgba(2,8,23,0.24)] backdrop-blur-xl sm:p-6">
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-lg font-bold text-white">Incident description</h2>
-                    <p className="mt-1 text-sm text-slate-400">
+                    <h2 className="text-lg font-bold text-slate-900">Incident description</h2>
+                    <p className="mt-1 text-sm text-slate-500">
                       Explain what happened, when it happened, and how it affected you.
                     </p>
                   </div>
-                  <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">
+                  <div className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
                     Step 2
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="message" className="text-sm font-semibold text-white">
+                  <label htmlFor="message" className="text-sm font-semibold text-slate-900">
                     Detailed description
                   </label>
                   <textarea
@@ -378,8 +379,8 @@ function Complaint() {
                     <span
                       className={
                         touched.message && errors.message
-                          ? "text-red-300"
-                          : "text-slate-400"
+                          ? "text-red-500"
+                          : "text-slate-500"
                       }
                     >
                       {touched.message && errors.message
@@ -393,13 +394,13 @@ function Complaint() {
                 </div>
               </div>
 
-              <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(34,197,94,0.08),rgba(6,78,59,0.18))] p-5 sm:p-6">
-                <h2 className="text-lg font-bold text-white">Before you submit</h2>
-                <div className="mt-3 grid gap-3 text-sm text-slate-200/85 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-white/10 bg-black/10 px-4 py-3">
+              <div className="rounded-[28px] border border-white/45 bg-white/76 p-5 shadow-[0_24px_70px_rgba(2,8,23,0.24)] backdrop-blur-xl sm:p-6">
+                <h2 className="text-lg font-bold text-slate-900">Before you submit</h2>
+                <div className="mt-3 grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
                     Keep the description respectful and factual.
                   </div>
-                  <div className="rounded-2xl border border-white/10 bg-black/10 px-4 py-3">
+                  <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
                     Add enough detail for admin staff to verify the case.
                   </div>
                 </div>
@@ -413,7 +414,7 @@ function Complaint() {
                 </button>
 
                 {!user && (
-                  <p className="mt-3 text-xs text-amber-300">
+                  <p className="mt-3 text-xs text-amber-600">
                     Sign in first to submit the complaint under your UniRide account.
                   </p>
                 )}
