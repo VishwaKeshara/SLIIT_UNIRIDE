@@ -21,6 +21,7 @@ import BookRide from "./pages/BookRide";
 import MyRides from "./pages/MyRides";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import TermsAndConditions from "./pages/TermsAndConditions";
 import RouteList from "./features/Shuttle & Route Management/RouteList";
 import RouteForm from "./features/Shuttle & Route Management/RouteFormAdmin";
 import StopManagerPage from "./features/Shuttle & Route Management/StopManagerPage";
@@ -75,7 +76,10 @@ function AppLayout() {
           <Route path="/schedules" element={<Schedules />} />
           <Route path="/book" element={<BookRide />} />
           <Route path="/myrides" element={<MyRides />} />
-          <Route path="/terms-and-conditions" element={<MyRides />} />
+          <Route
+            path="/terms-and-conditions"
+            element={<TermsAndConditions />}
+          />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />

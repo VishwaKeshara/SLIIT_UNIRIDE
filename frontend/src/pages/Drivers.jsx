@@ -76,11 +76,11 @@ function validateTrip(f) {
 // ─── Status badge colours (Updated for Dark Theme) ──────────────────────────
 const driverStatusCls = { 
   Available: "bg-green-400/10 text-green-400", 
-  "On Trip": "bg-orange-400/10 text-orange-400" 
+  "On Trip": "bg-cyan-400/10 text-cyan-300" 
 };
 const tripStatusCls = { 
   Scheduled: "bg-blue-400/10 text-blue-400", 
-  Ongoing: "bg-orange-400/10 text-orange-400", 
+  Ongoing: "bg-cyan-400/10 text-cyan-300", 
   Completed: "bg-emerald-400/10 text-emerald-400", 
   Delayed: "bg-red-400/10 text-red-400" 
 };
@@ -420,29 +420,29 @@ export default function Drivers() {
   // RENDER
   // ══════════════════════════════════════════════════════════════════════════
   return (
-    <section className="min-h-screen bg-gradient-to-br from-[#0A2233] via-[#123B57] to-[#16476A] pb-20 text-white">
+    <section className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.16),_transparent_28%),linear-gradient(135deg,#06121f_0%,#0d2237_45%,#123b57_100%)] pb-20 text-white">
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
 
         {/* ── Header & Tabs ── */}
-        <div className="rounded-3xl bg-white/10 backdrop-blur-md p-6 shadow-2xl md:px-10 md:py-8 border border-white/20">
+        <div className="rounded-[32px] border border-cyan-400/10 bg-white/10 p-6 shadow-[0_30px_90px_rgba(2,8,23,0.45)] backdrop-blur-xl md:px-10 md:py-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-              <p className="text-sm uppercase tracking-[0.2em] text-orange-400 font-bold mb-2">Workspace</p>
+              <p className="mb-2 text-sm font-bold uppercase tracking-[0.2em] text-cyan-300">Workspace</p>
               <h1 className="text-3xl font-extrabold text-white sm:text-4xl">Driver & Trip Dashboard</h1>
               <p className="mt-2 text-slate-300 max-w-2xl">Manage your personnel, arrange trip schedules, and track live statuses.</p>
             </div>
             
-            <div className="flex gap-2 p-1.5 bg-black/20 rounded-xl shrink-0 border border-white/10 shadow-inner">
+            <div className="flex gap-2 rounded-xl border border-white/10 bg-black/20 p-1.5 shadow-inner shrink-0">
               <button onClick={() => setActiveTab("drivers")}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition ${activeTab === "drivers" ? "bg-orange-500 text-white shadow-lg" : "text-slate-300 hover:text-white"}`}>
+                className={`flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition ${activeTab === "drivers" ? "bg-cyan-400 text-slate-950 shadow-lg" : "text-slate-300 hover:text-white"}`}>
                 <FaUser /> Drivers
               </button>
               <button onClick={() => setActiveTab("trips")}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition ${activeTab === "trips" ? "bg-orange-500 text-white shadow-lg" : "text-slate-300 hover:text-white"}`}>
+                className={`flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition ${activeTab === "trips" ? "bg-cyan-400 text-slate-950 shadow-lg" : "text-slate-300 hover:text-white"}`}>
                 <FaRoute /> Trips
               </button>
               <button onClick={() => setActiveTab("analysis")}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition ${activeTab === "analysis" ? "bg-orange-500 text-white shadow-lg" : "text-slate-300 hover:text-white"}`}>
+                className={`flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition ${activeTab === "analysis" ? "bg-cyan-400 text-slate-950 shadow-lg" : "text-slate-300 hover:text-white"}`}>
                 <FaChartPie /> Analytics
               </button>
             </div>
@@ -450,14 +450,14 @@ export default function Drivers() {
         </div>
 
         {/* ── Controls Row ── */}
-        <div className="mt-6 flex flex-wrap gap-3 items-center justify-between">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-[28px] border border-cyan-400/10 bg-white/8 p-4 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl">
           <div className="flex gap-3">
             {activeTab === "drivers" ? (
-              <button onClick={openAddDriver} className="flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-orange-600 transition ring-offset-2 ring-offset-[#123B57] active:scale-95">
+              <button onClick={openAddDriver} className="flex items-center gap-2 rounded-xl bg-cyan-400 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-lg transition hover:bg-cyan-300 ring-offset-2 ring-offset-[#123B57] active:scale-95">
                 <FaPlus /> Add Driver
               </button>
             ) : (
-              <button onClick={openCreateTrip} className="flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-orange-600 transition ring-offset-2 ring-offset-[#123B57] active:scale-95">
+              <button onClick={openCreateTrip} className="flex items-center gap-2 rounded-xl bg-cyan-400 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-lg transition hover:bg-cyan-300 ring-offset-2 ring-offset-[#123B57] active:scale-95">
                 <FaPlus /> Create Trip
               </button>
             )}
@@ -480,15 +480,15 @@ export default function Drivers() {
         {activeTab === "drivers" && (
           <div className="mt-8 animate-in fade-in duration-300">
             {driversLoading ? (
-              <div className="flex justify-center py-12"><div className="h-10 w-10 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" /></div>
+              <div className="flex justify-center rounded-[28px] border border-white/10 bg-white/8 py-12 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl"><div className="h-10 w-10 animate-spin rounded-full border-4 border-cyan-400 border-t-transparent" /></div>
             ) : drivers.length === 0 ? (
-              <p className="text-center text-slate-300 py-12 bg-white/5 rounded-3xl border border-white/10 shadow-sm backdrop-blur-md">No drivers found. Click <strong>Add Driver</strong> to begin.</p>
+              <p className="rounded-[28px] border border-white/10 bg-white/8 py-12 text-center text-slate-300 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl">No drivers found. Click <strong>Add Driver</strong> to begin.</p>
             ) : (
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {drivers.map(driver => (
-                  <div key={driver._id} className="group rounded-3xl bg-white/10 p-6 shadow-2xl border border-white/10 backdrop-blur-md transition hover:scale-[1.02] hover:bg-white/15 flex flex-col">
+                  <div key={driver._id} className="group flex flex-col rounded-[28px] border border-cyan-400/10 bg-white/10 p-6 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl transition hover:scale-[1.02] hover:bg-white/14">
                     <div className="flex items-start justify-between">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-500/20 text-xl font-bold text-orange-400 shadow-inner border border-orange-500/30">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/30 bg-cyan-400/15 text-xl font-bold text-cyan-300 shadow-inner">
                         {driver.name.split(" ").map(p => p[0]).join("")}
                       </div>
                       <span className={`rounded-full px-2.5 py-1 text-[10px] uppercase tracking-wider font-bold border ${driverStatusCls[driver.status] || "bg-slate-800 text-slate-400 border-slate-700"}`}>
@@ -496,24 +496,24 @@ export default function Drivers() {
                       </span>
                     </div>
 
-                    <h2 className="mt-4 text-xl font-bold text-white group-hover:text-orange-400 transition-colors uppercase tracking-tight">{driver.name}</h2>
+                    <h2 className="mt-4 text-xl font-bold uppercase tracking-tight text-white transition-colors group-hover:text-cyan-300">{driver.name}</h2>
                     <p className="text-sm font-medium text-slate-400 mt-0.5">{driver.shift}</p>
 
-                    <div className="mt-5 space-y-2.5 flex-1 p-4 bg-black/20 rounded-2xl border border-white/5">
+                    <div className="mt-5 flex-1 space-y-2.5 rounded-2xl border border-white/10 bg-white/6 p-4 backdrop-blur-md">
                       <p className="flex items-center gap-2.5 text-sm text-slate-300 font-medium">
-                        <FaRoute className="text-orange-500" /> {driver.route}
+                        <FaRoute className="text-cyan-300" /> {driver.route}
                       </p>
                       <p className="flex items-center gap-2.5 text-sm text-slate-300 font-medium">
-                        <FaIdBadge className="text-orange-500" /> Bus: {driver.assignedBus}
+                        <FaIdBadge className="text-cyan-300" /> Bus: {driver.assignedBus}
                       </p>
                       <p className="flex items-center gap-2.5 text-sm text-slate-300 font-medium">
-                        <FaPhoneAlt className="text-orange-500" /> {driver.contactNumber}
+                        <FaPhoneAlt className="text-cyan-300" /> {driver.contactNumber}
                       </p>
                     </div>
 
                     <div className="mt-5 flex gap-2">
                       <button onClick={() => openEditDriver(driver)}
-                        className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-2 text-xs font-bold text-white hover:bg-white/15 hover:border-orange-500/50 transition active:scale-95">
+                        className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-2 text-xs font-bold text-white transition hover:border-cyan-400/50 hover:bg-white/15 active:scale-95">
                         <FaEdit /> Edit
                       </button>
                       <button onClick={() => removeDriver(driver._id, driver.name)}
@@ -534,13 +534,13 @@ export default function Drivers() {
         {activeTab === "trips" && (
           <div className="mt-8 animate-in fade-in duration-300 space-y-4">
             {tripsLoading ? (
-               <div className="flex justify-center py-12"><div className="h-10 w-10 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" /></div>
+               <div className="flex justify-center rounded-[28px] border border-white/10 bg-white/8 py-12 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl"><div className="h-10 w-10 animate-spin rounded-full border-4 border-cyan-400 border-t-transparent" /></div>
             ) : trips.length === 0 ? (
-               <p className="text-center text-slate-300 py-12 bg-white/5 rounded-3xl border border-white/10 shadow-sm backdrop-blur-md">No trips scheduled. Click <strong>Create Trip</strong> to arrange one.</p>
+               <p className="rounded-[28px] border border-white/10 bg-white/8 py-12 text-center text-slate-300 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl">No trips scheduled. Click <strong>Create Trip</strong> to arrange one.</p>
             ) : (
               trips.map(trip => (
-                <div key={trip._id} className={`flex flex-col lg:flex-row items-center justify-between gap-5 rounded-3xl bg-white/10 p-5 pr-6 shadow-2xl border backdrop-blur-md transition hover:bg-white/15
-                  ${trip.status === "Ongoing" ? "border-orange-500/50" : trip.status === "Delayed" ? "border-red-500/50" : "border-white/10"}`}>
+                <div key={trip._id} className={`flex flex-col items-center justify-between gap-5 rounded-[28px] border bg-white/10 p-5 pr-6 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl transition hover:bg-white/14 lg:flex-row
+                  ${trip.status === "Ongoing" ? "border-cyan-400/40" : trip.status === "Delayed" ? "border-red-500/50" : "border-white/10"}`}>
                   
                   {/* Left block: driver & status */}
                   <div className="flex w-full lg:w-1/4 items-center gap-4 border-b lg:border-b-0 lg:border-r border-white/10 pb-4 lg:pb-0 pr-4">
@@ -560,9 +560,9 @@ export default function Drivers() {
                        <span className="font-bold text-white text-sm uppercase tracking-wide">{trip.route}</span>
                     </div>
                     <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs font-medium text-slate-300 pl-1 py-1">
-                      <span className="flex items-center gap-1.5"><FaCalendarAlt className="text-orange-500"/> {trip.date}</span>
-                      <span className="flex items-center gap-1.5"><FaClock className="text-orange-500"/> {trip.startTime} – {trip.endTime}</span>
-                      {trip.passengers > 0 && <span className="flex items-center gap-1.5"><FaUser className="text-orange-500"/> {trip.passengers} pax</span>}
+                      <span className="flex items-center gap-1.5"><FaCalendarAlt className="text-cyan-300"/> {trip.date}</span>
+                      <span className="flex items-center gap-1.5"><FaClock className="text-cyan-300"/> {trip.startTime} – {trip.endTime}</span>
+                      {trip.passengers > 0 && <span className="flex items-center gap-1.5"><FaUser className="text-cyan-300"/> {trip.passengers} pax</span>}
                     </div>
                     {trip.delayReason && <p className="text-xs text-red-400 bg-red-500/10 rounded pl-2.5 py-1 font-semibold border-l-4 border-red-500 w-max pr-3">Delay: {trip.delayReason}</p>}
                   </div>
@@ -570,7 +570,7 @@ export default function Drivers() {
                   {/* Right block: Actions */}
                   <div className="flex w-full lg:w-auto flex-wrap gap-2 shrink-0 pt-3 lg:pt-0 justify-end">
                      {trip.status === "Scheduled" && (
-                       <button onClick={() => changeStatus(trip._id, "Ongoing")} className="flex-1 lg:flex-none flex justify-center items-center gap-1.5 rounded-xl bg-orange-500 py-2 lg:py-1.5 px-4 text-xs font-bold text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600 transition active:scale-95">
+                       <button onClick={() => changeStatus(trip._id, "Ongoing")} className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-cyan-400 px-4 py-2 text-xs font-bold text-slate-950 shadow-lg shadow-cyan-500/20 transition hover:bg-cyan-300 active:scale-95 lg:flex-none lg:py-1.5">
                          <FaPlay /> Start
                        </button>
                      )}
@@ -580,7 +580,7 @@ export default function Drivers() {
                         </button>
                       )}
                       {trip.status === "Delayed" && (
-                        <button onClick={() => changeStatus(trip._id, "Ongoing")} className="flex-1 lg:flex-none flex justify-center items-center gap-1.5 rounded-xl bg-orange-500 py-2 lg:py-1.5 px-4 text-xs font-bold text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600 transition active:scale-95">
+                        <button onClick={() => changeStatus(trip._id, "Ongoing")} className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-cyan-400 px-4 py-2 text-xs font-bold text-slate-950 shadow-lg shadow-cyan-500/20 transition hover:bg-cyan-300 active:scale-95 lg:flex-none lg:py-1.5">
                           <FaPlay /> Resume
                         </button>
                       )}
@@ -589,7 +589,7 @@ export default function Drivers() {
                           <FaExclamationTriangle /> Delay
                         </button>
                       )}
-                      <button onClick={() => openEditTrip(trip)} className="flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-slate-400 p-2.5 hover:text-orange-400 hover:border-orange-500/50 hover:bg-white/10 transition active:scale-90">
+                      <button onClick={() => openEditTrip(trip)} className="flex items-center justify-center rounded-xl border border-white/10 bg-white/5 p-2.5 text-slate-400 transition hover:border-cyan-400/50 hover:bg-white/10 hover:text-cyan-300 active:scale-90">
                         <FaEdit />
                       </button>
                       {trip.status !== "Ongoing" && (
@@ -610,17 +610,17 @@ export default function Drivers() {
         {activeTab === "analysis" && (
           <div className="mt-8 animate-in fade-in duration-300 space-y-6">
             <div className="grid gap-6 lg:grid-cols-3">
-              <div className="rounded-[2rem] bg-white/10 border border-white/10 p-6 shadow-2xl backdrop-blur-xl">
+              <div className="rounded-[2rem] border border-cyan-400/10 bg-white/10 p-6 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl">
                 <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Total Drivers</p>
                 <h3 className="mt-4 text-4xl font-black text-white">{totalDrivers}</h3>
                 <p className="mt-2 text-sm text-slate-400">Current roster across all routes and shifts.</p>
               </div>
-              <div className="rounded-[2rem] bg-white/10 border border-white/10 p-6 shadow-2xl backdrop-blur-xl">
+              <div className="rounded-[2rem] border border-cyan-400/10 bg-white/10 p-6 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl">
                 <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Active Trips</p>
                 <h3 className="mt-4 text-4xl font-black text-white">{activeTrips}</h3>
                 <p className="mt-2 text-sm text-slate-400">Scheduled, ongoing and delayed trips in progress.</p>
               </div>
-              <div className="rounded-[2rem] bg-white/10 border border-white/10 p-6 shadow-2xl backdrop-blur-xl">
+              <div className="rounded-[2rem] border border-cyan-400/10 bg-white/10 p-6 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl">
                 <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Available Fleet</p>
                 <h3 className="mt-4 text-4xl font-black text-white">{availableFleet}</h3>
                 <p className="mt-2 text-sm text-slate-400">Drivers marked available and ready for assignment.</p>
@@ -628,7 +628,7 @@ export default function Drivers() {
             </div>
 
             <div className="grid gap-6 lg:grid-cols-2">
-              <div className="rounded-[2rem] bg-white/10 border border-white/10 p-6 shadow-2xl backdrop-blur-xl">
+              <div className="rounded-[2rem] border border-cyan-400/10 bg-white/10 p-6 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl">
                 <div className="flex items-center justify-between gap-3 mb-6">
                   <div>
                     <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Trip Status Breakdown</p>
@@ -654,7 +654,7 @@ export default function Drivers() {
                 </div>
               </div>
 
-              <div className="rounded-[2rem] bg-white/10 border border-white/10 p-6 shadow-2xl backdrop-blur-xl">
+              <div className="rounded-[2rem] border border-cyan-400/10 bg-white/10 p-6 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl">
                 <div className="flex items-center justify-between gap-3 mb-6">
                   <div>
                     <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Driver Shift Distribution</p>
@@ -709,13 +709,13 @@ export default function Drivers() {
        {/* Add / Edit Driver Modal */}
       {driverModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0A2233]/80 backdrop-blur-md p-4 overflow-y-auto">
-          <div className="relative w-full max-w-lg rounded-[2.5rem] bg-[#123B57] p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200 border border-white/10">
+          <div className="relative w-full max-w-lg animate-in zoom-in-95 rounded-[2.5rem] border border-cyan-400/10 bg-[linear-gradient(180deg,rgba(19,59,87,0.88),rgba(10,34,51,0.92))] p-8 shadow-[0_30px_90px_rgba(2,8,23,0.55)] backdrop-blur-xl duration-200 fade-in">
             <button onClick={() => setDriverModal(false)} className="absolute right-6 top-6 rounded-full bg-white/5 p-2 text-slate-400 hover:bg-white/10 hover:text-white transition"><FaTimes /></button>
 
             <div className="mb-6 flex items-center justify-between pr-10">
               <h2 className="text-2xl font-black text-white">{editingDriver ? "Edit Driver" : "Add Driver"}</h2>
               {!editingDriver && (
-                <button type="button" onClick={preFillDriver} className="flex items-center gap-1.5 rounded-xl bg-orange-500/10 px-3 py-1.5 text-xs font-bold text-orange-400 hover:bg-orange-500/20 border border-orange-500/30 transition">
+                <button type="button" onClick={preFillDriver} className="flex items-center gap-1.5 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-3 py-1.5 text-xs font-bold text-cyan-300 transition hover:bg-cyan-400/20">
                   <FaMagic /> Demo
                 </button>
               )}
@@ -752,7 +752,7 @@ export default function Drivers() {
               </Field>
               <div className="mt-8 flex gap-3">
                 <button type="button" onClick={() => setDriverModal(false)} className="w-1/3 rounded-xl bg-white/5 font-bold text-slate-300 hover:bg-white/10 hover:text-white transition py-3">Cancel</button>
-                <button type="submit" disabled={driverSaving || Object.keys(driverErrors).length > 0} className="w-2/3 rounded-xl bg-orange-500 py-3.5 font-bold text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600 active:scale-95 disabled:opacity-50 transition">
+                <button type="submit" disabled={driverSaving || Object.keys(driverErrors).length > 0} className="w-2/3 rounded-xl bg-cyan-400 py-3.5 font-bold text-slate-950 shadow-lg shadow-cyan-500/20 transition hover:bg-cyan-300 active:scale-95 disabled:opacity-50">
                   {driverSaving ? "Saving..." : "Save Driver"}
                 </button>
               </div>
@@ -764,13 +764,13 @@ export default function Drivers() {
       {/* Add / Edit Trip Modal */}
       {tripModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0A2233]/80 backdrop-blur-md p-4 overflow-y-auto">
-          <div className="relative w-full max-w-lg rounded-[2.5rem] bg-[#123B57] p-8 shadow-2xl animate-in fade-in zoom-in-95 duration-200 border border-white/10">
+          <div className="relative w-full max-w-lg animate-in zoom-in-95 rounded-[2.5rem] border border-cyan-400/10 bg-[linear-gradient(180deg,rgba(19,59,87,0.88),rgba(10,34,51,0.92))] p-8 shadow-[0_30px_90px_rgba(2,8,23,0.55)] backdrop-blur-xl duration-200 fade-in">
             <button onClick={() => setTripModal(false)} className="absolute right-6 top-6 rounded-full bg-white/5 p-2 text-slate-400 hover:bg-white/10 hover:text-white transition"><FaTimes /></button>
 
             <div className="mb-6 flex items-center justify-between pr-10">
               <h2 className="text-2xl font-black text-white">{editingTrip ? "Edit Trip" : "Create Trip"}</h2>
               {!editingTrip && (
-                <button type="button" onClick={preFillTrip} className="flex items-center gap-1.5 rounded-xl bg-orange-500/10 px-3 py-1.5 text-xs font-bold text-orange-400 hover:bg-orange-500/20 border border-orange-500/30 transition"><FaMagic /> Demo</button>
+                <button type="button" onClick={preFillTrip} className="flex items-center gap-1.5 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-3 py-1.5 text-xs font-bold text-cyan-300 transition hover:bg-cyan-400/20"><FaMagic /> Demo</button>
               )}
             </div>
 
@@ -823,7 +823,7 @@ export default function Drivers() {
 
               <div className="mt-8 flex gap-3">
                 <button type="button" onClick={() => setTripModal(false)} className="w-1/3 rounded-xl bg-white/5 font-bold text-slate-300 hover:bg-white/10 hover:text-white transition py-3">Cancel</button>
-                <button type="submit" disabled={tripSaving || Object.keys(tripErrors).length > 0} className="w-2/3 rounded-xl bg-orange-500 py-3.5 font-bold text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600 active:scale-95 disabled:opacity-50 transition">
+                <button type="submit" disabled={tripSaving || Object.keys(tripErrors).length > 0} className="w-2/3 rounded-xl bg-cyan-400 py-3.5 font-bold text-slate-950 shadow-lg shadow-cyan-500/20 transition hover:bg-cyan-300 active:scale-95 disabled:opacity-50">
                   {tripSaving ? "Saving..." : "Save Trip"}
                 </button>
               </div>
@@ -835,14 +835,14 @@ export default function Drivers() {
       {/* Delay Modal */}
       {delayModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0A2233]/80 backdrop-blur-md p-4">
-          <div className="relative w-full max-w-sm rounded-[2.5rem] bg-[#123B57] p-8 shadow-2xl border border-white/10">
+          <div className="relative w-full max-w-sm rounded-[2.5rem] border border-cyan-400/10 bg-[linear-gradient(180deg,rgba(19,59,87,0.88),rgba(10,34,51,0.92))] p-8 shadow-[0_30px_90px_rgba(2,8,23,0.55)] backdrop-blur-xl">
             <h2 className="text-xl font-bold text-white mb-2">Report Delay</h2>
             <p className="text-sm text-slate-400 mb-5">Please state the reason for delay.</p>
-            <textarea rows={3} value={delayReason} onChange={e => {setDelayReason(e.target.value); setDelayError("")}} className={`w-full rounded-xl border p-4 text-sm text-white resize-none bg-black/20 focus:ring-2 focus:ring-orange-500 outline-none transition ${delayError ? "border-red-500 bg-red-500/5 ring-2 ring-red-500/20" : "border-white/10"}`} placeholder="e.g. Heavy traffic..."/>
+            <textarea rows={3} value={delayReason} onChange={e => {setDelayReason(e.target.value); setDelayError("")}} className={`w-full rounded-xl border p-4 text-sm text-white resize-none bg-black/20 outline-none transition focus:ring-2 focus:ring-cyan-400 ${delayError ? "border-red-500 bg-red-500/5 ring-2 ring-red-500/20" : "border-white/10"}`} placeholder="e.g. Heavy traffic..."/>
             {delayError && <p className="text-red-400 text-xs font-bold mt-1.5 ml-1">{delayError}</p>}
             <div className="mt-6 flex gap-3">
               <button onClick={() => setDelayModal(null)} className="w-1/2 rounded-xl bg-white/5 font-bold text-slate-300 hover:bg-white/10 hover:text-white py-3 transition">Cancel</button>
-              <button onClick={handleDelayConfirm} disabled={delaySaving} className="w-1/2 rounded-xl bg-orange-500 font-bold text-white hover:bg-orange-600 py-3 shadow-lg shadow-orange-500/20 active:scale-95 disabled:opacity-50 transition">Confirm</button>
+              <button onClick={handleDelayConfirm} disabled={delaySaving} className="w-1/2 rounded-xl bg-cyan-400 py-3 font-bold text-slate-950 shadow-lg shadow-cyan-500/20 transition hover:bg-cyan-300 active:scale-95 disabled:opacity-50">Confirm</button>
             </div>
           </div>
         </div>
@@ -858,7 +858,7 @@ function Field({ label, required, error, children }) {
   return (
     <div>
       <label className="block text-[13px] font-bold text-white mb-1.5 ml-1 uppercase tracking-wide opacity-80">
-        {label} {required && <span className="text-orange-500">*</span>}
+        {label} {required && <span className="text-cyan-300">*</span>}
       </label>
       {children}
       {error && <p className="text-red-400 text-xs font-bold mt-1.5 ml-1">{error}</p>}
@@ -867,5 +867,5 @@ function Field({ label, required, error, children }) {
 }
 
 function inputCls(err) {
-  return `w-full rounded-xl border px-4 py-3 text-[14px] font-medium text-white focus:ring-2 focus:ring-orange-500 outline-none transition ${err ? "border-red-500 bg-red-500/10 ring-2 ring-red-500/20" : "border-white/10 bg-black/20 hover:bg-black/30"}`;
+  return `w-full rounded-xl border px-4 py-3 text-[14px] font-medium text-white outline-none transition focus:ring-2 focus:ring-cyan-400 ${err ? "border-red-500 bg-red-500/10 ring-2 ring-red-500/20" : "border-white/10 bg-black/20 hover:bg-black/30"}`;
 }
