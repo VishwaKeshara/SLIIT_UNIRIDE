@@ -80,16 +80,16 @@ function DriverListPage() {
   }
 
   return (
-    <section className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.16),_transparent_28%),linear-gradient(135deg,#06121f_0%,#0d2237_45%,#123b57_100%)] pb-16 text-white">
+    <section className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(125,211,252,0.3),_transparent_22%),radial-gradient(circle_at_bottom_right,_rgba(59,130,246,0.18),_transparent_30%),linear-gradient(180deg,#f7fbff_0%,#e0f2fe_42%,#f8fcff_100%)] pb-16 text-slate-900">
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
-        <div className="overflow-hidden rounded-[2rem] border border-white/40 bg-white/18 p-8 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-2xl">
+        <div className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/68 p-8 shadow-[0_24px_70px_rgba(14,116,144,0.12)] backdrop-blur-2xl">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-[0.28em] text-cyan-300">User View</p>
-              <h1 className="mt-2 text-3xl font-extrabold text-white sm:text-4xl">
+              <p className="text-sm uppercase tracking-[0.28em] text-sky-600">User View</p>
+              <h1 className="mt-2 text-3xl font-extrabold text-slate-900 sm:text-4xl">
                 Driver List
               </h1>
-              <p className="mt-3 max-w-2xl text-slate-300">
+              <p className="mt-3 max-w-2xl text-slate-600">
                 Browse active UniRide drivers and their assigned routes. This page is view-only for users.
               </p>
             </div>
@@ -98,7 +98,7 @@ function DriverListPage() {
               type="button"
               onClick={loadDrivers}
               disabled={loading}
-              className="inline-flex items-center gap-2 rounded-2xl border border-white/35 bg-white/25 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/30"
+              className="inline-flex items-center gap-2 rounded-2xl border border-sky-200 bg-white/90 px-4 py-2.5 text-sm font-semibold text-sky-700 shadow-sm transition hover:bg-sky-50"
             >
               <FaSync className={loading ? "animate-spin" : ""} />
               Refresh
@@ -106,17 +106,17 @@ function DriverListPage() {
           </div>
 
           <div className="mt-8 grid gap-4 md:grid-cols-3">
-            <div className="rounded-[1.6rem] border border-white/45 bg-white/70 p-5 backdrop-blur-xl">
+            <div className="rounded-[1.6rem] border border-white/75 bg-white/85 p-5 shadow-[0_18px_40px_rgba(14,116,144,0.08)] backdrop-blur-xl">
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-400">Total Drivers</p>
               <p className="mt-3 text-3xl font-extrabold text-slate-900">{drivers.length}</p>
             </div>
-            <div className="rounded-[1.6rem] border border-white/45 bg-white/70 p-5 backdrop-blur-xl">
+            <div className="rounded-[1.6rem] border border-white/75 bg-white/85 p-5 shadow-[0_18px_40px_rgba(14,116,144,0.08)] backdrop-blur-xl">
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-400">Available</p>
               <p className="mt-3 text-3xl font-extrabold text-emerald-600">
                 {drivers.filter((driver) => driver.status === "Available").length}
               </p>
             </div>
-            <div className="rounded-[1.6rem] border border-white/45 bg-white/70 p-5 backdrop-blur-xl">
+            <div className="rounded-[1.6rem] border border-white/75 bg-white/85 p-5 shadow-[0_18px_40px_rgba(14,116,144,0.08)] backdrop-blur-xl">
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-400">On Trip</p>
               <p className="mt-3 text-3xl font-extrabold text-cyan-700">
                 {drivers.filter((driver) => driver.status === "On Trip").length}
@@ -131,7 +131,7 @@ function DriverListPage() {
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Search by driver name, route, bus, shift..."
-              className="w-full rounded-[1.6rem] border border-white/45 bg-white/72 py-3 pl-12 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20"
+              className="w-full rounded-[1.6rem] border border-sky-100 bg-white/88 py-3 pl-12 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
             />
           </div>
 
@@ -143,10 +143,10 @@ function DriverListPage() {
 
           {loading ? (
             <div className="mt-10 flex justify-center">
-              <div className="h-10 w-10 animate-spin rounded-full border-4 border-cyan-400 border-t-transparent" />
+              <div className="h-10 w-10 animate-spin rounded-full border-4 border-sky-500 border-t-transparent" />
             </div>
           ) : filteredDrivers.length === 0 ? (
-            <div className="mt-8 rounded-[1.7rem] border border-dashed border-white/40 bg-white/45 px-6 py-12 text-center text-slate-700 backdrop-blur-xl">
+            <div className="mt-8 rounded-[1.7rem] border border-dashed border-sky-200 bg-white/75 px-6 py-12 text-center text-slate-700 backdrop-blur-xl">
               No drivers match your search.
             </div>
           ) : (
@@ -154,7 +154,7 @@ function DriverListPage() {
               {filteredDrivers.map((driver) => (
                 <article
                   key={driver._id}
-                  className="rounded-[1.8rem] border border-white/45 bg-white/72 p-6 shadow-[0_18px_50px_rgba(2,8,23,0.26)] backdrop-blur-xl transition hover:-translate-y-1 hover:border-cyan-300/40 hover:bg-white/80"
+                  className="rounded-[1.8rem] border border-white/75 bg-white/82 p-6 shadow-[0_18px_50px_rgba(14,116,144,0.12)] backdrop-blur-xl transition hover:-translate-y-1 hover:border-sky-300 hover:bg-white/92"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
@@ -189,7 +189,7 @@ function DriverListPage() {
                     </p>
                   </div>
 
-                  <div className="mt-6 rounded-[1.4rem] border border-white/55 bg-white/58 px-4 py-3 text-sm text-slate-600 backdrop-blur-md">
+                  <div className="mt-6 rounded-[1.4rem] border border-sky-100 bg-sky-50/70 px-4 py-3 text-sm text-slate-600 backdrop-blur-md">
                     <span className="inline-flex items-center gap-2 font-medium text-slate-800">
                       <FaUser className="text-cyan-600" />
                       View only

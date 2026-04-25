@@ -26,6 +26,11 @@ function formatDate(dateValue, options = {}) {
   });
 }
 
+const glassSection =
+  "rounded-[30px] border border-white/65 bg-white/70 p-6 shadow-[0_25px_70px_rgba(14,116,144,0.12)] backdrop-blur-2xl";
+const glassInput =
+  "w-full rounded-2xl border border-sky-100/90 bg-white/90 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100 disabled:bg-slate-100";
+
 function BookRide() {
   const location = useLocation();
   const storedUser = getLoggedInUser();
@@ -416,9 +421,9 @@ function BookRide() {
     const refId = booking._id?.slice(-8).toUpperCase();
 
     return (
-      <div className="min-h-screen bg-slate-100 px-4 py-10 text-slate-900">
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.18),_transparent_28%),linear-gradient(135deg,#06121f_0%,#0d2237_45%,#123b57_100%)] px-4 py-10 text-slate-900">
         <div className="mx-auto max-w-4xl">
-          <div className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-xl">
+          <div className="overflow-hidden rounded-[32px] border border-white/45 bg-white/18 shadow-[0_30px_90px_rgba(2,8,23,0.38)] backdrop-blur-2xl">
             <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
               <div className="relative min-h-[320px]">
                 <img
@@ -428,7 +433,7 @@ function BookRide() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-900/35 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-                  <p className="text-sm uppercase tracking-[0.35em] text-orange-300">
+                  <p className="text-sm uppercase tracking-[0.35em] text-cyan-300">
                     Booking Confirmed
                   </p>
                   <h1 className="mt-3 text-3xl font-semibold leading-tight">
@@ -487,7 +492,7 @@ function BookRide() {
                     <p className="text-slate-600">{booking.mobileNumber}</p>
                   </div>
 
-                  <div className="rounded-2xl bg-orange-50 p-4">
+                  <div className="rounded-2xl border border-cyan-200/70 bg-cyan-50/85 p-4">
                     <div className="flex items-center justify-between gap-4">
                       <div>
                         <p className="text-slate-500">Total fare</p>
@@ -506,7 +511,7 @@ function BookRide() {
                   <button
                     type="button"
                     onClick={downloadPDF}
-                    className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
+                    className="inline-flex items-center justify-center rounded-2xl bg-cyan-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-cyan-700"
                   >
                     Download receipt
                   </button>
@@ -519,7 +524,7 @@ function BookRide() {
                   </button>
                   <Link
                     to="/myrides"
-                    className="inline-flex items-center justify-center rounded-2xl border border-orange-300 bg-orange-50 px-5 py-3 text-sm font-medium text-orange-700 transition hover:bg-orange-100"
+                    className="inline-flex items-center justify-center rounded-2xl border border-cyan-300 bg-cyan-50 px-5 py-3 text-sm font-medium text-cyan-700 transition hover:bg-cyan-100"
                   >
                     View my rides
                   </Link>
@@ -534,8 +539,8 @@ function BookRide() {
 
   if (!loggedInUserId) {
     return (
-      <div className="min-h-screen bg-slate-100">
-        <section className="relative overflow-hidden bg-slate-950 text-white">
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.18),_transparent_28%),linear-gradient(135deg,#06121f_0%,#0d2237_45%,#123b57_100%)]">
+        <section className="relative overflow-hidden text-white">
           <div className="absolute inset-0">
             <img
               src={heroBusImage}
@@ -546,9 +551,9 @@ function BookRide() {
           </div>
 
           <div className="relative mx-auto flex min-h-[calc(100vh-80px)] max-w-5xl items-center px-4 py-12 sm:px-6 lg:px-8">
-            <div className="grid w-full gap-8 rounded-[32px] border border-white/10 bg-white/10 p-6 shadow-2xl backdrop-blur-xl lg:grid-cols-[1.15fr_0.85fr] lg:p-8">
+            <div className="grid w-full gap-8 rounded-[32px] border border-white/40 bg-white/18 p-6 shadow-[0_30px_90px_rgba(2,8,23,0.42)] backdrop-blur-2xl lg:grid-cols-[1.15fr_0.85fr] lg:p-8">
               <div>
-                <p className="text-sm uppercase tracking-[0.35em] text-orange-300">
+                <p className="text-sm uppercase tracking-[0.35em] text-cyan-300">
                   Login Required
                 </p>
                 <h1 className="mt-4 text-4xl font-semibold leading-tight sm:text-5xl">
@@ -566,7 +571,7 @@ function BookRide() {
                       from: "/book",
                       selectedRoute: location.state?.selectedRoute || null,
                     }}
-                    className="inline-flex items-center justify-center rounded-2xl bg-orange-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+                    className="inline-flex items-center justify-center rounded-2xl bg-cyan-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-cyan-600"
                   >
                     Login to Book Ride
                   </Link>
@@ -579,34 +584,34 @@ function BookRide() {
                 </div>
               </div>
 
-              <div className="rounded-[28px] border border-white/10 bg-slate-950/40 p-6">
-                <p className="text-sm uppercase tracking-[0.3em] text-orange-300">
+              <div className="rounded-[28px] border border-white/45 bg-white/20 p-6 backdrop-blur-xl">
+                <p className="text-sm uppercase tracking-[0.3em] text-cyan-300">
                   Guest Access
                 </p>
                 <div className="mt-6 space-y-4">
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                    <p className="text-base font-semibold text-white">You can view</p>
-                    <p className="mt-2 text-sm leading-7 text-slate-300">
+                  <div className="rounded-2xl border border-white/50 bg-white/72 p-4">
+                    <p className="text-base font-semibold text-slate-900">You can view</p>
+                    <p className="mt-2 text-sm leading-7 text-slate-600">
                       Schedules, drivers, and public trip notifications without signing in.
                     </p>
                   </div>
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                    <p className="text-base font-semibold text-white">You need login for</p>
-                    <p className="mt-2 text-sm leading-7 text-slate-300">
+                  <div className="rounded-2xl border border-white/50 bg-white/72 p-4">
+                    <p className="text-base font-semibold text-slate-900">You need login for</p>
+                    <p className="mt-2 text-sm leading-7 text-slate-600">
                       Booking rides, saving payment history, and connecting rides to your
                       personal profile.
                     </p>
                   </div>
                   {location.state?.selectedRoute && (
-                    <div className="rounded-2xl border border-orange-400/20 bg-orange-500/10 p-4">
-                      <p className="text-sm font-semibold text-orange-200">
+                    <div className="rounded-2xl border border-cyan-300/60 bg-cyan-50/85 p-4">
+                      <p className="text-sm font-semibold text-cyan-700">
                         Selected route
                       </p>
-                      <p className="mt-2 text-base font-semibold text-white">
+                      <p className="mt-2 text-base font-semibold text-slate-900">
                         {location.state.selectedRoute.routeName ||
                           `${location.state.selectedRoute.startLocation} to ${location.state.selectedRoute.endLocation}`}
                       </p>
-                      <p className="mt-1 text-sm text-slate-300">
+                      <p className="mt-1 text-sm text-slate-600">
                         After login, you can continue booking this route.
                       </p>
                     </div>
@@ -621,24 +626,25 @@ function BookRide() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      <section className="relative overflow-hidden bg-slate-950 text-white">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(125,211,252,0.32),_transparent_22%),radial-gradient(circle_at_bottom_right,_rgba(59,130,246,0.2),_transparent_26%),linear-gradient(180deg,#f7fbff_0%,#e0f2fe_44%,#f8fcff_100%)]">
+      <section className="relative overflow-hidden text-white">
         <div className="absolute inset-0">
           <img
             src={heroBusImage}
             alt="Bus booking cover"
-            className="h-full w-full object-cover opacity-40"
+            className="h-full w-full object-cover opacity-30"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/85 to-slate-900/50" />
+          <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(3,37,65,0.9)_0%,rgba(10,78,118,0.76)_45%,rgba(125,211,252,0.48)_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.18),_transparent_25%)]" />
         </div>
 
         <div className="relative mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8 lg:py-16">
           <div className="max-w-2xl">
-            <p className="text-sm uppercase tracking-[0.35em] text-orange-300">
+            <p className="text-sm uppercase tracking-[0.35em] text-sky-200">
               UniRide Booking
             </p>
             <h1 className="mt-4 text-4xl font-semibold leading-tight sm:text-5xl">
-              Book your campus shuttle in a clean, familiar flow.
+              Book your campus shuttle with a calm blue glass experience.
             </h1>
             <p className="mt-4 max-w-xl text-base text-slate-200 sm:text-lg">
               Select your route, choose dates, confirm passenger details, and
@@ -646,18 +652,18 @@ function BookRide() {
             </p>
 
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
-              <div className="rounded-3xl border border-white/10 bg-white/10 p-4 backdrop-blur-sm">
-                <p className="text-sm text-slate-300">Active routes</p>
+              <div className="rounded-3xl border border-white/30 bg-white/14 p-4 shadow-[0_18px_35px_rgba(8,47,73,0.18)] backdrop-blur-md">
+                <p className="text-sm text-sky-100/80">Active routes</p>
                 <p className="mt-2 text-3xl font-semibold">{routes.length}</p>
               </div>
-              <div className="rounded-3xl border border-white/10 bg-white/10 p-4 backdrop-blur-sm">
-                <p className="text-sm text-slate-300">Booking basis</p>
+              <div className="rounded-3xl border border-white/30 bg-white/14 p-4 shadow-[0_18px_35px_rgba(8,47,73,0.18)] backdrop-blur-md">
+                <p className="text-sm text-sky-100/80">Booking basis</p>
                 <p className="mt-2 text-3xl font-semibold capitalize">
                   {bookingBasis}
                 </p>
               </div>
-              <div className="rounded-3xl border border-white/10 bg-white/10 p-4 backdrop-blur-sm">
-                <p className="text-sm text-slate-300">Current total</p>
+              <div className="rounded-3xl border border-white/30 bg-white/14 p-4 shadow-[0_18px_35px_rgba(8,47,73,0.18)] backdrop-blur-md">
+                <p className="text-sm text-sky-100/80">Current total</p>
                 <p className="mt-2 text-3xl font-semibold">
                   LKR {totalAmount.toFixed(0)}
                 </p>
@@ -665,19 +671,19 @@ function BookRide() {
             </div>
           </div>
 
-          <div className="self-end rounded-[28px] border border-white/10 bg-white/10 p-6 backdrop-blur-md">
-            <p className="text-sm uppercase tracking-[0.35em] text-orange-300">
+          <div className="self-end rounded-[30px] border border-white/30 bg-white/16 p-6 shadow-[0_22px_55px_rgba(8,47,73,0.22)] backdrop-blur-xl">
+            <p className="text-sm uppercase tracking-[0.35em] text-sky-200">
               Quick Summary
             </p>
-            <div className="mt-5 space-y-4 text-sm text-slate-200">
-              <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-4">
-                <span className="text-slate-400">Route</span>
+            <div className="mt-5 space-y-4 text-sm text-slate-100">
+              <div className="flex items-start justify-between gap-4 border-b border-white/15 pb-4">
+                <span className="text-sky-100/70">Route</span>
                 <span className="text-right font-medium text-white">
                   {selectedRouteObj?.routeName || "Choose a route"}
                 </span>
               </div>
-              <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-4">
-                <span className="text-slate-400">Travel period</span>
+              <div className="flex items-start justify-between gap-4 border-b border-white/15 pb-4">
+                <span className="text-sky-100/70">Travel period</span>
                 <span className="text-right font-medium text-white">
                   {form.travelStartDate
                     ? `${formatDate(form.travelStartDate)} to ${formatDate(
@@ -686,16 +692,16 @@ function BookRide() {
                     : "Select dates"}
                 </span>
               </div>
-              <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-4">
-                <span className="text-slate-400">Boarding stop</span>
+              <div className="flex items-start justify-between gap-4 border-b border-white/15 pb-4">
+                <span className="text-sky-100/70">Boarding stop</span>
                 <span className="text-right font-medium text-white">
                   {stops.find((stop) => stop._id === form.boardingStop)?.stopName ||
                     "Optional"}
                 </span>
               </div>
               <div className="flex items-start justify-between gap-4">
-                <span className="text-slate-400">Payment status</span>
-                <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white">
+                <span className="text-sky-100/70">Payment status</span>
+                <span className="rounded-full border border-white/20 bg-white/14 px-3 py-1 text-xs font-medium text-white">
                   {payment.method
                     ? paymentComplete
                       ? "Ready to confirm"
@@ -712,22 +718,22 @@ function BookRide() {
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
-              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <div className="rounded-2xl border border-red-200/80 bg-white/90 px-4 py-3 text-sm text-red-700 shadow-sm backdrop-blur-sm">
                 {error}
               </div>
             )}
 
-            <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+            <section className={glassSection}>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-sm uppercase tracking-[0.3em] text-orange-500">
+                  <p className="text-sm uppercase tracking-[0.3em] text-sky-600">
                     Step 1
                   </p>
                   <h2 className="mt-1 text-2xl font-semibold text-slate-900">
                     Trip details
                   </h2>
                 </div>
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
+                <span className="rounded-full border border-sky-100 bg-sky-50/90 px-3 py-1 text-xs font-medium text-sky-700">
                   Route, stop, and date selection
                 </span>
               </div>
@@ -743,7 +749,7 @@ function BookRide() {
                     onChange={handleChange}
                     required
                     disabled={routesLoading}
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100 disabled:bg-slate-100"
+                    className={glassInput}
                   >
                     <option value="">
                       {routesLoading ? "Loading routes..." : "Choose a route"}
@@ -766,7 +772,7 @@ function BookRide() {
                     value={form.boardingStop}
                     onChange={handleChange}
                     disabled={!stops.length}
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100 disabled:bg-slate-100"
+                    className={glassInput}
                   >
                     <option value="">Choose a stop</option>
                     {stops.map((stop) => (
@@ -787,10 +793,10 @@ function BookRide() {
                         key={basis}
                         type="button"
                         onClick={() => handleBookingBasisChange(basis)}
-                        className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${
+                        className={`rounded-2xl border px-4 py-3 text-sm font-medium shadow-sm transition ${
                           bookingBasis === basis
-                            ? "border-orange-400 bg-orange-50 text-orange-700"
-                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                            ? "border-sky-300 bg-[linear-gradient(135deg,rgba(224,242,254,0.95),rgba(255,255,255,0.96))] text-sky-700 shadow-[0_14px_32px_rgba(14,165,233,0.12)]"
+                            : "border-sky-100 bg-white/85 text-slate-600 hover:border-sky-200 hover:bg-sky-50/60"
                         }`}
                       >
                         {basis === "daily" ? "Daily pass" : "Monthly pass"}
@@ -812,7 +818,7 @@ function BookRide() {
                         onChange={handleChange}
                         min={new Date().toISOString().split("T")[0]}
                         required
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                        className={glassInput}
                       />
                     </div>
 
@@ -827,7 +833,7 @@ function BookRide() {
                         onChange={handleChange}
                         min={form.travelStartDate || new Date().toISOString().split("T")[0]}
                         required
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                        className={glassInput}
                       />
                     </div>
                   </>
@@ -840,7 +846,7 @@ function BookRide() {
                       value={selectedMonth}
                       onChange={handleMonthChange}
                       required
-                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                      className={glassInput}
                     >
                       <option value="">Choose the travel month</option>
                       {monthOptions.map((month) => (
@@ -860,10 +866,10 @@ function BookRide() {
               </div>
             </section>
 
-            <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+            <section className={glassSection}>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-sm uppercase tracking-[0.3em] text-orange-500">
+                  <p className="text-sm uppercase tracking-[0.3em] text-sky-600">
                     Step 2
                   </p>
                   <h2 className="mt-1 text-2xl font-semibold text-slate-900">
@@ -871,7 +877,7 @@ function BookRide() {
                   </h2>
                 </div>
                 {loggedInUser && (
-                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                  <span className="rounded-full border border-emerald-200 bg-emerald-50/90 px-3 py-1 text-xs font-medium text-emerald-700">
                     Auto-filled from your profile
                   </span>
                 )}
@@ -888,7 +894,7 @@ function BookRide() {
                     value={form.passengerName}
                     onChange={handleChange}
                     required
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                    className={glassInput}
                   />
                 </div>
 
@@ -902,7 +908,7 @@ function BookRide() {
                     value={form.mobileNumber}
                     onChange={handleChange}
                     required
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                    className={glassInput}
                   />
                 </div>
 
@@ -916,7 +922,7 @@ function BookRide() {
                     value={form.email}
                     onChange={handleChange}
                     disabled={Boolean(loggedInUser)}
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100 disabled:bg-slate-100"
+                    className={glassInput}
                   />
                 </div>
 
@@ -930,23 +936,23 @@ function BookRide() {
                     value={form.studentId}
                     onChange={handleChange}
                     placeholder="Optional"
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                    className={glassInput}
                   />
                 </div>
               </div>
             </section>
 
-            <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+            <section className={glassSection}>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-sm uppercase tracking-[0.3em] text-orange-500">
+                  <p className="text-sm uppercase tracking-[0.3em] text-sky-600">
                     Step 3
                   </p>
                   <h2 className="mt-1 text-2xl font-semibold text-slate-900">
                     Payment method
                   </h2>
                 </div>
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
+                <span className="rounded-full border border-sky-100 bg-sky-50/90 px-3 py-1 text-xs font-medium text-sky-700">
                   Demo payment flow
                 </span>
               </div>
@@ -955,10 +961,10 @@ function BookRide() {
                 <button
                   type="button"
                   onClick={() => handlePaymentMethodChange("card")}
-                  className={`rounded-[24px] border p-5 text-left transition ${
+                  className={`rounded-[24px] border p-5 text-left shadow-sm transition ${
                     payment.method === "card"
-                      ? "border-orange-400 bg-orange-50"
-                      : "border-slate-200 bg-white hover:bg-slate-50"
+                      ? "border-sky-300 bg-[linear-gradient(135deg,rgba(224,242,254,0.92),rgba(255,255,255,0.95))]"
+                      : "border-sky-100 bg-white/85 hover:border-sky-200 hover:bg-sky-50/60"
                   }`}
                 >
                   <p className="text-sm font-semibold text-slate-900">
@@ -971,11 +977,11 @@ function BookRide() {
               </div>
 
               {payment.method === "card" && (
-                <div className="mt-6 rounded-[24px] border border-slate-200 bg-slate-50 p-5">
+                <div className="mt-6 rounded-[24px] border border-sky-100/90 bg-[linear-gradient(180deg,rgba(248,250,252,0.86),rgba(240,249,255,0.94))] p-5 shadow-inner">
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="md:col-span-2">
-                      <div className="rounded-[24px] bg-slate-900 p-5 text-white">
-                        <p className="text-xs uppercase tracking-[0.35em] text-orange-300">
+                      <div className="rounded-[24px] bg-[linear-gradient(135deg,#0f172a_0%,#0c4a6e_55%,#38bdf8_130%)] p-5 text-white shadow-[0_18px_45px_rgba(14,116,144,0.28)]">
+                        <p className="text-xs uppercase tracking-[0.35em] text-sky-200">
                           UniRide Card
                         </p>
                         <p className="mt-6 font-mono text-xl tracking-[0.35em]">
@@ -1008,7 +1014,7 @@ function BookRide() {
                         onChange={handleCardNumber}
                         maxLength={19}
                         placeholder="1234 5678 9012 3456"
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                        className={glassInput}
                       />
                     </div>
 
@@ -1026,7 +1032,7 @@ function BookRide() {
                           }))
                         }
                         placeholder="NAME SURNAME"
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm uppercase text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                        className={glassInput}
                       />
                     </div>
 
@@ -1040,7 +1046,7 @@ function BookRide() {
                         onChange={handleCardExpiry}
                         maxLength={5}
                         placeholder="MM/YY"
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                        className={glassInput}
                       />
                     </div>
 
@@ -1059,7 +1065,7 @@ function BookRide() {
                         }
                         maxLength={4}
                         placeholder="123"
-                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                        className={glassInput}
                       />
                     </div>
                   </div>
@@ -1071,7 +1077,7 @@ function BookRide() {
                       onClick={() =>
                         setPayment((prev) => ({ ...prev, cardProcessed: true }))
                       }
-                      className="mt-5 inline-flex items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+                      className="mt-5 inline-flex items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#0284c7,#2563eb)] px-5 py-3 text-sm font-medium text-white shadow-[0_14px_30px_rgba(37,99,235,0.26)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:shadow-none"
                     >
                       Confirm card details
                     </button>
@@ -1094,7 +1100,7 @@ function BookRide() {
 
             </section>
 
-            <div className="flex flex-col gap-4 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <div className={`${glassSection} flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between`}>
               <div>
                 <p className="text-sm font-medium text-slate-500">
                   Final check
@@ -1109,7 +1115,7 @@ function BookRide() {
               <button
                 type="submit"
                 disabled={!canSubmit || submitting}
-                className="inline-flex items-center justify-center rounded-2xl bg-orange-500 px-6 py-3 text-sm font-medium text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:bg-orange-300"
+                className="inline-flex items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#0284c7,#2563eb)] px-6 py-3 text-sm font-medium text-white shadow-[0_16px_35px_rgba(37,99,235,0.25)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:bg-sky-200 disabled:shadow-none"
               >
                 {submitting ? "Processing booking..." : "Confirm booking"}
               </button>
@@ -1118,25 +1124,25 @@ function BookRide() {
 
           <aside className="space-y-6">
             <div className="sticky top-24 space-y-6">
-              <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-                <p className="text-sm uppercase tracking-[0.3em] text-orange-500">
+              <section className={glassSection}>
+                <p className="text-sm uppercase tracking-[0.3em] text-sky-600">
                   Fare summary
                 </p>
 
                 <div className="mt-5 space-y-4 text-sm">
-                  <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                  <div className="flex items-start justify-between gap-4 border-b border-sky-100 pb-4">
                     <span className="text-slate-500">Route</span>
                     <span className="text-right font-medium text-slate-900">
                       {selectedRouteObj?.routeName || "Not selected"}
                     </span>
                   </div>
-                  <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                  <div className="flex items-start justify-between gap-4 border-b border-sky-100 pb-4">
                     <span className="text-slate-500">Schedule</span>
                     <span className="text-right font-medium text-slate-900">
                       {selectedRouteObj?.startTime || "Check route details"}
                     </span>
                   </div>
-                  <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                  <div className="flex items-start justify-between gap-4 border-b border-sky-100 pb-4">
                     <span className="text-slate-500">Travel period</span>
                     <span className="text-right font-medium text-slate-900">
                       {form.travelStartDate
@@ -1146,13 +1152,13 @@ function BookRide() {
                         : "Not selected"}
                     </span>
                   </div>
-                  <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                  <div className="flex items-start justify-between gap-4 border-b border-sky-100 pb-4">
                     <span className="text-slate-500">Duration</span>
                     <span className="text-right font-medium text-slate-900">
                       {totalDays ? `${totalDays} day${totalDays > 1 ? "s" : ""}` : "-"}
                     </span>
                   </div>
-                  <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                  <div className="flex items-start justify-between gap-4 border-b border-sky-100 pb-4">
                     <span className="text-slate-500">Price per day</span>
                     <span className="text-right font-medium text-slate-900">
                       LKR {pricePerDay.toFixed(2)}
@@ -1160,8 +1166,8 @@ function BookRide() {
                   </div>
                 </div>
 
-                <div className="mt-5 rounded-3xl bg-slate-900 p-5 text-white">
-                  <p className="text-sm text-slate-300">Estimated total</p>
+                <div className="mt-5 rounded-3xl bg-[linear-gradient(135deg,#0f172a_0%,#0c4a6e_60%,#38bdf8_120%)] p-5 text-white shadow-[0_22px_50px_rgba(14,116,144,0.28)]">
+                  <p className="text-sm text-sky-100/80">Estimated total</p>
                   <p className="mt-2 text-3xl font-semibold">
                     LKR {totalAmount.toFixed(2)}
                   </p>
@@ -1172,8 +1178,8 @@ function BookRide() {
                 </div>
               </section>
 
-              <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-                <p className="text-sm uppercase tracking-[0.3em] text-orange-500">
+              <section className={glassSection}>
+                <p className="text-sm uppercase tracking-[0.3em] text-sky-600">
                   Need help?
                 </p>
                 <div className="mt-4 space-y-3 text-sm text-slate-600">
@@ -1184,7 +1190,7 @@ function BookRide() {
                 {loggedInUser && (
                   <Link
                     to="/profile"
-                    className="mt-5 inline-flex items-center justify-center rounded-2xl border border-slate-300 px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    className="mt-5 inline-flex items-center justify-center rounded-2xl border border-sky-200 bg-white/85 px-4 py-3 text-sm font-medium text-sky-700 transition hover:bg-sky-50"
                   >
                     Review profile details
                   </Link>

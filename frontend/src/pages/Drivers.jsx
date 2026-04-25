@@ -84,6 +84,10 @@ const tripStatusCls = {
   Completed: "bg-emerald-400/10 text-emerald-400", 
   Delayed: "bg-red-400/10 text-red-400" 
 };
+const glassPanel =
+  "rounded-[32px] border border-white/35 bg-white/14 shadow-[0_30px_90px_rgba(2,8,23,0.45)] backdrop-blur-2xl";
+const glassSoft =
+  "border border-white/45 bg-white/76 shadow-[0_24px_70px_rgba(2,8,23,0.26)] backdrop-blur-xl";
 
 export default function Drivers() {
   const navigate = useNavigate();
@@ -424,12 +428,12 @@ export default function Drivers() {
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
 
         {/* ── Header & Tabs ── */}
-        <div className="rounded-[32px] border border-cyan-400/10 bg-white/10 p-6 shadow-[0_30px_90px_rgba(2,8,23,0.45)] backdrop-blur-xl md:px-10 md:py-8">
+        <div className={`${glassPanel} p-6 md:px-10 md:py-8`}>
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
               <p className="mb-2 text-sm font-bold uppercase tracking-[0.2em] text-cyan-300">Workspace</p>
               <h1 className="text-3xl font-extrabold text-white sm:text-4xl">Driver & Trip Dashboard</h1>
-              <p className="mt-2 text-slate-300 max-w-2xl">Manage your personnel, arrange trip schedules, and track live statuses.</p>
+              <p className="mt-2 max-w-2xl text-slate-300">Manage your personnel, arrange trip schedules, and track live statuses.</p>
             </div>
             
             <div className="flex gap-2 rounded-xl border border-white/10 bg-black/20 p-1.5 shadow-inner shrink-0">
@@ -450,25 +454,25 @@ export default function Drivers() {
         </div>
 
         {/* ── Controls Row ── */}
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-[28px] border border-cyan-400/10 bg-white/8 p-4 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl">
+        <div className={`mt-6 flex flex-wrap items-center justify-between gap-3 rounded-[28px] p-4 ${glassPanel}`}>
           <div className="flex gap-3">
             {activeTab === "drivers" ? (
-              <button onClick={openAddDriver} className="flex items-center gap-2 rounded-xl bg-cyan-400 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-lg transition hover:bg-cyan-300 ring-offset-2 ring-offset-[#123B57] active:scale-95">
+              <button onClick={openAddDriver} className="flex items-center gap-2 rounded-xl bg-cyan-400 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-lg transition hover:bg-cyan-300 active:scale-95">
                 <FaPlus /> Add Driver
               </button>
             ) : (
-              <button onClick={openCreateTrip} className="flex items-center gap-2 rounded-xl bg-cyan-400 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-lg transition hover:bg-cyan-300 ring-offset-2 ring-offset-[#123B57] active:scale-95">
+              <button onClick={openCreateTrip} className="flex items-center gap-2 rounded-xl bg-cyan-400 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-lg transition hover:bg-cyan-300 active:scale-95">
                 <FaPlus /> Create Trip
               </button>
             )}
-            <button onClick={refreshAction} className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10 transition shadow-sm backdrop-blur-sm">
+            <button onClick={refreshAction} className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10 transition shadow-sm">
               <FaSync className={(activeTab === "drivers" ? driversLoading : (activeTab === "analysis" ? driversLoading || tripsLoading : tripsLoading)) ? "animate-spin" : ""} /> Refresh
             </button>
           </div>
 
           {banner.msg && (
             <div className={`rounded-xl border px-4 py-2.5 text-sm font-semibold flex items-center gap-2 animate-in slide-in-from-top duration-300
-              ${banner.type === "success" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-red-500/10 border-red-500/30 text-red-400"}`}>
+              ${banner.type === "success" ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-red-50 border-red-200 text-red-700"}`}>
               {banner.type === "success" ? "✓" : "✗"} {banner.msg}
             </div>
           )}
@@ -480,15 +484,15 @@ export default function Drivers() {
         {activeTab === "drivers" && (
           <div className="mt-8 animate-in fade-in duration-300">
             {driversLoading ? (
-              <div className="flex justify-center rounded-[28px] border border-white/10 bg-white/8 py-12 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl"><div className="h-10 w-10 animate-spin rounded-full border-4 border-cyan-400 border-t-transparent" /></div>
+              <div className={`flex justify-center rounded-[28px] py-12 ${glassPanel}`}><div className="h-10 w-10 animate-spin rounded-full border-4 border-sky-500 border-t-transparent" /></div>
             ) : drivers.length === 0 ? (
-              <p className="rounded-[28px] border border-white/10 bg-white/8 py-12 text-center text-slate-300 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl">No drivers found. Click <strong>Add Driver</strong> to begin.</p>
+              <p className={`rounded-[28px] py-12 text-center text-slate-600 ${glassPanel}`}>No drivers found. Click <strong>Add Driver</strong> to begin.</p>
             ) : (
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {drivers.map(driver => (
-                  <div key={driver._id} className="group flex flex-col rounded-[28px] border border-cyan-400/10 bg-white/10 p-6 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl transition hover:scale-[1.02] hover:bg-white/14">
+                  <div key={driver._id} className={`group flex flex-col rounded-[28px] p-6 transition hover:-translate-y-1 hover:bg-white/82 ${glassSoft}`}>
                     <div className="flex items-start justify-between">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-400/30 bg-cyan-400/15 text-xl font-bold text-cyan-300 shadow-inner">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-300/40 bg-cyan-400/10 text-xl font-bold text-cyan-700 shadow-inner">
                         {driver.name.split(" ").map(p => p[0]).join("")}
                       </div>
                       <span className={`rounded-full px-2.5 py-1 text-[10px] uppercase tracking-wider font-bold border ${driverStatusCls[driver.status] || "bg-slate-800 text-slate-400 border-slate-700"}`}>
@@ -496,24 +500,24 @@ export default function Drivers() {
                       </span>
                     </div>
 
-                    <h2 className="mt-4 text-xl font-bold uppercase tracking-tight text-white transition-colors group-hover:text-cyan-300">{driver.name}</h2>
-                    <p className="text-sm font-medium text-slate-400 mt-0.5">{driver.shift}</p>
+                    <h2 className="mt-4 text-xl font-bold uppercase tracking-tight text-slate-900 transition-colors group-hover:text-cyan-700">{driver.name}</h2>
+                    <p className="mt-0.5 text-sm font-medium text-slate-500">{driver.shift}</p>
 
-                    <div className="mt-5 flex-1 space-y-2.5 rounded-2xl border border-white/10 bg-white/6 p-4 backdrop-blur-md">
-                      <p className="flex items-center gap-2.5 text-sm text-slate-300 font-medium">
-                        <FaRoute className="text-cyan-300" /> {driver.route}
+                    <div className="mt-5 flex-1 space-y-2.5 rounded-2xl border border-slate-200 bg-white/80 p-4 backdrop-blur-md">
+                      <p className="flex items-center gap-2.5 text-sm font-medium text-slate-700">
+                        <FaRoute className="text-cyan-600" /> {driver.route}
                       </p>
-                      <p className="flex items-center gap-2.5 text-sm text-slate-300 font-medium">
-                        <FaIdBadge className="text-cyan-300" /> Bus: {driver.assignedBus}
+                      <p className="flex items-center gap-2.5 text-sm font-medium text-slate-700">
+                        <FaIdBadge className="text-cyan-600" /> Bus: {driver.assignedBus}
                       </p>
-                      <p className="flex items-center gap-2.5 text-sm text-slate-300 font-medium">
-                        <FaPhoneAlt className="text-cyan-300" /> {driver.contactNumber}
+                      <p className="flex items-center gap-2.5 text-sm font-medium text-slate-700">
+                        <FaPhoneAlt className="text-cyan-600" /> {driver.contactNumber}
                       </p>
                     </div>
 
                     <div className="mt-5 flex gap-2">
                       <button onClick={() => openEditDriver(driver)}
-                        className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-2 text-xs font-bold text-white transition hover:border-cyan-400/50 hover:bg-white/15 active:scale-95">
+                        className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 active:scale-95">
                         <FaEdit /> Edit
                       </button>
                       <button onClick={() => removeDriver(driver._id, driver.name)}
@@ -534,22 +538,22 @@ export default function Drivers() {
         {activeTab === "trips" && (
           <div className="mt-8 animate-in fade-in duration-300 space-y-4">
             {tripsLoading ? (
-               <div className="flex justify-center rounded-[28px] border border-white/10 bg-white/8 py-12 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl"><div className="h-10 w-10 animate-spin rounded-full border-4 border-cyan-400 border-t-transparent" /></div>
+               <div className={`flex justify-center rounded-[28px] py-12 ${glassPanel}`}><div className="h-10 w-10 animate-spin rounded-full border-4 border-sky-500 border-t-transparent" /></div>
             ) : trips.length === 0 ? (
-               <p className="rounded-[28px] border border-white/10 bg-white/8 py-12 text-center text-slate-300 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl">No trips scheduled. Click <strong>Create Trip</strong> to arrange one.</p>
+               <p className={`rounded-[28px] py-12 text-center text-slate-600 ${glassPanel}`}>No trips scheduled. Click <strong>Create Trip</strong> to arrange one.</p>
             ) : (
               trips.map(trip => (
-                <div key={trip._id} className={`flex flex-col items-center justify-between gap-5 rounded-[28px] border bg-white/10 p-5 pr-6 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl transition hover:bg-white/14 lg:flex-row
-                  ${trip.status === "Ongoing" ? "border-cyan-400/40" : trip.status === "Delayed" ? "border-red-500/50" : "border-white/10"}`}>
+                <div key={trip._id} className={`flex flex-col items-center justify-between gap-5 rounded-[28px] p-5 pr-6 transition lg:flex-row ${glassSoft}
+                  ${trip.status === "Ongoing" ? "border-sky-300" : trip.status === "Delayed" ? "border-red-300" : "border-white/70"}`}>
                   
                   {/* Left block: driver & status */}
-                  <div className="flex w-full lg:w-1/4 items-center gap-4 border-b lg:border-b-0 lg:border-r border-white/10 pb-4 lg:pb-0 pr-4">
-                    <div className={`h-12 w-12 shrink-0 rounded-full flex items-center justify-center text-lg shadow-inner border border-white/10 ${trip.status === "Completed" ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5 text-slate-400"}`}>
+                  <div className="flex w-full items-center gap-4 border-b border-sky-100 pb-4 pr-4 lg:w-1/4 lg:border-b-0 lg:border-r">
+                    <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-sky-100 text-lg shadow-inner ${trip.status === "Completed" ? "bg-emerald-50 text-emerald-600" : "bg-sky-50 text-sky-600"}`}>
                       {trip.status === "Completed" ? "✓" : <FaClipboardList />}
                     </div>
                     <div>
-                      <h3 className="font-bold text-white">{trip.driver?.name || "Unknown Driver"}</h3>
-                      <p className="text-xs font-bold text-slate-400 flex items-center gap-1 mt-0.5 uppercase tracking-tighter"><FaBus /> {trip.driver?.assignedBus}</p>
+                      <h3 className="font-bold text-slate-900">{trip.driver?.name || "Unknown Driver"}</h3>
+                      <p className="mt-0.5 flex items-center gap-1 text-xs font-bold uppercase tracking-tighter text-slate-500"><FaBus /> {trip.driver?.assignedBus}</p>
                     </div>
                   </div>
 
@@ -557,12 +561,12 @@ export default function Drivers() {
                   <div className="flex w-full lg:flex-1 flex-col gap-1.5">
                     <div className="flex items-center gap-3">
                        <span className={`px-2.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider border ${tripStatusCls[trip.status]}`}>{trip.status}</span>
-                       <span className="font-bold text-white text-sm uppercase tracking-wide">{trip.route}</span>
+                       <span className="text-sm font-bold uppercase tracking-wide text-slate-900">{trip.route}</span>
                     </div>
-                    <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs font-medium text-slate-300 pl-1 py-1">
-                      <span className="flex items-center gap-1.5"><FaCalendarAlt className="text-cyan-300"/> {trip.date}</span>
+                    <div className="flex flex-wrap gap-x-5 gap-y-1 py-1 pl-1 text-xs font-medium text-slate-600">
+                      <span className="flex items-center gap-1.5"><FaCalendarAlt className="text-cyan-600"/> {trip.date}</span>
                       <span className="flex items-center gap-1.5"><FaClock className="text-cyan-300"/> {trip.startTime} – {trip.endTime}</span>
-                      {trip.passengers > 0 && <span className="flex items-center gap-1.5"><FaUser className="text-cyan-300"/> {trip.passengers} pax</span>}
+                      {trip.passengers > 0 && <span className="flex items-center gap-1.5"><FaUser className="text-cyan-600"/> {trip.passengers} pax</span>}
                     </div>
                     {trip.delayReason && <p className="text-xs text-red-400 bg-red-500/10 rounded pl-2.5 py-1 font-semibold border-l-4 border-red-500 w-max pr-3">Delay: {trip.delayReason}</p>}
                   </div>
@@ -589,11 +593,11 @@ export default function Drivers() {
                           <FaExclamationTriangle /> Delay
                         </button>
                       )}
-                      <button onClick={() => openEditTrip(trip)} className="flex items-center justify-center rounded-xl border border-white/10 bg-white/5 p-2.5 text-slate-400 transition hover:border-cyan-400/50 hover:bg-white/10 hover:text-cyan-300 active:scale-90">
+                      <button onClick={() => openEditTrip(trip)} className="flex items-center justify-center rounded-xl border border-slate-200 bg-white p-2.5 text-slate-500 transition hover:bg-slate-50 hover:text-cyan-700 active:scale-90">
                         <FaEdit />
                       </button>
                       {trip.status !== "Ongoing" && (
-                        <button onClick={() => removeTrip(trip._id)} className="flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-slate-500 p-2.5 hover:text-red-400 hover:bg-red-500/10 hover:border-red-500/50 transition active:scale-90">
+                        <button onClick={() => removeTrip(trip._id)} className="flex items-center justify-center rounded-xl border border-red-200 bg-white p-2.5 text-slate-500 hover:text-red-400 hover:bg-red-50 hover:border-red-300 transition active:scale-90">
                           <FaTrash />
                         </button>
                       )}
@@ -610,40 +614,40 @@ export default function Drivers() {
         {activeTab === "analysis" && (
           <div className="mt-8 animate-in fade-in duration-300 space-y-6">
             <div className="grid gap-6 lg:grid-cols-3">
-              <div className="rounded-[2rem] border border-cyan-400/10 bg-white/10 p-6 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl">
+              <div className={`${glassSoft} rounded-[2rem] p-6`}>
                 <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Total Drivers</p>
-                <h3 className="mt-4 text-4xl font-black text-white">{totalDrivers}</h3>
-                <p className="mt-2 text-sm text-slate-400">Current roster across all routes and shifts.</p>
+                <h3 className="mt-4 text-4xl font-black text-slate-900">{totalDrivers}</h3>
+                <p className="mt-2 text-sm text-slate-500">Current roster across all routes and shifts.</p>
               </div>
-              <div className="rounded-[2rem] border border-cyan-400/10 bg-white/10 p-6 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl">
+              <div className={`${glassSoft} rounded-[2rem] p-6`}>
                 <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Active Trips</p>
-                <h3 className="mt-4 text-4xl font-black text-white">{activeTrips}</h3>
-                <p className="mt-2 text-sm text-slate-400">Scheduled, ongoing and delayed trips in progress.</p>
+                <h3 className="mt-4 text-4xl font-black text-slate-900">{activeTrips}</h3>
+                <p className="mt-2 text-sm text-slate-500">Scheduled, ongoing and delayed trips in progress.</p>
               </div>
-              <div className="rounded-[2rem] border border-cyan-400/10 bg-white/10 p-6 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl">
+              <div className={`${glassSoft} rounded-[2rem] p-6`}>
                 <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Available Fleet</p>
-                <h3 className="mt-4 text-4xl font-black text-white">{availableFleet}</h3>
-                <p className="mt-2 text-sm text-slate-400">Drivers marked available and ready for assignment.</p>
+                <h3 className="mt-4 text-4xl font-black text-slate-900">{availableFleet}</h3>
+                <p className="mt-2 text-sm text-slate-500">Drivers marked available and ready for assignment.</p>
               </div>
             </div>
 
             <div className="grid gap-6 lg:grid-cols-2">
-              <div className="rounded-[2rem] border border-cyan-400/10 bg-white/10 p-6 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl">
+              <div className={`${glassSoft} rounded-[2rem] p-6`}>
                 <div className="flex items-center justify-between gap-3 mb-6">
                   <div>
                     <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Trip Status Breakdown</p>
-                    <h2 className="mt-2 text-2xl font-bold text-white">Status performance</h2>
+                    <h2 className="mt-2 text-2xl font-bold text-slate-900">Status performance</h2>
                   </div>
-                  <span className="rounded-2xl bg-slate-900/70 px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">Total {trips.length}</span>
+                  <span className="rounded-2xl border border-sky-100 bg-sky-50 px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">Total {trips.length}</span>
                 </div>
                 <div className="space-y-4">
                   {tripStatusItems.map((item) => (
                     <div key={item.label} className="space-y-2">
-                      <div className="flex items-center justify-between text-sm text-slate-300 font-medium">
+                      <div className="flex items-center justify-between text-sm font-medium text-slate-700">
                         <span>{item.label}</span>
                         <span>{item.value}</span>
                       </div>
-                      <div className="h-3 rounded-full bg-slate-900/80 overflow-hidden">
+                      <div className="h-3 overflow-hidden rounded-full bg-sky-100">
                         <div
                           className={`h-full rounded-full bg-gradient-to-r ${item.color}`}
                           style={{ width: `${(item.value / maxTripCount) * 100}%` }}
@@ -654,18 +658,18 @@ export default function Drivers() {
                 </div>
               </div>
 
-              <div className="rounded-[2rem] border border-cyan-400/10 bg-white/10 p-6 shadow-[0_24px_70px_rgba(2,8,23,0.35)] backdrop-blur-xl">
+              <div className={`${glassSoft} rounded-[2rem] p-6`}>
                 <div className="flex items-center justify-between gap-3 mb-6">
                   <div>
                     <p className="text-sm uppercase tracking-[0.25em] text-slate-400">Driver Shift Distribution</p>
-                    <h2 className="mt-2 text-2xl font-bold text-white">Shift coverage</h2>
+                    <h2 className="mt-2 text-2xl font-bold text-slate-900">Shift coverage</h2>
                   </div>
-                  <span className="rounded-2xl bg-slate-900/70 px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">{drivers.length} Drivers</span>
+                  <span className="rounded-2xl border border-sky-100 bg-sky-50 px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">{drivers.length} Drivers</span>
                 </div>
                 <div className="flex flex-col items-center justify-center gap-6 lg:flex-row lg:items-start">
                   <div className="relative h-56 w-56">
                     <svg viewBox="0 0 120 120" className="h-full w-full">
-                      <circle cx="60" cy="60" r="48" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="18" />
+                      <circle cx="60" cy="60" r="48" fill="none" stroke="rgba(14,116,144,0.08)" strokeWidth="18" />
                       {shiftSeries.map((segment) => (
                         <circle
                           key={segment.label}
@@ -684,7 +688,7 @@ export default function Drivers() {
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <span className="text-sm uppercase tracking-[0.22em] text-slate-400">Shift</span>
-                      <span className="mt-2 text-3xl font-black text-white">{drivers.length}</span>
+                      <span className="mt-2 text-3xl font-black text-slate-900">{drivers.length}</span>
                     </div>
                   </div>
                   <div className="space-y-3">
@@ -692,7 +696,7 @@ export default function Drivers() {
                       <div key={segment.label} className="flex items-center gap-3">
                         <span className="h-3.5 w-3.5 rounded-full" style={{ backgroundColor: segment.color }} />
                         <div>
-                          <p className="text-sm font-semibold text-white">{segment.label}</p>
+                          <p className="text-sm font-semibold text-slate-900">{segment.label}</p>
                           <p className="text-xs text-slate-400">{segment.value} ({Math.round((segment.value / shiftTotal) * 100)}%)</p>
                         </div>
                       </div>
@@ -738,20 +742,20 @@ export default function Drivers() {
                   <input name="assignedBus" value={driverForm.assignedBus} onChange={handleDriverFormChange} placeholder="e.g. UR-12" className={inputCls(driverErrors.assignedBus)} />
                 </Field>
                 <Field label="Shift" required error={driverErrors.shift}>
-                  <select name="shift" value={driverForm.shift} onChange={handleDriverFormChange} className={inputCls(driverErrors.shift) + " bg-[#0A2233]"}>
+                  <select name="shift" value={driverForm.shift} onChange={handleDriverFormChange} className={inputCls(driverErrors.shift)}>
                     <option value="">Select shift</option>
                     {SHIFTS.map(s => <option key={s}>{s}</option>)}
                   </select>
                 </Field>
               </div>
               <Field label="Route" required error={driverErrors.route}>
-                <select name="route" value={driverForm.route} onChange={handleDriverFormChange} className={inputCls(driverErrors.route) + " bg-[#0A2233]"}>
+                <select name="route" value={driverForm.route} onChange={handleDriverFormChange} className={inputCls(driverErrors.route)}>
                   <option value="">Select route</option>
                   {routeOptions.map((route) => <option key={route}>{route}</option>)}
                 </select>
               </Field>
               <div className="mt-8 flex gap-3">
-                <button type="button" onClick={() => setDriverModal(false)} className="w-1/3 rounded-xl bg-white/5 font-bold text-slate-300 hover:bg-white/10 hover:text-white transition py-3">Cancel</button>
+                <button type="button" onClick={() => setDriverModal(false)} className="w-1/3 rounded-xl bg-white/5 py-3 font-bold text-slate-300 hover:bg-white/10 hover:text-white transition">Cancel</button>
                 <button type="submit" disabled={driverSaving || Object.keys(driverErrors).length > 0} className="w-2/3 rounded-xl bg-cyan-400 py-3.5 font-bold text-slate-950 shadow-lg shadow-cyan-500/20 transition hover:bg-cyan-300 active:scale-95 disabled:opacity-50">
                   {driverSaving ? "Saving..." : "Save Driver"}
                 </button>
@@ -778,15 +782,15 @@ export default function Drivers() {
 
             <form onSubmit={submitTrip} className="space-y-4">
               <Field label="Assign Driver" required error={tripErrors.driver}>
-                <select name="driver" value={tripForm.driver} onChange={handleTripFormChange} className={inputCls(tripErrors.driver) + " bg-[#0A2233]"}>
+                <select name="driver" value={tripForm.driver} onChange={handleTripFormChange} className={inputCls(tripErrors.driver)}>
                   <option value="">Select a driver...</option>
-                  {drivers.map(d => <option key={d._id} value={d._id} className="bg-[#0A2233]">{d.name} ({d.assignedBus}) {d.status === "On Trip" && " - ON TRIP"}</option>)}
+                  {drivers.map(d => <option key={d._id} value={d._id}>{d.name} ({d.assignedBus}) {d.status === "On Trip" && " - ON TRIP"}</option>)}
                 </select>
               </Field>
               <Field label="Route" required error={tripErrors.route}>
-                <select name="route" value={tripForm.route} onChange={handleTripFormChange} className={inputCls(tripErrors.route) + " bg-[#0A2233]"}>
+                <select name="route" value={tripForm.route} onChange={handleTripFormChange} className={inputCls(tripErrors.route)}>
                   <option value="">Select route</option>
-                  {routeOptions.map((route) => <option key={route} className="bg-[#0A2233]">{route}</option>)}
+                  {routeOptions.map((route) => <option key={route}>{route}</option>)}
                 </select>
               </Field>
               <Field label="Date" required error={tripErrors.date}>
@@ -803,11 +807,11 @@ export default function Drivers() {
               
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Status" error={tripErrors.status}>
-                  <select name="status" value={tripForm.status || "Scheduled"} onChange={handleTripFormChange} className={inputCls("") + " bg-[#0A2233]"}>
-                    <option value="Scheduled" className="bg-[#0A2233]">Scheduled</option>
-                    <option value="Ongoing" className="bg-[#0A2233]">Ongoing</option>
-                    <option value="Completed" className="bg-[#0A2233]">Completed</option>
-                    <option value="Delayed" className="bg-[#0A2233]">Delayed</option>
+                  <select name="status" value={tripForm.status || "Scheduled"} onChange={handleTripFormChange} className={inputCls("")}>
+                    <option value="Scheduled">Scheduled</option>
+                    <option value="Ongoing">Ongoing</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Delayed">Delayed</option>
                   </select>
                 </Field>
                 <Field label="Passengers" error="">
@@ -822,7 +826,7 @@ export default function Drivers() {
               )}
 
               <div className="mt-8 flex gap-3">
-                <button type="button" onClick={() => setTripModal(false)} className="w-1/3 rounded-xl bg-white/5 font-bold text-slate-300 hover:bg-white/10 hover:text-white transition py-3">Cancel</button>
+                <button type="button" onClick={() => setTripModal(false)} className="w-1/3 rounded-xl bg-white/5 py-3 font-bold text-slate-300 hover:bg-white/10 hover:text-white transition">Cancel</button>
                 <button type="submit" disabled={tripSaving || Object.keys(tripErrors).length > 0} className="w-2/3 rounded-xl bg-cyan-400 py-3.5 font-bold text-slate-950 shadow-lg shadow-cyan-500/20 transition hover:bg-cyan-300 active:scale-95 disabled:opacity-50">
                   {tripSaving ? "Saving..." : "Save Trip"}
                 </button>
@@ -836,12 +840,12 @@ export default function Drivers() {
       {delayModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0A2233]/80 backdrop-blur-md p-4">
           <div className="relative w-full max-w-sm rounded-[2.5rem] border border-cyan-400/10 bg-[linear-gradient(180deg,rgba(19,59,87,0.88),rgba(10,34,51,0.92))] p-8 shadow-[0_30px_90px_rgba(2,8,23,0.55)] backdrop-blur-xl">
-            <h2 className="text-xl font-bold text-white mb-2">Report Delay</h2>
-            <p className="text-sm text-slate-400 mb-5">Please state the reason for delay.</p>
+            <h2 className="mb-2 text-xl font-bold text-white">Report Delay</h2>
+            <p className="mb-5 text-sm text-slate-400">Please state the reason for delay.</p>
             <textarea rows={3} value={delayReason} onChange={e => {setDelayReason(e.target.value); setDelayError("")}} className={`w-full rounded-xl border p-4 text-sm text-white resize-none bg-black/20 outline-none transition focus:ring-2 focus:ring-cyan-400 ${delayError ? "border-red-500 bg-red-500/5 ring-2 ring-red-500/20" : "border-white/10"}`} placeholder="e.g. Heavy traffic..."/>
             {delayError && <p className="text-red-400 text-xs font-bold mt-1.5 ml-1">{delayError}</p>}
             <div className="mt-6 flex gap-3">
-              <button onClick={() => setDelayModal(null)} className="w-1/2 rounded-xl bg-white/5 font-bold text-slate-300 hover:bg-white/10 hover:text-white py-3 transition">Cancel</button>
+              <button onClick={() => setDelayModal(null)} className="w-1/2 rounded-xl bg-white/5 py-3 font-bold text-slate-300 hover:bg-white/10 hover:text-white transition">Cancel</button>
               <button onClick={handleDelayConfirm} disabled={delaySaving} className="w-1/2 rounded-xl bg-cyan-400 py-3 font-bold text-slate-950 shadow-lg shadow-cyan-500/20 transition hover:bg-cyan-300 active:scale-95 disabled:opacity-50">Confirm</button>
             </div>
           </div>
@@ -857,7 +861,7 @@ export default function Drivers() {
 function Field({ label, required, error, children }) {
   return (
     <div>
-      <label className="block text-[13px] font-bold text-white mb-1.5 ml-1 uppercase tracking-wide opacity-80">
+      <label className="mb-1.5 ml-1 block text-[13px] font-bold uppercase tracking-wide text-white opacity-80">
         {label} {required && <span className="text-cyan-300">*</span>}
       </label>
       {children}
