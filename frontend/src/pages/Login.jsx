@@ -56,9 +56,7 @@ function Login() {
       const defaultPath =
         userRole === "driver"
           ? "/drivers"
-          : userRole === "student" || userRole === "lecturer"
-            ? "/trips"
-            : "/home";
+          : "/home";
 
       navigate(requestedPath || defaultPath);
     } catch (err) {
